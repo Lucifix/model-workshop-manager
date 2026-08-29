@@ -124,7 +124,7 @@ export interface ShoppingListRow {
     priority: string;
     purchased: boolean;
   };
-  paint: { id: number; name: string } | null;
+  paint: { id: number; name: string; colorHex?: string } | null;
 }
 
 export function useShoppingList() {
@@ -174,6 +174,7 @@ export interface ModelDetail {
   instructionUrl?: string;
   source: string;
   sourceUrl?: string;
+  manufacturer: Manufacturer | null;
   requiredPaints: ModelDetailPaint[];
   availability: { totalRequired: number; ownedCount: number; missingCount: number; coveragePercent: number };
   ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string }[];
@@ -201,6 +202,7 @@ export interface PaintDetail {
   notes?: string;
   source: string;
   sourceUrl?: string;
+  manufacturer: Manufacturer | null;
   inventory: { id: number; paintId: number; quantity: number; fillLevel: string; storageLocation?: string; notes?: string }[];
 }
 
@@ -246,6 +248,25 @@ export function useCreateModel() {
   });
 }
 
+export function useUpdateModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<ModelCreateInput> }) => {
+      const res = await fetch(`/api/models/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update model");
+      return res.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["model", id] });
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+    },
+  });
+}
+
 export function useUploadModelImage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -262,6 +283,70 @@ export function useUploadModelImage() {
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+    },
+  });
+}
+
+export function useUploadModelInstructions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ modelId, file }: { modelId: number; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/models/${modelId}/instructions`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to upload instructions");
+      return res.json();
+    },
+    onSuccess: (_, { modelId }) => {
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+    },
+  });
+}
+
+export interface ModelPaint {
+  modelId: number;
+  paintId: number;
+  usage?: string;
+  instructionRef?: string;
+  confidence?: string;
+}
+
+export function useAddModelPaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      modelId,
+      data,
+    }: {
+      modelId: number;
+      data: { paintId: number; usage?: string; confidence?: string };
+    }) => {
+      const res = await fetch(`/api/models/${modelId}/paints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add required paint");
+      return res.json() as Promise<ModelPaint>;
+    },
+    onSuccess: (_, { modelId }) => {
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+    },
+  });
+}
+
+export function useRemoveModelPaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ modelId, paintId }: { modelId: number; paintId: number }) => {
+      const res = await fetch(`/api/models/${modelId}/paints/${paintId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove required paint");
+    },
+    onSuccess: (_, { modelId }) => {
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
     },
   });
 }
@@ -423,6 +508,56 @@ export function useUploadProjectPhoto() {
       });
       if (!res.ok) throw new Error("Failed to upload photo");
       return res.json();
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    },
+  });
+}
+
+export function useDeleteProjectPhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, photoId }: { projectId: number; photoId: number }) => {
+      const res = await fetch(`/api/projects/${projectId}/photos/${photoId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete photo");
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    },
+  });
+}
+
+export function useAddProjectPaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      data,
+    }: {
+      projectId: number;
+      data: { paintId: number; purpose?: "required" | "optional" | "weathering" | "already_substituted"; notes?: string };
+    }) => {
+      const res = await fetch(`/api/projects/${projectId}/paints`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add paint to build");
+      return res.json();
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    },
+  });
+}
+
+export function useRemoveProjectPaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, paintId }: { projectId: number; paintId: number }) => {
+      const res = await fetch(`/api/projects/${projectId}/paints/${paintId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove paint from build");
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });

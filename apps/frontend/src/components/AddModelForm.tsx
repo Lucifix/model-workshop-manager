@@ -45,6 +45,8 @@ export function AddModelForm({
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageBroken, setImageBroken] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [instructionUrl, setInstructionUrl] = useState("");
   const [barcodeQuery, setBarcodeQuery] = useState("");
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +137,8 @@ export function AddModelForm({
         partCount: partCount ? Number(partCount) : undefined,
         description: description || undefined,
         imageUrl: imageUrl || undefined,
+        sourceUrl: sourceUrl || undefined,
+        instructionUrl: instructionUrl || undefined,
       });
       onCreated(created);
     } catch {
@@ -244,6 +248,26 @@ export function AddModelForm({
             />
           )}
           {imageBroken && <p className="mt-1.5 text-xs text-amber-400">Couldn't load that image URL.</p>}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <FieldLabel>Official page (optional)</FieldLabel>
+            <Input
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="Link to the manufacturer's product page"
+            />
+          </div>
+          <div>
+            <FieldLabel>Instructions PDF link (optional)</FieldLabel>
+            <Input
+              value={instructionUrl}
+              onChange={(e) => setInstructionUrl(e.target.value)}
+              placeholder="Link to the manual, if you have one"
+            />
+            <p className="mt-1.5 text-xs text-slate-500">You can also attach a PDF file after saving.</p>
+          </div>
         </div>
 
         {duplicateHint && (

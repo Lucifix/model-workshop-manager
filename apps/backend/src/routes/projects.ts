@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { eq } from "drizzle-orm";
-import { mkdirSync, createWriteStream } from "node:fs";
+import { and, eq } from "drizzle-orm";
+import { mkdirSync, createWriteStream, unlink } from "node:fs";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { db } from "../db/client.js";
@@ -66,12 +66,26 @@ export async function projectRoutes(app: FastifyInstance) {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(projectUpdateSchema, req.body, reply);
     if (!body) return;
+
+    const existing = db.select().from(projects).where(eq(projects.id, id)).get();
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    const now = new Date().toISOString();
+    const patch: typeof body & { startedAt?: string; completedAt?: string } = { ...body };
+    // Minimize manual data entry (spec §15): a status transition sets the matching
+    // timestamp automatically, the first time only — never overwrites a value already set.
+    if (body.status === "In Progress" && !existing.startedAt && !body.startedAt) {
+      patch.startedAt = now;
+    }
+    if (body.status === "Completed" && !existing.completedAt && !body.completedAt) {
+      patch.completedAt = now;
+    }
+
     const [row] = await db
       .update(projects)
-      .set({ ...body, updatedAt: new Date().toISOString() })
+      .set({ ...patch, updatedAt: now })
       .where(eq(projects.id, id))
       .returning();
-    if (!row) return reply.code(404).send({ error: "not_found" });
     return row;
   });
 
@@ -120,15 +134,45 @@ export async function projectRoutes(app: FastifyInstance) {
     reply.code(201).send(row);
   });
 
+  app.delete("/api/projects/:id/photos/:photoId", async (req, reply) => {
+    const photoId = Number((req.params as { photoId: string }).photoId);
+    const photo = db.select().from(projectPhotos).where(eq(projectPhotos.id, photoId)).get();
+    if (!photo) return reply.code(404).send({ error: "not_found" });
+
+    await db.delete(projectPhotos).where(eq(projectPhotos.id, photoId));
+    unlink(join(UPLOAD_DIR, photo.filename), () => {
+      // best-effort — the DB row is the source of truth; a missing file is not an error
+    });
+    reply.code(204).send();
+  });
+
   // --- paints actually used on this build -----------------------------------
   app.post("/api/projects/:id/paints", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(projectPaintCreateSchema, req.body, reply);
     if (!body) return;
+
+    const existing = db
+      .select()
+      .from(projectPaints)
+      .where(eq(projectPaints.projectId, id))
+      .all()
+      .find((r) => r.paintId === body.paintId);
+    if (existing) return reply.code(409).send({ error: "already_linked" });
+
     const [row] = await db
       .insert(projectPaints)
       .values({ ...body, projectId: id })
       .returning();
     reply.code(201).send(row);
+  });
+
+  app.delete("/api/projects/:id/paints/:paintId", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const paintId = Number((req.params as { paintId: string }).paintId);
+    await db
+      .delete(projectPaints)
+      .where(and(eq(projectPaints.projectId, id), eq(projectPaints.paintId, paintId)));
+    reply.code(204).send();
   });
 }

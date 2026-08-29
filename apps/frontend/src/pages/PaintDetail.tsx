@@ -73,7 +73,7 @@ export default function PaintDetail() {
           <div className="mb-4 space-y-2 text-sm">
             <p>
               <span className="font-medium text-slate-300">Manufacturer:</span>{" "}
-              <span className="text-slate-400">Manufacturer ID {paint.manufacturerId}</span>
+              <span className="text-slate-400">{paint.manufacturer?.name ?? "Unknown"}</span>
             </p>
             <p>
               <span className="font-medium text-slate-300">Product Code:</span>{" "}

@@ -39,6 +39,13 @@ export const modelCreateSchema = z.object({
 });
 export const modelUpdateSchema = modelCreateSchema.partial();
 
+export const modelPaintCreateSchema = z.object({
+  paintId: z.number().int().positive(),
+  usage: z.string().optional(),
+  instructionRef: z.string().optional(),
+  confidence: z.string().optional(),
+});
+
 export const ownedModelCreateSchema = z.object({
   modelId: z.number().int().positive(),
   owned: z.boolean().default(true),

@@ -1,7 +1,16 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useProjectDetail, useUpdateProject, useAddBuildLogEntry, useUploadProjectPhoto } from "../api/client";
+import {
+  useProjectDetail,
+  useUpdateProject,
+  useAddBuildLogEntry,
+  useUploadProjectPhoto,
+  useAddProjectPaint,
+  useRemoveProjectPaint,
+  useDeleteProjectPhoto,
+} from "../api/client";
 import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar, ModelThumbnail } from "../components/ui";
+import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 
 type TabType = "overview" | "paints" | "log" | "photos" | "notes";
 
@@ -15,11 +24,19 @@ export default function ProjectDetail() {
   const [logTitle, setLogTitle] = useState("");
   const [logDesc, setLogDesc] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [showAddPaint, setShowAddPaint] = useState(false);
+  const [selectedPaint, setSelectedPaint] = useState<PickedPaint | null>(null);
+  const [paintPurpose, setPaintPurpose] = useState<"required" | "optional" | "weathering" | "already_substituted">(
+    "required"
+  );
 
   const { data: project, isLoading, isError } = useProjectDetail(Number(id!));
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
   const { mutate: addBuildLog, isPending: isAddingLog } = useAddBuildLogEntry();
   const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadProjectPhoto();
+  const addProjectPaint = useAddProjectPaint();
+  const removeProjectPaint = useRemoveProjectPaint();
+  const deletePhoto = useDeleteProjectPhoto();
 
   if (!id || isNaN(Number(id))) {
     return <ErrorState message="Invalid project ID." />;
@@ -47,6 +64,21 @@ export default function ProjectDetail() {
         setLogFormOpen(false);
       },
     });
+  };
+
+  const handleAddPaint = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPaint) return;
+    addProjectPaint.mutate(
+      { projectId: project.id, data: { paintId: selectedPaint.id, purpose: paintPurpose } },
+      {
+        onSuccess: () => {
+          setSelectedPaint(null);
+          setPaintPurpose("required");
+          setShowAddPaint(false);
+        },
+      }
+    );
   };
 
   const handleUploadPhoto = () => {
@@ -211,17 +243,101 @@ export default function ProjectDetail() {
                 )}
               </dl>
             </Card>
+            <Card>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-slate-300">Photos</h2>
+                <button
+                  onClick={() => setActiveTab("photos")}
+                  className="text-xs text-workshop-accent hover:underline"
+                >
+                  {project.photos?.length ? `View all (${project.photos.length})` : "Add photos"}
+                </button>
+              </div>
+              {project.photos && project.photos.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {project.photos.slice(0, 8).map((photo) => (
+                    <button
+                      key={photo.id}
+                      onClick={() => setActiveTab("photos")}
+                      className="overflow-hidden rounded-lg border border-workshop-border"
+                    >
+                      <img
+                        src={`/uploads/${photo.filename}`}
+                        alt={photo.originalFilename || "Project photo"}
+                        className="aspect-square w-full object-cover transition-transform hover:scale-105"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">No photos yet — the Photos tab has a quick upload.</p>
+              )}
+            </Card>
           </div>
         )}
 
         {activeTab === "paints" && (
           <div className="flex flex-col gap-4">
             <Card>
-              <h2 className="mb-4 text-sm font-semibold text-slate-300">Paints used in this build</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-slate-300">Paints used in this build</h2>
+                {!showAddPaint && (
+                  <Button size="sm" variant="secondary" onClick={() => setShowAddPaint(true)}>
+                    + Add paint
+                  </Button>
+                )}
+              </div>
+
+              {showAddPaint && (
+                <form onSubmit={handleAddPaint} className="mb-4 flex flex-col gap-2 rounded-lg border border-workshop-border p-3">
+                  {!selectedPaint ? (
+                    <PaintPicker onSelect={setSelectedPaint} />
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span
+                        className="h-4 w-4 rounded-full border border-workshop-border"
+                        style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
+                      />
+                      <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
+                      <button type="button" className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSelectedPaint(null)}>
+                        change
+                      </button>
+                    </div>
+                  )}
+                  <Select value={paintPurpose} onChange={(e) => setPaintPurpose(e.target.value as typeof paintPurpose)}>
+                    <option value="required">Required</option>
+                    <option value="optional">Optional</option>
+                    <option value="weathering">Weathering</option>
+                    <option value="already_substituted">Already substituted</option>
+                  </Select>
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" disabled={!selectedPaint || addProjectPaint.isPending} className="flex-1">
+                      {addProjectPaint.isPending ? "Adding…" : "Add"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowAddPaint(false);
+                        setSelectedPaint(null);
+                        setPaintPurpose("required");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              )}
+
               {project.usedPaints && project.usedPaints.length > 0 ? (
                 <ul className="space-y-2">
                   {project.usedPaints.map((row) => (
-                    <li key={row.projectPaint.paintId} className="flex items-center gap-3 rounded-lg border border-workshop-border p-2 text-sm">
+                    <li
+                      key={row.projectPaint.paintId}
+                      className="group flex items-center gap-3 rounded-lg border border-workshop-border p-2 text-sm"
+                    >
                       <span
                         className="h-5 w-5 rounded-full border border-slate-600 flex-shrink-0"
                         style={{ backgroundColor: row.paint?.colorHex ?? "#334155" }}
@@ -233,11 +349,18 @@ export default function ProjectDetail() {
                           {row.projectPaint.notes ? ` · ${row.projectPaint.notes}` : ""}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => removeProjectPaint.mutate({ projectId: project.id, paintId: row.projectPaint.paintId })}
+                        className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
+                      >
+                        Remove
+                      </button>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-slate-500">No paints recorded for this build yet.</p>
+                !showAddPaint && <p className="text-xs text-slate-500">No paints recorded for this build yet.</p>
               )}
             </Card>
           </div>
@@ -337,12 +460,23 @@ export default function ProjectDetail() {
             {project.photos && project.photos.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {project.photos.map((photo) => (
-                  <div key={photo.id} className="overflow-hidden rounded-xl border border-workshop-border">
+                  <div key={photo.id} className="group relative overflow-hidden rounded-xl border border-workshop-border">
                     <img
                       src={`/uploads/${photo.filename}`}
                       alt={photo.originalFilename || "Project photo"}
                       className="h-32 w-full object-cover"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm("Delete this photo?")) {
+                          deletePhoto.mutate({ projectId: project.id, photoId: photo.id });
+                        }
+                      }}
+                      className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 px-2 py-1 text-xs text-slate-200 opacity-0 transition-opacity hover:bg-red-900/80 group-hover:opacity-100"
+                    >
+                      Delete
+                    </button>
                     {photo.caption && (
                       <div className="bg-workshop-panelmuted p-2 text-xs text-slate-300">{photo.caption}</div>
                     )}

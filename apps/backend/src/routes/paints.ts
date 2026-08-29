@@ -41,12 +41,13 @@ export async function paintRoutes(app: FastifyInstance) {
     const id = Number((req.params as { id: string }).id);
     const paint = db.select().from(paints).where(eq(paints.id, id)).get();
     if (!paint) return reply.code(404).send({ error: "not_found" });
+    const manufacturer = db.select().from(manufacturers).where(eq(manufacturers.id, paint.manufacturerId)).get();
     const inventory = db
       .select()
       .from(paintInventory)
       .where(eq(paintInventory.paintId, id))
       .all();
-    return { ...paint, inventory };
+    return { ...paint, manufacturer, inventory };
   });
 
   app.patch("/api/paints/:id", async (req, reply) => {

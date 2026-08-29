@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { mkdirSync, createWriteStream } from "node:fs";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
@@ -13,7 +13,7 @@ import {
   ownedModels,
   projects,
 } from "../db/schema.js";
-import { modelCreateSchema, modelUpdateSchema } from "../lib/schemas.js";
+import { modelCreateSchema, modelUpdateSchema, modelPaintCreateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
 import { paintAvailability } from "../lib/paintAvailability.js";
 
@@ -59,6 +59,7 @@ export async function modelRoutes(app: FastifyInstance) {
     const id = Number((req.params as { id: string }).id);
     const model = db.select().from(models).where(eq(models.id, id)).get();
     if (!model) return reply.code(404).send({ error: "not_found" });
+    const manufacturer = db.select().from(manufacturers).where(eq(manufacturers.id, model.manufacturerId)).get();
 
     const requiredPaints = db
       .select({ modelPaint: modelPaints, paint: paints })
@@ -78,6 +79,7 @@ export async function modelRoutes(app: FastifyInstance) {
 
     return {
       ...model,
+      manufacturer,
       requiredPaints: requiredPaints.map((r) => ({
         ...r.paint,
         usage: r.modelPaint.usage,
@@ -133,5 +135,62 @@ export async function modelRoutes(app: FastifyInstance) {
       .where(eq(models.id, id))
       .returning();
     reply.code(201).send(row);
+  });
+
+  // Attach an instruction manual (PDF) — same "your own file, locally stored" pattern as
+  // the box-photo upload above. An instructionUrl link is also settable directly via PATCH.
+  app.post("/api/models/:id/instructions", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const existing = db.select().from(models).where(eq(models.id, id)).get();
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "no_file" });
+
+    const dir = join(UPLOAD_DIR, "models", String(id));
+    mkdirSync(dir, { recursive: true });
+    const filename = `${Date.now()}-${file.filename}`;
+    await pipeline(file.file, createWriteStream(join(dir, filename)));
+
+    const instructionUrl = `/uploads/models/${id}/${filename}`;
+    const [row] = await db
+      .update(models)
+      .set({ instructionUrl, updatedAt: new Date().toISOString() })
+      .where(eq(models.id, id))
+      .returning();
+    reply.code(201).send(row);
+  });
+
+  // --- required paints (model_paints) ---------------------------------------
+  app.post("/api/models/:id/paints", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const model = db.select().from(models).where(eq(models.id, id)).get();
+    if (!model) return reply.code(404).send({ error: "not_found" });
+
+    const body = parseBody(modelPaintCreateSchema, req.body, reply);
+    if (!body) return;
+
+    const existing = db
+      .select()
+      .from(modelPaints)
+      .where(eq(modelPaints.modelId, id))
+      .all()
+      .find((r) => r.paintId === body.paintId);
+    if (existing) return reply.code(409).send({ error: "already_linked" });
+
+    const [row] = await db
+      .insert(modelPaints)
+      .values({ ...body, modelId: id, source: "manual" })
+      .returning();
+    reply.code(201).send(row);
+  });
+
+  app.delete("/api/models/:id/paints/:paintId", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const paintId = Number((req.params as { paintId: string }).paintId);
+    await db
+      .delete(modelPaints)
+      .where(and(eq(modelPaints.modelId, id), eq(modelPaints.paintId, paintId)));
+    reply.code(204).send();
   });
 }
