@@ -8,6 +8,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import { forwardRef } from "react";
+import { BoxIcon } from "./icons";
 
 export function Card({ children, className = "", ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
   return (
@@ -165,6 +166,76 @@ export function ProgressBar({ percent, className = "" }: { percent: number; clas
         className="h-full rounded-full bg-workshop-accent transition-all"
         style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
       />
+    </div>
+  );
+}
+
+const thumbnailSizes = {
+  sm: "h-10 w-10",
+  md: "h-12 w-12",
+  lg: "h-16 w-16",
+};
+
+export function ModelThumbnail({
+  imageUrl,
+  size = "md",
+  className = "",
+}: {
+  imageUrl?: string | null;
+  size?: keyof typeof thumbnailSizes;
+  className?: string;
+}) {
+  const sizeClass = thumbnailSizes[size];
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt=""
+        className={`${sizeClass} flex-shrink-0 rounded-xl border border-workshop-border object-cover ${className}`}
+      />
+    );
+  }
+  return (
+    <span
+      className={`flex ${sizeClass} flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent ${className}`}
+    >
+      <BoxIcon className="h-5 w-5" />
+    </span>
+  );
+}
+
+export function MediaCard({
+  image,
+  imageAlt = "",
+  aspect = "aspect-[4/3]",
+  overlay,
+  children,
+  className = "",
+  ...props
+}: PropsWithChildren<
+  HTMLAttributes<HTMLDivElement> & { image?: string | null; imageAlt?: string; aspect?: string; overlay?: ReactNode }
+>) {
+  return (
+    <div
+      className={`group overflow-hidden rounded-2xl border border-workshop-border bg-workshop-panel shadow-panel transition-all duration-200 hover:-translate-y-0.5 hover:border-workshop-accent/50 hover:shadow-lift ${className}`}
+      {...props}
+    >
+      <div className={`relative ${aspect} w-full overflow-hidden bg-workshop-panelmuted`}>
+        {image ? (
+          <img
+            src={image}
+            alt={imageAlt}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-workshop-accent/30">
+            <BoxIcon className="h-10 w-10" />
+          </div>
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-workshop-panel via-workshop-panel/10 to-transparent opacity-90" />
+        {overlay && <div className="absolute inset-x-0 bottom-0 p-3">{overlay}</div>}
+      </div>
+      <div className="p-3.5">{children}</div>
     </div>
   );
 }

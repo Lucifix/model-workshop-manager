@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Button } from "../components/ui";
+import { LoadingState, ErrorState, EmptyState, Badge, PageHeader, Button, MediaCard } from "../components/ui";
 
 interface OwnedModelRow {
   owned: {
@@ -16,6 +16,7 @@ interface OwnedModelRow {
     id: number;
     kitNumber: string;
     name: string;
+    imageUrl?: string;
   } | null;
 }
 
@@ -36,46 +37,40 @@ export default function OwnedModels() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="My Collection"
-        description="Model kits you own."
-        actions={<Button onClick={() => navigate("/models")}>Add models</Button>}
+        description={data && data.length > 0 ? `${data.length} kit${data.length === 1 ? "" : "s"} on the shelf.` : "Model kits you own."}
+        actions={<Button onClick={() => navigate("/models")}>+ Add models</Button>}
       />
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Could not load your model collection." />}
       {data && data.length === 0 && <EmptyState message="You haven't added any models yet. Click 'Add models' to get started!" />}
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.map((row) => (
-          <Card
+          <MediaCard
             key={row.owned.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800/60"
+            image={row.model?.imageUrl}
+            imageAlt={row.model?.name}
+            className="cursor-pointer animate-fade-up"
             onClick={() => navigate(`/models/${row.owned.modelId}`)}
+            overlay={
+              row.owned.condition && (
+                <Badge variant="secondary" tone={row.owned.condition === "unbuilt" ? "neutral" : "ok"}>
+                  {row.owned.condition}
+                </Badge>
+              )
+            }
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="mb-1 font-semibold text-slate-100">{row.model?.name || "Unknown model"}</h3>
-                <div className="mb-2 text-xs text-slate-400">
-                  {row.model?.kitNumber && <>Kit: {row.model.kitNumber} · </>}
-                  Quantity: {row.owned.quantity}
-                </div>
-                {row.owned.condition && (
-                  <Badge variant="secondary" tone={row.owned.condition === "unbuilt" ? "neutral" : "ok"}>
-                    {row.owned.condition}
-                  </Badge>
-                )}
-              </div>
-              {row.owned.storageLocation && (
-                <div className="text-right text-xs text-slate-500">
-                  📍 {row.owned.storageLocation}
-                </div>
-              )}
+            <h3 className="mb-1 truncate font-semibold text-slate-100">{row.model?.name || "Unknown model"}</h3>
+            <div className="mb-2 text-xs text-slate-400">
+              {row.model?.kitNumber && <>Kit: {row.model.kitNumber} · </>}
+              Qty: {row.owned.quantity}
             </div>
-            {row.owned.notes && (
-              <div className="mt-2 text-xs text-slate-500">
-                Notes: {row.owned.notes}
-              </div>
-            )}
-          </Card>
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              {row.owned.storageLocation ? <span>📍 {row.owned.storageLocation}</span> : <span />}
+            </div>
+            {row.owned.notes && <div className="mt-2 truncate text-xs text-slate-500">{row.owned.notes}</div>}
+          </MediaCard>
         ))}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useProjectDetail, useUpdateProject, useAddBuildLogEntry, useUploadProjectPhoto } from "../api/client";
-import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar } from "../components/ui";
+import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar, ModelThumbnail } from "../components/ui";
 
 type TabType = "overview" | "paints" | "log" | "photos" | "notes";
 
@@ -72,13 +72,16 @@ export default function ProjectDetail() {
 
       <Card className="mb-2">
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="mb-1 text-3xl font-bold text-slate-100">{project.name}</h1>
-            {project.model && (
-              <p className="text-sm text-slate-400">
-                {project.model.name} ({project.model.kitNumber})
-              </p>
-            )}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <ModelThumbnail imageUrl={project.model?.imageUrl} size="lg" />
+            <div className="min-w-0">
+              <h1 className="mb-1 truncate text-3xl font-bold text-slate-100">{project.name}</h1>
+              {project.model && (
+                <p className="truncate text-sm text-slate-400">
+                  {project.model.name} ({project.model.kitNumber})
+                </p>
+              )}
+            </div>
           </div>
           <div className="w-44 flex-shrink-0">
             <Select value={project.status} onChange={(e) => handleUpdateStatus(e.target.value)}>

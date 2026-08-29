@@ -20,6 +20,16 @@ export default {
       },
       boxShadow: {
         panel: "0 1px 2px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02)",
+        lift: "0 12px 24px -8px rgba(0,0,0,0.5), 0 0 0 1px rgba(249,115,22,0.15)",
+      },
+      keyframes: {
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.25s ease-out",
       },
     },
   },

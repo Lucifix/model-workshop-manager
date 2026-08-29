@@ -1,20 +1,34 @@
 import { useNavigate } from "react-router-dom";
-import { useDashboard } from "../api/client";
-import { StatTile, LoadingState, ErrorState, EmptyState, PageHeader, SectionCard, Button } from "../components/ui";
+import { useDashboard, useProjects } from "../api/client";
+import {
+  StatTile,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  PageHeader,
+  SectionCard,
+  Button,
+  ModelThumbnail,
+  ProgressBar,
+  Badge,
+} from "../components/ui";
 import { ArchiveIcon, BeakerIcon, BoxIcon, CartIcon, DropletIcon, HammerIcon } from "../components/icons";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useDashboard();
+  const { data: projects } = useProjects();
 
   if (isLoading) return <LoadingState />;
   if (isError || !data) return <ErrorState message="Could not load dashboard data." />;
 
+  const inProgress = projects?.filter((r) => r.project.status === "In Progress") ?? [];
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Dashboard"
-        description="An overview of your workshop."
+        title="Workshop"
+        description="What's on the bench right now."
         actions={<Button onClick={() => navigate("/projects/new")}>+ New Build</Button>}
       />
 
@@ -31,6 +45,34 @@ export default function Dashboard() {
           tone={data.lowStockCount > 0 ? "warn" : "neutral"}
         />
       </div>
+
+      <SectionCard title="Continue building" actions={<Badge variant="secondary">{inProgress.length} active</Badge>}>
+        {inProgress.length === 0 ? (
+          <EmptyState message="Nothing in progress — start a build to see it here." />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {inProgress.map((row) => (
+              <button
+                key={row.project.id}
+                onClick={() => navigate(`/projects/${row.project.id}`)}
+                className="flex w-full items-center gap-3 rounded-xl border border-transparent p-2 text-left transition-colors hover:border-workshop-border hover:bg-workshop-panelmuted"
+              >
+                <ModelThumbnail imageUrl={row.model?.imageUrl} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium text-slate-100">{row.project.name}</div>
+                  <div className="mb-1.5 truncate text-xs text-slate-400">
+                    {row.model?.name} ({row.model?.kitNumber})
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ProgressBar percent={row.project.progressPercent} className="max-w-xs flex-1" />
+                    <span className="text-xs font-medium text-workshop-accent">{row.project.progressPercent}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
       <SectionCard title="Recent activity">
         {data.recentActivity.length === 0 ? (
@@ -56,13 +98,18 @@ export default function Dashboard() {
         {data.recentlyAddedModels.length === 0 ? (
           <EmptyState message="No models yet — add your first kit." />
         ) : (
-          <ul className="flex flex-col gap-1 text-sm">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {data.recentlyAddedModels.map((m) => (
-              <li key={m.id}>
-                {m.name} <span className="text-slate-500">({m.kitNumber})</span>
-              </li>
+              <button
+                key={m.id}
+                onClick={() => navigate(`/models/${m.id}`)}
+                className="flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition-colors hover:bg-workshop-panelmuted"
+              >
+                <ModelThumbnail imageUrl={m.imageUrl} size="lg" className="w-full aspect-square h-auto" />
+                <span className="line-clamp-2 text-xs font-medium text-slate-300">{m.name}</span>
+              </button>
             ))}
-          </ul>
+          </div>
         )}
       </SectionCard>
     </div>

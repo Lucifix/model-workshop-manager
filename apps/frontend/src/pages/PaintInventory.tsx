@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Button, Select } from "../components/ui";
+import { LoadingState, ErrorState, EmptyState, Badge, PageHeader, Button, Select } from "../components/ui";
 import { useState } from "react";
 
 interface PaintInventoryRow {
@@ -53,8 +53,8 @@ export default function PaintInventory() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="My Paint Inventory"
-        description="Paints you have on the shelf."
-        actions={<Button onClick={() => navigate("/paints")}>Add paints</Button>}
+        description={data && data.length > 0 ? `${data.length} paint${data.length === 1 ? "" : "s"} on the shelf.` : "Paints you have on the shelf."}
+        actions={<Button onClick={() => navigate("/paints")}>+ Add paints</Button>}
       />
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -78,40 +78,32 @@ export default function PaintInventory() {
       {isError && <ErrorState message="Could not load your paint inventory." />}
       {data && data.length === 0 && <EmptyState message="You haven't added any paints yet. Click 'Add paints' to get started!" />}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {data?.map((row) => (
-          <Card
+          <div
             key={row.inventory.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800/60"
             onClick={() => navigate(`/paints/${row.inventory.paintId}`)}
+            className="group cursor-pointer overflow-hidden rounded-2xl border border-workshop-border bg-workshop-panel shadow-panel transition-all duration-200 hover:-translate-y-0.5 hover:border-workshop-accent/50 hover:shadow-lift"
           >
-            <div className="flex items-start gap-3">
-              <span
-                className="h-12 w-12 shrink-0 rounded-lg border border-workshop-border shadow-inner"
-                style={{ backgroundColor: row.paint?.colorHex ?? "#334155" }}
-              />
-              <div className="flex-1">
-                <h3 className="mb-1 font-semibold text-slate-100">{row.paint?.name || "Unknown paint"}</h3>
-                <div className="mb-2 text-xs text-slate-400">
-                  {row.paint?.productCode} · {row.paint?.type}
-                  {row.paint?.finish ? ` · ${row.paint.finish}` : ""}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary" tone={getLowStockTone(row.inventory.fillLevel)}>
-                    {row.inventory.quantity}x {row.inventory.fillLevel}
-                  </Badge>
-                  {row.inventory.storageLocation && (
-                    <Badge variant="secondary">📍 {row.inventory.storageLocation}</Badge>
-                  )}
-                </div>
-              </div>
+            <div
+              className="relative flex h-20 items-end p-2"
+              style={{ backgroundColor: row.paint?.colorHex ?? "#334155" }}
+            >
+              <Badge variant="secondary" tone={getLowStockTone(row.inventory.fillLevel)}>
+                {row.inventory.quantity}x {row.inventory.fillLevel}
+              </Badge>
             </div>
-            {row.inventory.notes && (
-              <div className="mt-2 text-xs text-slate-500">
-                Notes: {row.inventory.notes}
+            <div className="p-3">
+              <h3 className="mb-1 truncate text-sm font-semibold text-slate-100">{row.paint?.name || "Unknown paint"}</h3>
+              <div className="truncate text-xs text-slate-400">
+                {row.paint?.productCode} · {row.paint?.type}
+                {row.paint?.finish ? ` · ${row.paint.finish}` : ""}
               </div>
-            )}
-          </Card>
+              {row.inventory.storageLocation && (
+                <div className="mt-1.5 truncate text-xs text-slate-500">📍 {row.inventory.storageLocation}</div>
+              )}
+            </div>
+          </div>
         ))}
       </div>
     </div>

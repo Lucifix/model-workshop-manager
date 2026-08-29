@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModels } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input, Button } from "../components/ui";
-import { BoxIcon } from "../components/icons";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input, Button, ModelThumbnail } from "../components/ui";
 import { AddModelForm } from "../components/AddModelForm";
 
 export default function Models() {
@@ -43,9 +42,7 @@ export default function Models() {
             className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
             onClick={() => navigate(`/models/${row.model.id}`)}
           >
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent">
-              <BoxIcon className="h-5 w-5" />
-            </span>
+            <ModelThumbnail imageUrl={row.model.imageUrl} size="sm" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="truncate font-medium text-slate-100">{row.model.name}</span>

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, ProgressBar, Button } from "../components/ui";
+import { LoadingState, ErrorState, EmptyState, Badge, PageHeader, ProgressBar, Button, MediaCard } from "../components/ui";
 
 const statusTone = {
   "In Progress": "ok",
@@ -26,27 +26,29 @@ export default function Projects() {
       {isError && <ErrorState message="Could not load projects." />}
       {data && data.length === 0 && <EmptyState message="No builds yet — start your first project." />}
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.map((row) => (
-          <Card
+          <MediaCard
             key={row.project.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800/60"
+            image={row.model?.imageUrl}
+            imageAlt={row.model?.name}
+            className="cursor-pointer animate-fade-up"
             onClick={() => navigate(`/projects/${row.project.id}`)}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-slate-100">{row.project.name}</div>
-                <div className="text-xs text-slate-400">
-                  {row.model?.name} ({row.model?.kitNumber})
-                </div>
-              </div>
+            overlay={
               <Badge tone={statusTone[row.project.status as keyof typeof statusTone] ?? "neutral"}>
                 {row.project.status}
               </Badge>
+            }
+          >
+            <h3 className="mb-1 truncate font-semibold text-slate-100">{row.project.name}</h3>
+            <div className="mb-3 truncate text-xs text-slate-400">
+              {row.model?.name} ({row.model?.kitNumber})
             </div>
-            <ProgressBar percent={row.project.progressPercent} className="mt-3" />
-            <div className="mt-1 text-right text-xs text-slate-500">{row.project.progressPercent}%</div>
-          </Card>
+            <div className="flex items-center gap-2">
+              <ProgressBar percent={row.project.progressPercent} className="flex-1" />
+              <span className="text-xs font-medium text-slate-400">{row.project.progressPercent}%</span>
+            </div>
+          </MediaCard>
         ))}
       </div>
     </div>

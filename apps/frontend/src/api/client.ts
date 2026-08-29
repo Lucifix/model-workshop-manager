@@ -14,7 +14,7 @@ export interface DashboardData {
   totalPaints: number;
   lowStockCount: number;
   recentActivity: { projectName?: string; title: string; createdAt: string }[];
-  recentlyAddedModels: { id: number; name: string; kitNumber: string }[];
+  recentlyAddedModels: { id: number; name: string; kitNumber: string; imageUrl?: string }[];
   recentlyCompletedBuilds: { id: number; name: string; completedAt?: string }[];
 }
 
@@ -109,7 +109,7 @@ export interface ProjectListRow {
     progressPercent: number;
     startedAt?: string;
   };
-  model: { id: number; name: string; kitNumber: string } | null;
+  model: { id: number; name: string; kitNumber: string; imageUrl?: string } | null;
 }
 
 export function useProjects() {
@@ -337,7 +337,7 @@ export interface ProjectDetail {
   startedAt?: string;
   completedAt?: string;
   notes?: string;
-  model: { id: number; name: string; kitNumber: string } | null;
+  model: { id: number; name: string; kitNumber: string; imageUrl?: string } | null;
   log: { id: number; projectId: number; title: string; description?: string; createdAt: string }[];
   photos: { id: number; projectId: number; filename: string; originalFilename?: string; caption?: string; takenAt?: string; createdAt: string }[];
   usedPaints: { projectPaint: { projectId: number; paintId: number; purpose: string; notes?: string }; paint: any }[];
