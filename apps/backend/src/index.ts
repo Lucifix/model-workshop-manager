@@ -3,6 +3,8 @@ import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import { resolve } from "node:path";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { db } from "./db/client.js";
 
 import { manufacturerRoutes } from "./routes/manufacturers.js";
 import { paintRoutes } from "./routes/paints.js";
@@ -18,6 +20,11 @@ const PORT = Number(process.env.PORT ?? 3001);
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
 const app = Fastify({ logger: true });
+
+// Idempotent — safe to run on every boot. Ensures a fresh deployment (empty
+// volume, no tables yet) works without a separate manual migration step.
+migrate(db, { migrationsFolder: "./src/db/migrations" });
+app.log.info("Database migrations applied.");
 
 await app.register(cors, { origin: true });
 await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024 } });
