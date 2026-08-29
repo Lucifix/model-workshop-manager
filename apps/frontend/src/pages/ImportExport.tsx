@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useImportManufacturers, useImportPaints, useImportModels, useExportData, ImportResult } from "../api/client";
-import { Card, LoadingState, Badge } from "../components/ui";
+import { Card, Button, Select, PageHeader } from "../components/ui";
 
 type ImportType = "manufacturers" | "paints" | "models";
 
@@ -78,15 +78,15 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-slate-100">Catalog Management</h1>
+      <PageHeader title="Import & Export" description="Bring catalog data in, or take it out as a backup." />
 
-      <div className="border-b border-slate-800">
+      <div className="border-b border-workshop-border">
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`border-b-2 px-4 py-3 font-medium transition-colors ${
+              className={`border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? "border-workshop-accent text-workshop-accent"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -105,18 +105,17 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
             <form onSubmit={handleImport} className="flex flex-col gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Data type</label>
-                <select
+                <Select
                   value={importType}
                   onChange={(e) => {
                     setImportType(e.target.value as ImportType);
                     setImportResult(null);
                   }}
-                  className="w-full rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 >
                   <option value="manufacturers">Manufacturers</option>
                   <option value="paints">Paints</option>
                   <option value="models">Models</option>
-                </select>
+                </Select>
               </div>
 
               <div>
@@ -128,7 +127,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                     setSelectedFile(e.target.files?.[0] ?? null);
                     setImportResult(null);
                   }}
-                  className="w-full rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                  className="w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-none file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
                 />
                 {selectedFile && (
                   <p className="mt-2 text-xs text-slate-400">
@@ -137,28 +136,24 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={!selectedFile || isImporting}
-                className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-slate-900 hover:bg-workshop-accent/90 disabled:opacity-50"
-              >
+              <Button type="submit" disabled={!selectedFile || isImporting} className="self-start">
                 {isImporting ? "Importing..." : "Import"}
-              </button>
+              </Button>
             </form>
 
             {importResult && (
-              <div className="mt-6 space-y-3 border-t border-slate-700 pt-6">
+              <div className="mt-6 space-y-3 border-t border-workshop-border pt-6">
                 <h3 className="font-semibold text-slate-100">Import Results</h3>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded bg-emerald-500/15 p-3">
+                  <div className="rounded-lg bg-emerald-500/15 p-3">
                     <div className="text-2xl font-bold text-emerald-400">{importResult.imported}</div>
                     <div className="text-xs text-emerald-300">Imported</div>
                   </div>
-                  <div className="rounded bg-amber-500/15 p-3">
+                  <div className="rounded-lg bg-amber-500/15 p-3">
                     <div className="text-2xl font-bold text-amber-400">{importResult.skipped}</div>
                     <div className="text-xs text-amber-300">Skipped</div>
                   </div>
-                  <div className="rounded bg-red-500/15 p-3">
+                  <div className="rounded-lg bg-red-500/15 p-3">
                     <div className="text-2xl font-bold text-red-400">{importResult.errors.length}</div>
                     <div className="text-xs text-red-300">Errors</div>
                   </div>
@@ -185,10 +180,12 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
 
           <Card>
             <h3 className="mb-3 font-semibold text-slate-100">Sample {importType.slice(0, -1)} CSV</h3>
-            <pre className="overflow-x-auto rounded bg-slate-900 p-3 text-xs text-slate-300">
+            <pre className="overflow-x-auto rounded-lg bg-workshop-panelmuted p-3 text-xs text-slate-300">
               {getSampleCSV()}
             </pre>
-            <button
+            <Button
+              variant="secondary"
+              className="mt-3"
               onClick={() => {
                 const csv = getSampleCSV();
                 const blob = new Blob([csv], { type: "text/csv" });
@@ -199,10 +196,9 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="mt-3 rounded border border-slate-700 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
             >
               Download template
-            </button>
+            </Button>
           </Card>
         </div>
       )}
@@ -219,7 +215,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <button
                 onClick={() => handleExport("manufacturers")}
                 disabled={exportData.isPending}
-                className="flex w-full items-center justify-between rounded border border-slate-700 p-3 hover:bg-slate-800"
+                className="flex w-full items-center justify-between rounded-lg border border-workshop-border p-3 transition-colors hover:bg-slate-800/60"
               >
                 <div className="text-left">
                   <div className="font-medium text-slate-100">Manufacturers</div>
@@ -231,7 +227,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <button
                 onClick={() => handleExport("paints")}
                 disabled={exportData.isPending}
-                className="flex w-full items-center justify-between rounded border border-slate-700 p-3 hover:bg-slate-800"
+                className="flex w-full items-center justify-between rounded-lg border border-workshop-border p-3 transition-colors hover:bg-slate-800/60"
               >
                 <div className="text-left">
                   <div className="font-medium text-slate-100">Paints</div>
@@ -243,7 +239,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <button
                 onClick={() => handleExport("models")}
                 disabled={exportData.isPending}
-                className="flex w-full items-center justify-between rounded border border-slate-700 p-3 hover:bg-slate-800"
+                className="flex w-full items-center justify-between rounded-lg border border-workshop-border p-3 transition-colors hover:bg-slate-800/60"
               >
                 <div className="text-left">
                   <div className="font-medium text-slate-100">Models</div>
@@ -255,7 +251,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <button
                 onClick={() => handleExport("all")}
                 disabled={exportData.isPending}
-                className="flex w-full items-center justify-between rounded border border-workshop-accent bg-workshop-accent/10 p-3 hover:bg-workshop-accent/20"
+                className="flex w-full items-center justify-between rounded-lg border border-workshop-accent bg-workshop-accent/10 p-3 transition-colors hover:bg-workshop-accent/20"
               >
                 <div className="text-left">
                   <div className="font-medium text-workshop-accent">Complete Export</div>

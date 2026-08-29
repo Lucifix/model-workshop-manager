@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useProjectDetail, useUpdateProject, useAddBuildLogEntry, useUploadProjectPhoto } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar } from "../components/ui";
 
 type TabType = "overview" | "paints" | "log" | "photos" | "notes";
 
@@ -11,7 +11,6 @@ export default function ProjectDetail() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [editProgress, setEditProgress] = useState(false);
   const [newProgress, setNewProgress] = useState(0);
-  const [newStatus, setNewStatus] = useState("");
   const [logFormOpen, setLogFormOpen] = useState(false);
   const [logTitle, setLogTitle] = useState("");
   const [logDesc, setLogDesc] = useState("");
@@ -37,7 +36,6 @@ export default function ProjectDetail() {
 
   const handleUpdateStatus = (status: string) => {
     updateProject({ id: project.id, data: { status } });
-    setNewStatus("");
   };
 
   const handleAddLogEntry = (e: React.FormEvent) => {
@@ -51,13 +49,10 @@ export default function ProjectDetail() {
     });
   };
 
-  const handleUploadPhoto = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUploadPhoto = () => {
     if (!photoFile) return;
     uploadPhoto({ projectId: project.id, file: photoFile }, {
-      onSuccess: () => {
-        setPhotoFile(null);
-      },
+      onSuccess: () => setPhotoFile(null),
     });
   };
 
@@ -71,12 +66,9 @@ export default function ProjectDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <button
-        onClick={() => navigate("/projects")}
-        className="mb-2 text-sm text-slate-400 hover:text-slate-100"
-      >
-        ← Back to projects
-      </button>
+      <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="self-start -ml-2.5">
+        ← Back to builds
+      </Button>
 
       <Card className="mb-2">
         <div className="flex items-start justify-between gap-4">
@@ -88,19 +80,17 @@ export default function ProjectDetail() {
               </p>
             )}
           </div>
-          <div className="flex gap-2">
-            <select
-              value={project.status}
-              onChange={(e) => handleUpdateStatus(e.target.value)}
-              className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-            >
-              <option value="Planned">Planned</option>
-              <option value="In Progress">In Progress</option>
-              <option value="On Hold">On Hold</option>
-              <option value="Completed">Completed</option>
-              <option value="Abandoned">Abandoned</option>
-            </select>
-          </div>
+          <Select
+            value={project.status}
+            onChange={(e) => handleUpdateStatus(e.target.value)}
+            className="w-auto flex-shrink-0"
+          >
+            <option value="Planned">Planned</option>
+            <option value="In Progress">In Progress</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+            <option value="Abandoned">Abandoned</option>
+          </Select>
         </div>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row">
@@ -109,12 +99,7 @@ export default function ProjectDetail() {
               <span className="text-sm font-semibold text-slate-300">Progress</span>
               <span className="text-sm font-bold text-workshop-accent">{project.progressPercent}%</span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full bg-workshop-accent transition-all"
-                style={{ width: `${project.progressPercent}%` }}
-              />
-            </div>
+            <ProgressBar percent={project.progressPercent} className="h-3" />
             {!editProgress ? (
               <button
                 onClick={() => {
@@ -126,28 +111,21 @@ export default function ProjectDetail() {
                 Edit progress
               </button>
             ) : (
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex items-center gap-2">
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={newProgress}
                   onChange={(e) => setNewProgress(parseInt(e.target.value))}
-                  className="flex-1"
+                  className="flex-1 accent-workshop-accent"
                 />
-                <button
-                  onClick={handleUpdateProgress}
-                  disabled={isUpdating}
-                  className="rounded bg-workshop-accent px-2 py-1 text-xs font-medium text-slate-900 hover:bg-workshop-accent/90 disabled:opacity-50"
-                >
+                <Button size="sm" onClick={handleUpdateProgress} disabled={isUpdating}>
                   Save
-                </button>
-                <button
-                  onClick={() => setEditProgress(false)}
-                  className="rounded border border-slate-700 px-2 py-1 text-xs font-medium text-slate-300"
-                >
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setEditProgress(false)}>
                   Cancel
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -171,16 +149,15 @@ export default function ProjectDetail() {
         </div>
       </Card>
 
-      {/* Tabs */}
-      <div className="border-b border-slate-800">
+      <div className="border-b border-workshop-border">
         <div className="flex gap-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 px-4 py-3 font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "border-workshop-accent text-worksheet-accent"
+                  ? "border-workshop-accent text-workshop-accent"
                   : "border-transparent text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -190,7 +167,6 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Tab content */}
       <div>
         {activeTab === "overview" && (
           <div className="flex flex-col gap-4">
@@ -244,7 +220,7 @@ export default function ProjectDetail() {
               {project.usedPaints && project.usedPaints.length > 0 ? (
                 <ul className="space-y-2">
                   {project.usedPaints.map((row) => (
-                    <li key={row.projectPaint.paintId} className="flex items-center gap-3 rounded border border-slate-700 p-2 text-sm">
+                    <li key={row.projectPaint.paintId} className="flex items-center gap-3 rounded-lg border border-workshop-border p-2 text-sm">
                       <span
                         className="h-5 w-5 rounded-full border border-slate-600 flex-shrink-0"
                         style={{ backgroundColor: row.paint?.colorHex ?? "#334155" }}
@@ -269,45 +245,32 @@ export default function ProjectDetail() {
         {activeTab === "log" && (
           <div className="flex flex-col gap-4">
             {!logFormOpen ? (
-              <button
-                onClick={() => setLogFormOpen(true)}
-                className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-slate-900 hover:bg-workshop-accent/90"
-              >
+              <Button onClick={() => setLogFormOpen(true)} className="self-start">
                 + Add progress
-              </button>
+              </Button>
             ) : (
               <Card>
                 <form onSubmit={handleAddLogEntry} className="flex flex-col gap-3">
-                  <input
+                  <Input
                     type="text"
                     value={logTitle}
                     onChange={(e) => setLogTitle(e.target.value)}
                     placeholder="What did you work on?"
                     required
-                    className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                   />
-                  <textarea
+                  <Textarea
                     value={logDesc}
                     onChange={(e) => setLogDesc(e.target.value)}
                     placeholder="Add details (optional)"
                     rows={3}
-                    className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                   />
                   <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isAddingLog}
-                      className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-slate-900 hover:bg-workshop-accent/90 disabled:opacity-50"
-                    >
+                    <Button type="submit" disabled={isAddingLog} className="flex-1">
                       {isAddingLog ? "Adding..." : "Add entry"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLogFormOpen(false)}
-                      className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
-                    >
+                    </Button>
+                    <Button type="button" variant="secondary" className="flex-1" onClick={() => setLogFormOpen(false)}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </Card>
@@ -340,8 +303,8 @@ export default function ProjectDetail() {
         {activeTab === "photos" && (
           <div className="flex flex-col gap-4">
             {!photoFile ? (
-              <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-slate-700 p-8">
-                <label className="flex flex-col items-center gap-2 cursor-pointer">
+              <div className="flex items-center justify-center rounded-xl border-2 border-dashed border-workshop-border p-8">
+                <label className="flex cursor-pointer flex-col items-center gap-2">
                   <span className="text-sm font-medium text-slate-300">Upload a photo</span>
                   <input
                     type="file"
@@ -358,24 +321,13 @@ export default function ProjectDetail() {
                     <p className="text-sm font-medium text-slate-100">{photoFile.name}</p>
                     <p className="text-xs text-slate-500">{(photoFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
-                  <div className="flex gap-2 ml-auto">
-                    <button
-                      onClick={() => {
-                        const formData = new FormData();
-                        formData.append("file", photoFile);
-                        uploadPhoto({ projectId: project.id, file: photoFile });
-                      }}
-                      disabled={isUploadingPhoto}
-                      className="rounded bg-workshop-accent px-3 py-1 text-xs font-medium text-slate-900 hover:bg-workshop-accent/90 disabled:opacity-50"
-                    >
+                  <div className="ml-auto flex gap-2">
+                    <Button size="sm" onClick={handleUploadPhoto} disabled={isUploadingPhoto}>
                       {isUploadingPhoto ? "Uploading..." : "Upload"}
-                    </button>
-                    <button
-                      onClick={() => setPhotoFile(null)}
-                      className="rounded border border-slate-700 px-3 py-1 text-xs font-medium text-slate-300"
-                    >
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setPhotoFile(null)}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -384,14 +336,14 @@ export default function ProjectDetail() {
             {project.photos && project.photos.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {project.photos.map((photo) => (
-                  <div key={photo.id} className="rounded-lg border border-slate-700 overflow-hidden">
+                  <div key={photo.id} className="overflow-hidden rounded-xl border border-workshop-border">
                     <img
                       src={`/uploads/${photo.filename}`}
                       alt={photo.originalFilename || "Project photo"}
-                      className="w-full h-32 object-cover"
+                      className="h-32 w-full object-cover"
                     />
                     {photo.caption && (
-                      <div className="bg-slate-800 p-2 text-xs text-slate-300">{photo.caption}</div>
+                      <div className="bg-workshop-panelmuted p-2 text-xs text-slate-300">{photo.caption}</div>
                     )}
                   </div>
                 ))}

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModels } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input } from "../components/ui";
+import { BoxIcon } from "../components/icons";
 
 export default function Models() {
   const navigate = useNavigate();
@@ -9,12 +10,13 @@ export default function Models() {
   const { data, isLoading, isError } = useModels(search);
 
   return (
-    <div className="flex flex-col gap-3">
-      <input
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Model Catalog" description="Every kit in the shared catalog." />
+
+      <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search models (name or kit number)…"
-        className="rounded-lg border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
       />
 
       {isLoading && <LoadingState />}
@@ -25,12 +27,15 @@ export default function Models() {
         {data?.map((row) => (
           <Card
             key={row.model.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800 flex items-center gap-3"
+            className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
             onClick={() => navigate(`/models/${row.model.id}`)}
           >
-            <div className="flex-1">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent">
+              <BoxIcon className="h-5 w-5" />
+            </span>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-slate-100">{row.model.name}</span>
+                <span className="truncate font-medium text-slate-100">{row.model.name}</span>
                 {row.model.scale && <Badge>{row.model.scale}</Badge>}
               </div>
               <div className="text-xs text-slate-400">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePaints } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input } from "../components/ui";
 
 export default function Paints() {
   const navigate = useNavigate();
@@ -9,12 +9,13 @@ export default function Paints() {
   const { data, isLoading, isError } = usePaints(search);
 
   return (
-    <div className="flex flex-col gap-3">
-      <input
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Paint Catalog" description="Every paint in the shared catalog." />
+
+      <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search paints (name or product code)…"
-        className="rounded-lg border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
       />
 
       {isLoading && <LoadingState />}
@@ -25,17 +26,17 @@ export default function Paints() {
         {data?.map((row) => (
           <Card
             key={row.paint.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800 flex items-center gap-3"
+            className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
             onClick={() => navigate(`/paints/${row.paint.id}`)}
           >
             <span
-              className="h-8 w-8 shrink-0 rounded-full border border-slate-700"
+              className="h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
               style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
               aria-hidden
             />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-slate-100">{row.paint.name}</span>
+                <span className="truncate font-medium text-slate-100">{row.paint.name}</span>
                 <Badge>{row.paint.type}</Badge>
               </div>
               <div className="text-xs text-slate-400">

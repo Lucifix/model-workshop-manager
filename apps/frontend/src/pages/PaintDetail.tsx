@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { usePaintDetail, useAddPaintToInventory } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea } from "../components/ui";
 import { useState } from "react";
 
 export default function PaintDetail() {
@@ -48,17 +48,14 @@ export default function PaintDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <button
-        onClick={() => navigate("/paints")}
-        className="mb-2 text-sm text-slate-400 hover:text-slate-100"
-      >
+      <Button variant="ghost" size="sm" onClick={() => navigate("/paints")} className="self-start -ml-2.5">
         ← Back to paints
-      </button>
+      </Button>
 
       <Card className="flex flex-col gap-6 lg:flex-row">
-        <div className="flex h-32 w-32 flex-shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-800 lg:h-40 lg:w-40">
+        <div className="flex h-32 w-32 flex-shrink-0 items-center justify-center rounded-xl border border-workshop-border bg-workshop-panelmuted lg:h-40 lg:w-40">
           <div
-            className="h-24 w-24 rounded-lg border border-slate-600 shadow-lg"
+            className="h-24 w-24 rounded-xl border border-slate-600 shadow-lg"
             style={{ backgroundColor: paint.colorHex ?? "#334155" }}
           />
         </div>
@@ -100,68 +97,51 @@ export default function PaintDetail() {
             {!isInInventory ? (
               <>
                 {!showAddForm ? (
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90"
-                  >
-                    Add to my paints
-                  </button>
+                  <Button onClick={() => setShowAddForm(true)}>Add to my paints</Button>
                 ) : (
-                  <form onSubmit={handleAddToInventory} className="flex flex-col gap-3">
-                    <input
+                  <form onSubmit={handleAddToInventory} className="flex w-full flex-col gap-3">
+                    <Input
                       type="number"
                       min="1"
                       value={formData.quantity}
                       onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                       placeholder="Quantity"
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                     />
-                    <select
+                    <Select
                       value={formData.fillLevel}
                       onChange={(e) => setFormData({ ...formData, fillLevel: e.target.value })}
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                     >
                       <option value="Full">Full</option>
                       <option value="Mostly Full">Mostly Full</option>
                       <option value="Half">Half</option>
                       <option value="Low">Low</option>
                       <option value="Empty">Empty</option>
-                    </select>
-                    <input
+                    </Select>
+                    <Input
                       type="text"
                       value={formData.storageLocation}
                       onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
                       placeholder="Storage location"
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                     />
-                    <textarea
+                    <Textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Notes"
                       rows={2}
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                     />
                     <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={isPending}
-                        className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
-                      >
+                      <Button type="submit" disabled={isPending} className="flex-1">
                         {isPending ? "Adding..." : "Add"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
-                      >
+                      </Button>
+                      <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddForm(false)}>
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </form>
                 )}
               </>
             ) : (
-              <div className="rounded border border-green-900 bg-green-950/30 px-4 py-2 text-sm font-medium text-green-400">
+              <div className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-400">
                 ✓ In your inventory ({totalQuantity} bottles)
               </div>
             )}
@@ -176,7 +156,7 @@ export default function PaintDetail() {
             {paint.inventory.map((inv) => (
               <li
                 key={inv.id}
-                className="flex items-center justify-between rounded border border-slate-700 p-2 text-sm"
+                className="flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm"
               >
                 <div>
                   <div className="font-medium text-slate-100">

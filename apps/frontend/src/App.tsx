@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { NavBar } from "./components/NavBar";
+import { Sidebar } from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Models from "./pages/Models";
 import ModelDetail from "./pages/ModelDetail";
@@ -14,9 +14,9 @@ import ImportExport from "./pages/ImportExport";
 
 export default function App() {
   return (
-    <div className="min-h-screen">
-      <NavBar />
-      <main className="mx-auto max-w-5xl px-4 py-4">
+    <div className="min-h-screen lg:flex">
+      <Sidebar />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 lg:px-8">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/models" element={<Models />} />

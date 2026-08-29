@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useShoppingList, useMarkPurchased, useAddShoppingListItem } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
+import {
+  Card,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  Badge,
+  PageHeader,
+  Button,
+  Input,
+  Select,
+  FieldLabel,
+} from "../components/ui";
 
 const priorityTone = { high: "warn", normal: "neutral", low: "neutral" } as const;
 
@@ -17,7 +28,7 @@ export default function ShoppingList() {
 
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
-    addItem(
+    addItem.mutate(
       {
         description: formData.description,
         quantity: formData.quantity || 1,
@@ -40,66 +51,58 @@ export default function ShoppingList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-100">Shopping List</h1>
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-slate-900 hover:bg-workshop-accent/90"
-          >
-            + Add item
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Shopping List"
+        description="Paints and supplies you still need."
+        actions={!showForm && <Button onClick={() => setShowForm(true)}>+ Add item</Button>}
+      />
 
       {showForm && (
         <Card>
           <form onSubmit={handleAddItem} className="flex flex-col gap-3">
-            <input
-              type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="What do you need?"
-              required
-              className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-            />
-            <div className="flex gap-2 sm:flex-row gap-2">
-              <input
+            <div>
+              <FieldLabel>What do you need?</FieldLabel>
+              <Input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="e.g. Tamiya XF-1 Flat Black"
+                required
+              />
+            </div>
+            <div className="flex gap-2">
+              <Input
                 type="number"
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                 placeholder="Quantity"
-                className="flex-1 rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                className="flex-1"
               />
-              <select
+              <Select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
               >
                 <option value="low">Low</option>
                 <option value="normal">Normal</option>
                 <option value="high">High</option>
-              </select>
+              </Select>
             </div>
             <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={addItem.isPending}
-                className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-slate-900 hover:bg-workshop-accent/90 disabled:opacity-50"
-              >
+              <Button type="submit" disabled={addItem.isPending} className="flex-1">
                 {addItem.isPending ? "Adding..." : "Add"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                className="flex-1"
                 onClick={() => {
                   setShowForm(false);
                   setFormData({ description: "", quantity: 1, priority: "normal" });
                 }}
-                className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         </Card>
@@ -124,12 +127,9 @@ export default function ShoppingList() {
                   <Badge tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}>
                     {row.item.priority}
                   </Badge>
-                  <button
-                    onClick={() => markPurchased.mutate(row.item.id)}
-                    className="rounded-lg bg-workshop-accent px-2 sm:px-3 py-1.5 text-xs font-medium text-slate-900 hover:bg-workshop-accent/90"
-                  >
+                  <Button size="sm" onClick={() => markPurchased.mutate(row.item.id)}>
                     ✓ Done
-                  </button>
+                  </Button>
                 </div>
               </Card>
             ))}

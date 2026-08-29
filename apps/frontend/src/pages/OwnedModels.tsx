@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Button } from "../components/ui";
 
 interface OwnedModelRow {
   owned: {
@@ -34,15 +34,11 @@ export default function OwnedModels() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-100">My Model Collection</h1>
-        <button
-          onClick={() => navigate("/models")}
-          className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90"
-        >
-          Add models
-        </button>
-      </div>
+      <PageHeader
+        title="My Collection"
+        description="Model kits you own."
+        actions={<Button onClick={() => navigate("/models")}>Add models</Button>}
+      />
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Could not load your model collection." />}
@@ -52,7 +48,7 @@ export default function OwnedModels() {
         {data?.map((row) => (
           <Card
             key={row.owned.id}
-            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800"
+            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800/60"
             onClick={() => navigate(`/models/${row.owned.modelId}`)}
           >
             <div className="flex items-start justify-between gap-4">

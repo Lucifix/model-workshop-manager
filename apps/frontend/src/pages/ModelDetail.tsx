@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useModelDetail, useAddModelToInventory, useCreateProject } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge } from "../components/ui";
+import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar } from "../components/ui";
 import { useState } from "react";
 
 export default function ModelDetail() {
@@ -73,19 +73,16 @@ export default function ModelDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <button
-        onClick={() => navigate("/models")}
-        className="mb-2 text-sm text-slate-400 hover:text-slate-100"
-      >
+      <Button variant="ghost" size="sm" onClick={() => navigate("/models")} className="self-start -ml-2.5">
         ← Back to models
-      </button>
+      </Button>
 
       <Card className="flex flex-col gap-4 lg:flex-row lg:gap-6">
         {model.imageUrl && (
           <img
             src={model.imageUrl}
             alt={model.name}
-            className="h-48 w-full rounded object-cover lg:h-64 lg:w-64 lg:flex-shrink-0"
+            className="h-48 w-full rounded-xl object-cover lg:h-64 lg:w-64 lg:flex-shrink-0"
           />
         )}
         <div className="flex-1">
@@ -125,119 +122,93 @@ export default function ModelDetail() {
             {!showAddForm && !showCreateBuildForm && (
               <>
                 {!isInInventory ? (
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90"
-                  >
-                    Add to my models
-                  </button>
+                  <Button onClick={() => setShowAddForm(true)}>Add to my models</Button>
                 ) : (
-                  <div className="text-sm text-emerald-400">✓ In your inventory</div>
+                  <div className="flex items-center text-sm font-medium text-emerald-400">✓ In your inventory</div>
                 )}
-                <button
-                  onClick={() => setShowCreateBuildForm(true)}
-                  className="rounded border border-workshop-accent px-4 py-2 text-sm font-medium text-workshop-accent hover:bg-workshop-accent/10"
-                >
+                <Button variant="outlineAccent" onClick={() => setShowCreateBuildForm(true)}>
                   Create build
-                </button>
+                </Button>
               </>
             )}
 
             {showAddForm && (
               <form onSubmit={handleAddToInventory} className="w-full flex flex-col gap-3">
-                <input
+                <Input
                   type="number"
                   min="1"
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                   placeholder="Quantity"
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 />
-                <select
+                <Select
                   value={formData.condition}
                   onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 >
                   <option value="">Condition (optional)</option>
                   <option value="unbuilt">Unbuilt</option>
                   <option value="built">Built</option>
                   <option value="damaged">Damaged</option>
-                </select>
-                <input
+                </Select>
+                <Input
                   type="text"
                   value={formData.storageLocation}
                   onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
                   placeholder="Storage location"
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 />
-                <textarea
+                <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Notes"
                   rows={2}
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 />
                 <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={isPending}
-                    className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
-                  >
+                  <Button type="submit" disabled={isPending} className="flex-1">
                     {isPending ? "Adding..." : "Add"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
-                  >
+                  </Button>
+                  <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddForm(false)}>
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
 
             {showCreateBuildForm && (
               <form onSubmit={handleCreateBuild} className="w-full flex flex-col gap-3">
-                <input
+                <Input
                   type="text"
                   value={buildFormData.name}
                   onChange={(e) => setBuildFormData({ ...buildFormData, name: e.target.value })}
                   placeholder={`${model.name} Build`}
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 />
-                <select
+                <Select
                   value={buildFormData.status}
                   onChange={(e) => setBuildFormData({ ...buildFormData, status: e.target.value })}
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 >
                   <option value="Planned">Planned</option>
                   <option value="In Progress">In Progress</option>
                   <option value="On Hold">On Hold</option>
                   <option value="Completed">Completed</option>
                   <option value="Abandoned">Abandoned</option>
-                </select>
-                <textarea
+                </Select>
+                <Textarea
                   value={buildFormData.notes}
                   onChange={(e) => setBuildFormData({ ...buildFormData, notes: e.target.value })}
                   placeholder="Notes (optional)"
                   rows={2}
-                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
                 />
                 <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={isCreatingProject}
-                    className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
-                  >
+                  <Button type="submit" disabled={isCreatingProject} className="flex-1">
                     {isCreatingProject ? "Creating..." : "Create Build"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="secondary"
+                    className="flex-1"
                     onClick={() => setShowCreateBuildForm(false)}
-                    className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
@@ -256,9 +227,9 @@ export default function ModelDetail() {
               {model.requiredPaints.map((paint) => (
                 <li
                   key={paint.id}
-                  className="flex items-center gap-3 rounded border border-slate-700 p-2 text-sm"
+                  className="flex items-center gap-3 rounded-lg border border-workshop-border p-2 text-sm"
                 >
-                  {paint.owned && <span className="text-green-400">✓</span>}
+                  {paint.owned && <span className="text-emerald-400">✓</span>}
                   {!paint.owned && <span className="text-slate-600">○</span>}
                   <span
                     className="h-5 w-5 rounded-full border border-slate-600 flex-shrink-0"
@@ -286,19 +257,14 @@ export default function ModelDetail() {
           <h2 className="mb-4 text-sm font-semibold text-slate-300">Build History</h2>
           <ul className="space-y-2">
             {model.projects.map((project) => (
-              <li key={project.id} className="flex items-center justify-between rounded border border-slate-700 p-2 text-sm">
+              <li key={project.id} className="flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm">
                 <div>
                   <div className="font-medium text-slate-100">{project.name}</div>
                   <div className="text-xs text-slate-500">{project.status}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs font-medium text-slate-300">{project.progressPercent}%</div>
-                  <div className="h-1 w-16 rounded-full bg-slate-700 mt-1">
-                    <div
-                      className="h-full rounded-full bg-workshop-accent"
-                      style={{ width: `${project.progressPercent}%` }}
-                    />
-                  </div>
+                  <ProgressBar percent={project.progressPercent} className="mt-1 w-16" />
                 </div>
               </li>
             ))}
