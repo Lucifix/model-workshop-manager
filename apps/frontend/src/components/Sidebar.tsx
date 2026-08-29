@@ -14,6 +14,7 @@ import {
 } from "./icons";
 import type { ComponentType } from "react";
 import type { IconProps } from "./icons";
+import { useAuthStatus, useLogout } from "../api/client";
 
 interface NavItem {
   to: string;
@@ -85,6 +86,24 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function UserFooter() {
+  const { data: auth } = useAuthStatus();
+  const logout = useLogout();
+
+  return (
+    <div className="flex items-center justify-between border-t border-workshop-border px-4 py-3">
+      <span className="truncate text-xs text-slate-500">{auth?.username}</span>
+      <button
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+        className="text-xs font-medium text-slate-400 hover:text-workshop-accent disabled:opacity-50"
+      >
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 function Brand() {
   return (
     <div className="flex items-center gap-2 px-4 py-4">
@@ -120,6 +139,7 @@ export function Sidebar() {
       <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col border-r border-workshop-border bg-workshop-sidebar lg:flex">
         <Brand />
         <NavLinks />
+        <UserFooter />
       </aside>
 
       {open && (
@@ -137,6 +157,7 @@ export function Sidebar() {
               </button>
             </div>
             <NavLinks onNavigate={() => setOpen(false)} />
+            <UserFooter />
           </aside>
         </div>
       )}

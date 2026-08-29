@@ -2,10 +2,15 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
+import secureSession from "@fastify/secure-session";
+import rateLimit from "@fastify/rate-limit";
+import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { db } from "./db/client.js";
+import { isPublicPath } from "./lib/auth.js";
 
+import { authRoutes } from "./routes/auth.js";
 import { manufacturerRoutes } from "./routes/manufacturers.js";
 import { paintRoutes } from "./routes/paints.js";
 import { modelRoutes } from "./routes/models.js";
@@ -19,6 +24,16 @@ import { catalogRoutes } from "./routes/catalog.js";
 const PORT = Number(process.env.PORT ?? 3001);
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
+// Fail closed: refuse to boot rather than silently serve an unauthenticated
+// API. All three must be explicitly configured — see .env.example.
+for (const name of ["AUTH_USERNAME", "AUTH_PASSWORD", "SESSION_SECRET"]) {
+  if (!process.env[name]) {
+    console.error(`Missing required env var ${name}. See .env.example — this app requires login to be configured.`);
+    process.exit(1);
+  }
+}
+const SESSION_SECRET = process.env.SESSION_SECRET!;
+
 const app = Fastify({ logger: true });
 
 // Idempotent — safe to run on every boot. Ensures a fresh deployment (empty
@@ -26,7 +41,31 @@ const app = Fastify({ logger: true });
 migrate(db, { migrationsFolder: "./src/db/migrations" });
 app.log.info("Database migrations applied.");
 
-await app.register(cors, { origin: true });
+await app.register(cors, { origin: true, credentials: true });
+await app.register(rateLimit, { global: false });
+await app.register(secureSession, {
+  // Any-length secret is fine — SHA-256 always derives a valid 32-byte key.
+  key: createHash("sha256").update(SESSION_SECRET).digest(),
+  cookieName: "workshop_session",
+  cookie: {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.SESSION_COOKIE_SECURE === "true",
+    maxAge: 60 * 60 * 24 * 30, // 30 days — single-user LAN app, favor convenience
+  },
+});
+
+// Global auth guard — everything is protected by default; PUBLIC_PATHS in
+// lib/auth.ts is the only allow-list. New routes are guarded automatically.
+app.addHook("onRequest", async (req, reply) => {
+  const path = req.url.split("?")[0]!;
+  if (isPublicPath(path)) return;
+  if (req.session.get("authenticated") !== true) {
+    reply.code(401).send({ error: "unauthenticated" });
+  }
+});
+
 await app.register(multipart, { limits: { fileSize: 25 * 1024 * 1024 } });
 await app.register(fastifyStatic, {
   root: resolve(UPLOAD_DIR),
@@ -35,6 +74,7 @@ await app.register(fastifyStatic, {
 
 app.get("/api/health", async () => ({ status: "ok" }));
 
+await app.register(authRoutes);
 await app.register(manufacturerRoutes);
 await app.register(paintRoutes);
 await app.register(modelRoutes);

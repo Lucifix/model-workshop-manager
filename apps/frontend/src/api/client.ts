@@ -2,8 +2,57 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`);
+  if (res.status === 401 && path !== "/auth/me") {
+    window.location.href = "/login";
+    throw new Error("Session expired");
+  }
   if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
   return res.json() as Promise<T>;
+}
+
+// --- Auth ------------------------------------------------------------------
+
+export interface AuthStatus {
+  authenticated: boolean;
+  username?: string;
+}
+
+export function useAuthStatus() {
+  return useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: () => apiFetch<AuthStatus>("/auth/me"),
+    retry: false,
+    staleTime: 60_000,
+  });
+}
+
+export function useLogin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(res.status === 401 ? "Invalid username or password." : "Login failed.");
+      return res.json() as Promise<AuthStatus>;
+    },
+    onSuccess: (data) => queryClient.setQueryData(["auth", "me"], data),
+  });
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["auth", "me"], { authenticated: false });
+      queryClient.clear();
+    },
+  });
 }
 
 export interface DashboardData {

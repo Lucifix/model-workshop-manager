@@ -123,18 +123,29 @@ the same "Add Model" / "Add Paint" search flow.
 
 ## Security considerations
 
-This is designed as a **single-user private application** — there's no authentication
-in the MVP by design (spec §19), but:
+This is a **single-user private application**, and it requires login:
 
-- **Do not expose the API or frontend directly to the public internet.** Put it behind
-  your existing reverse proxy (Nginx, Caddy, Traefik) and restrict access — e.g. a VPN
-  (Tailscale/WireGuard), an IP allowlist, or basic auth at the proxy layer.
-- The backend has no rate limiting or auth middleware of its own; it trusts whatever
-  sits in front of it.
-- File uploads are size-capped (25 MB/file) but not otherwise scanned — don't expose the
-  upload endpoint to untrusted users.
-- The backend route structure (single Fastify instance, one `db` module) makes it
-  straightforward to add a session/auth plugin later without restructuring routes.
+- The whole API is protected by default (`onRequest` hook, allow-list of exactly three
+  public paths: `/api/health`, `/api/auth/login`, `/api/auth/me`) — a new route is
+  guarded automatically, nothing to remember to add.
+- Credentials are a single username/password pair from `AUTH_USERNAME`/`AUTH_PASSWORD`
+  env vars (no user table — this app is explicitly single-user by design, spec §19).
+  Compared in constant time to avoid timing attacks.
+- Sessions are a signed, `httpOnly` cookie (`@fastify/secure-session`) — no server-side
+  session store to run or lose. `SESSION_SECRET` derives the signing key (any string
+  works, it's hashed into a proper key internally).
+- The login endpoint is rate-limited (5 attempts/minute) against brute-forcing.
+- The app **refuses to start** if `AUTH_USERNAME`, `AUTH_PASSWORD`, or `SESSION_SECRET`
+  aren't set — see `.env.example`. `docker-compose.yml` also enforces this at deploy
+  time (fails immediately with a clear error, rather than crash-looping the container).
+- `SESSION_COOKIE_SECURE=true` should be set once this is served over HTTPS — until
+  then, leave it `false` or the browser will silently refuse to send the cookie at all.
+
+Still true regardless of login: **don't expose this to the public internet.** Put it
+behind your reverse proxy and keep it LAN-only or behind a VPN (Tailscale/WireGuard) —
+login raises the bar, it isn't a substitute for not exposing a personal, unaudited app
+to the open internet. File uploads are size-capped (25 MB/file) but not otherwise
+scanned.
 
 ## Project status / phases
 
