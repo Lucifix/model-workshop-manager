@@ -8,6 +8,7 @@ const links = [
   { to: "/paint-inventory", label: "My Paints" },
   { to: "/projects", label: "Projects" },
   { to: "/shopping-list", label: "Shopping" },
+  { to: "/import-export", label: "Catalog" },
 ];
 
 export function NavBar() {

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useModelDetail, useAddModelToInventory } from "../api/client";
+import { useModelDetail, useAddModelToInventory, useCreateProject } from "../api/client";
 import { Card, LoadingState, ErrorState, Badge } from "../components/ui";
 import { useState } from "react";
 
@@ -7,15 +7,22 @@ export default function ModelDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCreateBuildForm, setShowCreateBuildForm] = useState(false);
   const [formData, setFormData] = useState({
     quantity: 1,
     condition: "",
     storageLocation: "",
     notes: "",
   });
+  const [buildFormData, setBuildFormData] = useState({
+    name: "",
+    status: "Planned",
+    notes: "",
+  });
 
   const { data: model, isLoading, isError } = useModelDetail(Number(id));
   const { mutate: addToInventory, isPending } = useAddModelToInventory();
+  const { mutate: createProject, isPending: isCreatingProject } = useCreateProject();
 
   if (!id || isNaN(Number(id))) {
     return <ErrorState message="Invalid model ID." />;
@@ -38,6 +45,25 @@ export default function ModelDetail() {
         onSuccess: () => {
           setShowAddForm(false);
           setFormData({ quantity: 1, condition: "", storageLocation: "", notes: "" });
+        },
+      }
+    );
+  };
+
+  const handleCreateBuild = (e: React.FormEvent) => {
+    e.preventDefault();
+    createProject(
+      {
+        modelId: model.id,
+        name: buildFormData.name || `${model.name} Build`,
+        status: buildFormData.status || "Planned",
+        notes: buildFormData.notes || undefined,
+      },
+      {
+        onSuccess: (result) => {
+          setShowCreateBuildForm(false);
+          setBuildFormData({ name: "", status: "Planned", notes: "" });
+          navigate(`/projects/${result.id}`);
         },
       }
     );
@@ -96,9 +122,9 @@ export default function ModelDetail() {
           </div>
 
           <div className="flex gap-3">
-            {!isInInventory ? (
+            {!showAddForm && !showCreateBuildForm && (
               <>
-                {!showAddForm ? (
+                {!isInInventory ? (
                   <button
                     onClick={() => setShowAddForm(true)}
                     className="rounded bg-workshop-accent px-4 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90"
@@ -106,60 +132,114 @@ export default function ModelDetail() {
                     Add to my models
                   </button>
                 ) : (
-                  <form onSubmit={handleAddToInventory} className="flex flex-col gap-3">
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                      placeholder="Quantity"
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-                    />
-                    <select
-                      value={formData.condition}
-                      onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-                    >
-                      <option value="">Condition (optional)</option>
-                      <option value="unbuilt">Unbuilt</option>
-                      <option value="built">Built</option>
-                      <option value="damaged">Damaged</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={formData.storageLocation}
-                      onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
-                      placeholder="Storage location"
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-                    />
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Notes"
-                      rows={2}
-                      className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={isPending}
-                        className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
-                      >
-                        {isPending ? "Adding..." : "Add"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
+                  <div className="text-sm text-emerald-400">✓ In your inventory</div>
                 )}
+                <button
+                  onClick={() => setShowCreateBuildForm(true)}
+                  className="rounded border border-workshop-accent px-4 py-2 text-sm font-medium text-workshop-accent hover:bg-workshop-accent/10"
+                >
+                  Create build
+                </button>
               </>
-            ) : (
-              <div className="text-sm font-medium text-green-400">✓ In your inventory</div>
+            )}
+
+            {showAddForm && (
+              <form onSubmit={handleAddToInventory} className="w-full flex flex-col gap-3">
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                  placeholder="Quantity"
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                />
+                <select
+                  value={formData.condition}
+                  onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                >
+                  <option value="">Condition (optional)</option>
+                  <option value="unbuilt">Unbuilt</option>
+                  <option value="built">Built</option>
+                  <option value="damaged">Damaged</option>
+                </select>
+                <input
+                  type="text"
+                  value={formData.storageLocation}
+                  onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
+                  placeholder="Storage location"
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                />
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Notes"
+                  rows={2}
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={isPending}
+                    className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
+                  >
+                    {isPending ? "Adding..." : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showCreateBuildForm && (
+              <form onSubmit={handleCreateBuild} className="w-full flex flex-col gap-3">
+                <input
+                  type="text"
+                  value={buildFormData.name}
+                  onChange={(e) => setBuildFormData({ ...buildFormData, name: e.target.value })}
+                  placeholder={`${model.name} Build`}
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                />
+                <select
+                  value={buildFormData.status}
+                  onChange={(e) => setBuildFormData({ ...buildFormData, status: e.target.value })}
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                >
+                  <option value="Planned">Planned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Abandoned">Abandoned</option>
+                </select>
+                <textarea
+                  value={buildFormData.notes}
+                  onChange={(e) => setBuildFormData({ ...buildFormData, notes: e.target.value })}
+                  placeholder="Notes (optional)"
+                  rows={2}
+                  className="rounded border border-slate-700 bg-workshop-panel px-3 py-2 text-sm outline-none focus:border-workshop-accent"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={isCreatingProject}
+                    className="flex-1 rounded bg-workshop-accent px-3 py-2 text-sm font-medium text-white hover:bg-workshop-accent/90 disabled:opacity-50"
+                  >
+                    {isCreatingProject ? "Creating..." : "Create Build"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateBuildForm(false)}
+                    className="flex-1 rounded border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             )}
           </div>
         </div>

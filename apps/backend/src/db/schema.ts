@@ -57,6 +57,8 @@ export const paints = sqliteTable("paints", {
   notes: text("notes"),
   source: text("source").notNull().default("manual"),
   sourceUrl: text("source_url"),
+  importedAt: text("imported_at"), // When this record was imported from external source
+  lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
   ...timestamps,
 });
 
@@ -76,6 +78,8 @@ export const models = sqliteTable("models", {
   sourceUrl: text("source_url"),
   imageUrl: text("image_url"),
   instructionUrl: text("instruction_url"),
+  importedAt: text("imported_at"), // When this record was imported from external source
+  lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
   ...timestamps,
 });
 

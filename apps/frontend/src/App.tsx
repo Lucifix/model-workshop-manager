@@ -10,6 +10,7 @@ import PaintInventory from "./pages/PaintInventory";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ShoppingList from "./pages/ShoppingList";
+import ImportExport from "./pages/ImportExport";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
+          <Route path="/import-export" element={<ImportExport />} />
         </Routes>
       </main>
     </div>

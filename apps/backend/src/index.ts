@@ -11,6 +11,7 @@ import { inventoryRoutes } from "./routes/inventory.js";
 import { projectRoutes } from "./routes/projects.js";
 import { shoppingListRoutes } from "./routes/shoppingList.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { importRoutes } from "./routes/import.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
@@ -33,6 +34,7 @@ await app.register(inventoryRoutes);
 await app.register(projectRoutes);
 await app.register(shoppingListRoutes);
 await app.register(dashboardRoutes);
+await app.register(importRoutes);
 
 app.listen({ port: PORT, host: "0.0.0.0" }).catch((err) => {
   app.log.error(err);

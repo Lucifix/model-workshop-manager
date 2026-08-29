@@ -237,6 +237,25 @@ export function useProjectDetail(id: number) {
   });
 }
 
+export function useCreateProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { modelId: number; name: string; status?: string; notes?: string }) => {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create project");
+      return res.json() as Promise<{ id: number }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
 export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -310,6 +329,83 @@ export function useAddShoppingListItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+    },
+  });
+}
+
+// --- Import/Export -------------------------------------------------------
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  errors: Array<{ row: number; error: string }>;
+}
+
+export function useImportManufacturers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/import/manufacturers", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to import manufacturers");
+      return res.json() as Promise<ImportResult>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["manufacturers"] });
+    },
+  });
+}
+
+export function useImportPaints() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/import/paints", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to import paints");
+      return res.json() as Promise<ImportResult>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useImportModels() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/import/models", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to import models");
+      return res.json() as Promise<ImportResult>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useExportData() {
+  return useMutation({
+    mutationFn: async (dataType: "paints" | "models" | "manufacturers" | "all") => {
+      const res = await fetch(`/api/export/${dataType}`);
+      if (!res.ok) throw new Error("Failed to export data");
+      return res.json();
     },
   });
 }
