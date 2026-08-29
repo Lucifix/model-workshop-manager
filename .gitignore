@@ -3,3 +3,4 @@ dist/
 data/
 .env
 *.log
+.DS_Storeapps/frontend/tsconfig.tsbuildinfo
