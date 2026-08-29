@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   ArchiveIcon,
   BeakerIcon,
@@ -11,6 +11,7 @@ import {
   HammerIcon,
   HomeIcon,
   MenuIcon,
+  ShipIcon,
 } from "./icons";
 import type { ComponentType } from "react";
 import type { IconProps } from "./icons";
@@ -104,14 +105,18 @@ function UserFooter() {
   );
 }
 
-function Brand() {
+function Brand({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-4">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-workshop-accent text-white">
-        <HammerIcon className="h-[18px] w-[18px]" />
+    <Link
+      to="/"
+      onClick={onNavigate}
+      className="flex items-center gap-2 rounded-lg px-4 py-4 transition-opacity hover:opacity-80"
+    >
+      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-workshop-accent text-white">
+        <ShipIcon className="h-[18px] w-[18px]" />
       </span>
       <span className="text-sm font-bold tracking-tight text-slate-50">Workshop Manager</span>
-    </div>
+    </Link>
   );
 }
 
@@ -147,7 +152,7 @@ export function Sidebar() {
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 flex h-full w-72 flex-col border-r border-workshop-border bg-workshop-sidebar shadow-xl">
             <div className="flex items-center justify-between">
-              <Brand />
+              <Brand onNavigate={() => setOpen(false)} />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
