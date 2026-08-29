@@ -17,14 +17,20 @@ export function StatTile({ label, value }: { label: string; value: number | stri
   );
 }
 
-export function Badge({ children, tone = "neutral" }: PropsWithChildren<{ tone?: "neutral" | "warn" | "ok" }>) {
-  const toneClass =
-    tone === "warn"
-      ? "bg-amber-500/15 text-amber-400"
-      : tone === "ok"
-        ? "bg-emerald-500/15 text-emerald-400"
-        : "bg-slate-700/40 text-slate-300";
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${toneClass}`}>{children}</span>;
+export function Badge({ children, tone = "neutral", variant = "default" }: PropsWithChildren<{ tone?: "neutral" | "warn" | "ok"; variant?: "default" | "secondary" }>) {
+  let className = "";
+  if (variant === "secondary") {
+    className = "bg-slate-700/40 text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full";
+  } else {
+    className =
+      tone === "warn"
+        ? "bg-amber-500/15 text-amber-400"
+        : tone === "ok"
+          ? "bg-emerald-500/15 text-emerald-400"
+          : "bg-slate-700/40 text-slate-300";
+    className += " rounded-full px-2 py-0.5 text-xs font-medium";
+  }
+  return <span className={className}>{children}</span>;
 }
 
 export function EmptyState({ message }: { message: string }) {

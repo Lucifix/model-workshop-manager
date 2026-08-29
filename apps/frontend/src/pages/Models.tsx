@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useModels } from "../api/client";
 import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
 
 export default function Models() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const { data, isLoading, isError } = useModels(search);
 
@@ -21,7 +23,11 @@ export default function Models() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {data?.map((row) => (
-          <Card key={row.model.id} className="flex items-center gap-3">
+          <Card
+            key={row.model.id}
+            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800 flex items-center gap-3"
+            onClick={() => navigate(`/models/${row.model.id}`)}
+          >
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-slate-100">{row.model.name}</span>

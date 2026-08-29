@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePaints } from "../api/client";
 import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
 
 export default function Paints() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const { data, isLoading, isError } = usePaints(search);
 
@@ -21,7 +23,11 @@ export default function Paints() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {data?.map((row) => (
-          <Card key={row.paint.id} className="flex items-center gap-3">
+          <Card
+            key={row.paint.id}
+            className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800 flex items-center gap-3"
+            onClick={() => navigate(`/paints/${row.paint.id}`)}
+          >
             <span
               className="h-8 w-8 shrink-0 rounded-full border border-slate-700"
               style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
