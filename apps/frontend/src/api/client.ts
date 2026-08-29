@@ -39,6 +39,7 @@ export interface Manufacturer {
   name: string;
   slug: string;
   website?: string;
+  logoUrl?: string;
 }
 
 export function useManufacturers() {
@@ -83,10 +84,20 @@ export interface PaintListRow {
   manufacturer: { id: number; name: string } | null;
 }
 
-export function usePaints(search?: string) {
+/** requireFilter: when true, the query only runs once search or manufacturerId is set — the
+ * paints catalog is large (10k+ rows across 34 manufacturers), so the page shouldn't
+ * fetch/render everything on load. */
+export function usePaints(search?: string, manufacturerId?: number, requireFilter = false) {
   return useQuery({
-    queryKey: ["paints", search],
-    queryFn: () => apiFetch<PaintListRow[]>(`/paints${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+    queryKey: ["paints", search, manufacturerId],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (search) params.set("q", search);
+      if (manufacturerId) params.set("manufacturerId", String(manufacturerId));
+      const qs = params.toString();
+      return apiFetch<PaintListRow[]>(`/paints${qs ? `?${qs}` : ""}`);
+    },
+    enabled: !requireFilter || !!search?.trim() || !!manufacturerId,
   });
 }
 

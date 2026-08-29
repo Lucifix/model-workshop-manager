@@ -26,6 +26,7 @@ export const manufacturers = sqliteTable("manufacturers", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   website: text("website"),
+  logoUrl: text("logo_url"),
   ...timestamps,
 });
 

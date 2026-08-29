@@ -5,6 +5,7 @@ export const manufacturerCreateSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
   website: z.string().url().optional(),
+  logoUrl: z.string().url().optional(),
 });
 
 export const paintCreateSchema = z.object({
