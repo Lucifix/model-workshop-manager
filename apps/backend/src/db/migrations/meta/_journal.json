@@ -8,6 +8,20 @@
       "when": 1788018029500,
       "tag": "0000_tense_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788021394000,
+      "tag": "0001_add_provenance_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788024150000,
+      "tag": "0002_add_manufacturer_logo",
+      "breakpoints": true
     }
   ]
 }
