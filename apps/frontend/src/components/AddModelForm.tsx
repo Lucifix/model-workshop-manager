@@ -60,12 +60,20 @@ export function AddModelForm({
       const results = await catalogSearch.mutateAsync(barcodeQuery.trim());
       const hit = results[0] as CatalogSearchResult | undefined;
       if (!hit) {
-        setLookupMessage("No match found for that barcode.");
+        setLookupMessage(
+          "No match — this lookup is sourced from US retail listings, so European/import kits are often missing. Paste an image URL below, or upload your own photo after saving."
+        );
         return;
       }
       if (hit.name) setName(hit.name);
-      if (hit.imageUrl) setImageUrl(hit.imageUrl);
-      setLookupMessage(`Found: ${hit.name}. Review the fields below before saving.`);
+      if (hit.imageUrl) {
+        setImageUrl(hit.imageUrl);
+        setLookupMessage(`Found: ${hit.name}. Review the fields below before saving.`);
+      } else {
+        setLookupMessage(
+          `Found: ${hit.name} — but no image for it. Paste one below, or upload your own photo after saving.`
+        );
+      }
     } catch {
       setLookupMessage("Lookup unavailable right now.");
     }
