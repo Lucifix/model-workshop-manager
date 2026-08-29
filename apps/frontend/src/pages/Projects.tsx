@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, ProgressBar } from "../components/ui";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, ProgressBar, Button } from "../components/ui";
 
 const statusTone = {
   "In Progress": "ok",
@@ -16,7 +16,11 @@ export default function Projects() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Builds" description="Your in-progress and completed builds." />
+      <PageHeader
+        title="Builds"
+        description="Your in-progress and completed builds."
+        actions={<Button onClick={() => navigate("/projects/new")}>+ New Build</Button>}
+      />
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Could not load projects." />}

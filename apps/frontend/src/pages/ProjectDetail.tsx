@@ -72,7 +72,7 @@ export default function ProjectDetail() {
 
       <Card className="mb-2">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="mb-1 text-3xl font-bold text-slate-100">{project.name}</h1>
             {project.model && (
               <p className="text-sm text-slate-400">
@@ -80,17 +80,15 @@ export default function ProjectDetail() {
               </p>
             )}
           </div>
-          <Select
-            value={project.status}
-            onChange={(e) => handleUpdateStatus(e.target.value)}
-            className="w-auto flex-shrink-0"
-          >
-            <option value="Planned">Planned</option>
-            <option value="In Progress">In Progress</option>
-            <option value="On Hold">On Hold</option>
-            <option value="Completed">Completed</option>
-            <option value="Abandoned">Abandoned</option>
-          </Select>
+          <div className="w-44 flex-shrink-0">
+            <Select value={project.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
+              <option value="Planned">Planned</option>
+              <option value="In Progress">In Progress</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Completed">Completed</option>
+              <option value="Abandoned">Abandoned</option>
+            </Select>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row">

@@ -1,17 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModels } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input } from "../components/ui";
+import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input, Button } from "../components/ui";
 import { BoxIcon } from "../components/icons";
+import { AddModelForm } from "../components/AddModelForm";
 
 export default function Models() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
   const { data, isLoading, isError } = useModels(search);
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Model Catalog" description="Every kit in the shared catalog." />
+      <PageHeader
+        title="Model Catalog"
+        description="Every kit in the shared catalog."
+        actions={!showAddForm && <Button onClick={() => setShowAddForm(true)}>+ Add model</Button>}
+      />
+
+      {showAddForm && (
+        <AddModelForm
+          onCreated={(model) => navigate(`/models/${model.id}`)}
+          onCancel={() => setShowAddForm(false)}
+        />
+      )}
 
       <Input
         value={search}

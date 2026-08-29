@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { useDashboard } from "../api/client";
-import { StatTile, LoadingState, ErrorState, EmptyState, PageHeader, SectionCard } from "../components/ui";
+import { StatTile, LoadingState, ErrorState, EmptyState, PageHeader, SectionCard, Button } from "../components/ui";
 import { ArchiveIcon, BeakerIcon, BoxIcon, CartIcon, DropletIcon, HammerIcon } from "../components/icons";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useDashboard();
 
   if (isLoading) return <LoadingState />;
@@ -10,7 +12,11 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="Dashboard" description="An overview of your workshop." />
+      <PageHeader
+        title="Dashboard"
+        description="An overview of your workshop."
+        actions={<Button onClick={() => navigate("/projects/new")}>+ New Build</Button>}
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatTile label="Model kits" value={data.totalModelKits} icon={<BoxIcon className="h-5 w-5" />} />

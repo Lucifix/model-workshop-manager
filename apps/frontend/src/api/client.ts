@@ -34,6 +34,36 @@ export interface ModelListRow {
   manufacturer: { id: number; name: string } | null;
 }
 
+export interface Manufacturer {
+  id: number;
+  name: string;
+  slug: string;
+  website?: string;
+}
+
+export function useManufacturers() {
+  return useQuery({
+    queryKey: ["manufacturers"],
+    queryFn: () => apiFetch<Manufacturer[]>("/manufacturers"),
+  });
+}
+
+export function useCreateManufacturer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; slug: string; website?: string }) => {
+      const res = await fetch("/api/manufacturers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create manufacturer");
+      return res.json() as Promise<Manufacturer>;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["manufacturers"] }),
+  });
+}
+
 export function useModels(search?: string) {
   return useQuery({
     queryKey: ["models", search],
@@ -143,6 +173,7 @@ export function useModelDetail(id: number) {
   return useQuery({
     queryKey: ["model", id],
     queryFn: () => apiFetch<ModelDetail>(`/models/${id}`),
+    enabled: Number.isFinite(id),
   });
 }
 
@@ -170,6 +201,81 @@ export function usePaintDetail(id: number) {
 }
 
 // --- Mutations -----------------------------------------------------------
+
+export interface ModelCreateInput {
+  manufacturerId: number;
+  kitNumber: string;
+  name: string;
+  scale?: string;
+  category?: string;
+  difficulty?: string;
+  partCount?: number;
+  description?: string;
+  imageUrl?: string;
+  instructionUrl?: string;
+  sourceUrl?: string;
+}
+
+export function useCreateModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: ModelCreateInput) => {
+      const res = await fetch("/api/models", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create model");
+      return res.json() as Promise<{ id: number; name: string; kitNumber: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUploadModelImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ modelId, file }: { modelId: number; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/models/${modelId}/image`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to upload model image");
+      return res.json();
+    },
+    onSuccess: (_, { modelId }) => {
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+    },
+  });
+}
+
+export interface CatalogSearchResult {
+  externalId: string;
+  manufacturerName: string;
+  kitNumber: string;
+  name: string;
+  scale?: string;
+  imageUrl?: string;
+  sourceUrl?: string;
+}
+
+/** Optional barcode-lookup convenience (docs/PLAN.md §35.5, method 3) — never the primary path. */
+export function useCatalogSearch() {
+  return useMutation({
+    mutationFn: async (query: string) => {
+      const res = await fetch(`/api/catalog/search?provider=upcitemdb&q=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error("Lookup failed");
+      const data = (await res.json()) as { results: CatalogSearchResult[] };
+      return data.results;
+    },
+  });
+}
 
 export function useAddModelToInventory() {
   const queryClient = useQueryClient();

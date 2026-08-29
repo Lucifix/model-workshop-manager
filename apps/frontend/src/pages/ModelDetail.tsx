@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useModelDetail, useAddModelToInventory, useCreateProject } from "../api/client";
+import { useModelDetail, useAddModelToInventory, useUploadModelImage } from "../api/client";
 import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar } from "../components/ui";
 import { useState } from "react";
 
@@ -7,22 +7,16 @@ export default function ModelDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showCreateBuildForm, setShowCreateBuildForm] = useState(false);
   const [formData, setFormData] = useState({
     quantity: 1,
     condition: "",
     storageLocation: "",
     notes: "",
   });
-  const [buildFormData, setBuildFormData] = useState({
-    name: "",
-    status: "Planned",
-    notes: "",
-  });
 
   const { data: model, isLoading, isError } = useModelDetail(Number(id));
   const { mutate: addToInventory, isPending } = useAddModelToInventory();
-  const { mutate: createProject, isPending: isCreatingProject } = useCreateProject();
+  const uploadImage = useUploadModelImage();
 
   if (!id || isNaN(Number(id))) {
     return <ErrorState message="Invalid model ID." />;
@@ -50,23 +44,11 @@ export default function ModelDetail() {
     );
   };
 
-  const handleCreateBuild = (e: React.FormEvent) => {
-    e.preventDefault();
-    createProject(
-      {
-        modelId: model.id,
-        name: buildFormData.name || `${model.name} Build`,
-        status: buildFormData.status || "Planned",
-        notes: buildFormData.notes || undefined,
-      },
-      {
-        onSuccess: (result) => {
-          setShowCreateBuildForm(false);
-          setBuildFormData({ name: "", status: "Planned", notes: "" });
-          navigate(`/projects/${result.id}`);
-        },
-      }
-    );
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadImage.mutate({ modelId: model.id, file });
+    e.target.value = "";
   };
 
   const isInInventory = model.ownership && model.ownership.length > 0;
@@ -78,13 +60,25 @@ export default function ModelDetail() {
       </Button>
 
       <Card className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-        {model.imageUrl && (
-          <img
-            src={model.imageUrl}
-            alt={model.name}
-            className="h-48 w-full rounded-xl object-cover lg:h-64 lg:w-64 lg:flex-shrink-0"
-          />
-        )}
+        <div className="flex flex-shrink-0 flex-col gap-2 lg:w-64">
+          {model.imageUrl ? (
+            <img
+              src={model.imageUrl}
+              alt={model.name}
+              className="h-48 w-full rounded-xl object-cover lg:h-64"
+            />
+          ) : (
+            <div className="flex h-48 w-full items-center justify-center rounded-xl border border-dashed border-workshop-border text-xs text-slate-500 lg:h-64">
+              No image yet
+            </div>
+          )}
+          <label className="cursor-pointer">
+            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            <span className="block w-full rounded-lg border border-workshop-border px-3 py-2 text-center text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800/60">
+              {uploadImage.isPending ? "Uploading…" : "Upload a photo of the box"}
+            </span>
+          </label>
+        </div>
         <div className="flex-1">
           <div className="mb-4">
             <h1 className="mb-2 text-2xl font-bold text-slate-100">{model.name}</h1>
@@ -119,14 +113,14 @@ export default function ModelDetail() {
           </div>
 
           <div className="flex gap-3">
-            {!showAddForm && !showCreateBuildForm && (
+            {!showAddForm && (
               <>
                 {!isInInventory ? (
                   <Button onClick={() => setShowAddForm(true)}>Add to my models</Button>
                 ) : (
                   <div className="flex items-center text-sm font-medium text-emerald-400">✓ In your inventory</div>
                 )}
-                <Button variant="outlineAccent" onClick={() => setShowCreateBuildForm(true)}>
+                <Button variant="outlineAccent" onClick={() => navigate(`/projects/new?modelId=${model.id}`)}>
                   Create build
                 </Button>
               </>
@@ -167,46 +161,6 @@ export default function ModelDetail() {
                     {isPending ? "Adding..." : "Add"}
                   </Button>
                   <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            )}
-
-            {showCreateBuildForm && (
-              <form onSubmit={handleCreateBuild} className="w-full flex flex-col gap-3">
-                <Input
-                  type="text"
-                  value={buildFormData.name}
-                  onChange={(e) => setBuildFormData({ ...buildFormData, name: e.target.value })}
-                  placeholder={`${model.name} Build`}
-                />
-                <Select
-                  value={buildFormData.status}
-                  onChange={(e) => setBuildFormData({ ...buildFormData, status: e.target.value })}
-                >
-                  <option value="Planned">Planned</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="On Hold">On Hold</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Abandoned">Abandoned</option>
-                </Select>
-                <Textarea
-                  value={buildFormData.notes}
-                  onChange={(e) => setBuildFormData({ ...buildFormData, notes: e.target.value })}
-                  placeholder="Notes (optional)"
-                  rows={2}
-                />
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={isCreatingProject} className="flex-1">
-                    {isCreatingProject ? "Creating..." : "Create Build"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="flex-1"
-                    onClick={() => setShowCreateBuildForm(false)}
-                  >
                     Cancel
                   </Button>
                 </div>

@@ -239,6 +239,8 @@ export async function importRoutes(app: FastifyInstance) {
           description: row.description || undefined,
           source: row.source || "imported",
           sourceUrl: row.sourceUrl || undefined,
+          imageUrl: row.imageUrl || undefined,
+          instructionUrl: row.instructionUrl || undefined,
           importedAt: new Date().toISOString(),
         });
         result.imported++;

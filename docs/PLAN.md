@@ -1213,3 +1213,153 @@ At the end of each implementation phase:
 5. Identify the next logical phase
 
 Start by researching the current data-source landscape and then propose the architecture and schema before implementing the application.
+
+---
+
+# 35. Phase 6 — Streamlined model intake & "New Build" workflow (addendum, 2026-08-29)
+
+This addendum was requested after Phases 1–3 (and the Phase-4 CSV importer) were already
+implemented and in use. It does not change any prior decision in this document — it closes a
+gap between what the backend already supports and what the UI actually exposes.
+
+## 35.1 Problem
+
+Today, starting a new build means:
+
+1. The model must already exist in the `models` catalog.
+2. The **only** way to add a model through the UI is the bulk CSV/JSON importer on
+   `/import-export` — there is no "Add Model" button anywhere, even though
+   `POST /api/models` already exists, is fully validated (`modelCreateSchema`), and already
+   accepts `imageUrl`.
+3. Once the model exists, you open its detail page and use "Create build".
+
+So the single most common action — "I bought one new kit, let's start it" — requires building
+a one-row CSV file, uploading it, finding the model, then starting the build. Three disconnected
+steps for one kit.
+
+Separately: a full `CatalogProvider` architecture already exists in
+`apps/backend/src/providers/` (`manualProvider`, `csvImportProvider`, `upcItemDbProvider`) per
+§21/§Architecture, but **no route calls any of them** — it's dead code from the frontend's
+perspective. `GET /api/manufacturers` and `POST /api/manufacturers` also exist and are unused by
+the frontend (no manufacturer picker anywhere).
+
+## 35.2 Goal
+
+Collapse "add a model" + "start a build" into one guided flow reachable from a single button,
+without weakening the Catalog vs. Inventory vs. Build separation in §6: a build always
+references a catalog model; owning a kit and building a kit remain separate facts.
+
+## 35.3 New "New Build" entry point
+
+Add a primary **"+ New Build"** action on the Dashboard and on `/projects` (Builds). It opens a
+two-step flow at `/projects/new`:
+
+**Step 1 — pick the model**
+- A search box hits the existing `GET /api/models?q=` to search the catalog first.
+- If nothing matches: "Add a new model" reveals an inline create form — manufacturer picker
+  (`GET /api/manufacturers`, with "+ new manufacturer" inline via `POST /api/manufacturers`),
+  kit number, name, scale, category, difficulty, part count, description, image (see §35.5).
+  Submits to `POST /api/models` (already implemented server-side, just never called from the UI).
+- Either path ends with one selected model.
+
+**Step 2 — build details**
+- Name (default `"<model name> Build"`), status, notes — the same shape `ModelDetail`'s inline
+  "Create build" form already posts. Submits to the existing `POST /api/projects`, then routes
+  to `/projects/:id`.
+- Optional "I already own this kit" checkbox also fires the existing `POST /api/inventory/models`
+  so My Collection doesn't silently drift out of sync with what you're building.
+
+Keep `ModelDetail`'s "Create build" button — it becomes an entry into step 2 of this same flow
+with the model preselected, not a second implementation of project creation.
+
+## 35.4 Add models without a build attached ("add many other models")
+
+Two complementary paths depending on volume:
+
+- **One or a few kits** → extract the Step-1 create-model form from §35.3 into a shared
+  `AddModelForm` component, and add a **"+ Add model"** button directly on `/models` that opens
+  it standalone (adds to the catalog only — no project created).
+- **A batch** (e.g. digitizing an existing stash) → the CSV/JSON importer on `/import-export`
+  already does this well. Extend it to also read `imageUrl` and `instructionUrl` columns from
+  the row (backend already accepts both — `apps/backend/src/routes/import.ts`'s model importer
+  just doesn't read them yet). Update the sample CSV template on that page to match.
+- Apply the same manufacturer-id + kit-number duplicate check the CSV importer already does
+  to the new single-add form, so re-adding a kit that's already catalogued surfaces "already in
+  your catalog — open it?" instead of a rejected/duplicate insert.
+
+## 35.5 Images from the original manufacturer — allowed methods only
+
+`docs/DATA_SOURCES.md` already researched this and concluded Revell, Tamiya, and AK Interactive
+have **no official API, no data feed, and no ToS coverage for reuse of their product images** —
+so **this app must not add a scraper that fetches images from their sites.** That conclusion is
+unchanged by this addendum. Ship these three methods instead, offered together wherever an image
+is attached to a model, cheapest-to-build first:
+
+1. **Paste the official image URL yourself** — ships with zero new backend code. The model
+   form's existing `imageUrl` field already accepts any URL (`z.string().url()` in
+   `modelCreateSchema`). You open the kit's real product page yourself, copy the image address,
+   and paste it in — the app hotlinks a URL *you* chose, which is a meaningfully different (and
+   low-risk) act from the app automatically crawling and redistributing manufacturer content.
+   Add a live thumbnail preview under the field so a bad paste is obvious immediately.
+2. **Upload your own photo of the box** — reuse the exact pattern `project_photos` already uses.
+   Add `POST /api/models/:id/image` (multipart, mirrors `projects.ts`'s photo upload), storing
+   the file under `/data/uploads/models/{modelId}/` and setting `models.imageUrl` to that local
+   path. Works offline, no external dependency, best fit for a personal workshop app.
+3. **Optional barcode lookup convenience** — `upcItemDbProvider` is already fully coded
+   (`apps/backend/src/providers/upcItemDbProvider.ts`) but has no route. Add
+   `GET /api/catalog/search?provider=upcitemdb&q=<code>`, a thin route delegating to
+   `createUpcItemDbProvider().searchModels(q)`, gated by the existing `UPCITEMDB_ENABLED=true`
+   env var (already in `docker-compose.yml`). In `AddModelForm`, an optional "Look up by
+   barcode" field calls this and prefills name/manufacturer/image on a hit — always editable,
+   never auto-saved. Per `DATA_SOURCES.md`, expect this to hit for generic retail packaging
+   sometimes and miss for hobby-specific kit data — it's a nice-to-have, never the primary path.
+
+**Explicitly out of scope:** any server-side fetch of `revell.com`, `tamiya.com`,
+`ak-interactive.com`, or Scalemates HTML or images. That would reproduce exactly the scraping
+approach `docs/DATA_SOURCES.md` already evaluated and rejected for this project. If a
+manufacturer ever ships a real public API, add it as a new `CatalogProvider` implementation —
+the interface in `providers/types.ts` already supports this without touching route or UI code.
+
+## 35.6 Backend changes
+
+- `GET /api/catalog/search?provider=<id>&q=<query>` — new route delegating to a provider
+  (`upcitemdb` per above; `manual` can just return `[]`). Returns `ModelResult[]`.
+- `POST /api/models/:id/image` — new multipart upload route mirroring the existing project-photo
+  upload, writing to `/data/uploads/models/{id}/` and updating `models.imageUrl`.
+- `POST /api/import/models` — read `imageUrl` and `instructionUrl` from CSV/JSON rows (both
+  already valid columns per `modelCreateSchema`; this is the same two-line pattern already used
+  for `sourceUrl`).
+- No schema or migration changes needed — `models.imageUrl`, `source`, and `sourceUrl` already
+  exist and are already used elsewhere.
+
+## 35.7 Frontend changes
+
+- `client.ts`: add `useManufacturers()`, `useCreateManufacturer()`, `useCreateModel()`,
+  `useCatalogSearch()`, `useUploadModelImage()` — same hook shape as everything else in the file.
+- New `AddModelForm` component, shared by the `/models` "+ Add model" button and step 1 of the
+  New Build wizard — one implementation, two entry points.
+- New `/projects/new` route (New Build wizard): model search-or-create step, then build-details
+  step, reusing `AddModelForm` and the existing create-project mutation.
+- `ModelDetail`'s "Create build" button links into the wizard's step 2 with the model
+  preselected, instead of keeping its own separate inline form.
+- Add the "+ New Build" primary action to the Dashboard and to `/projects`.
+
+## 35.8 What this addendum does not change
+
+- The Catalog / Inventory / Build table separation (§6) — the new flow only ever writes to
+  `models`, optionally `owned_models`, and `projects`; it never blends them.
+- The CSV/JSON bulk importer — unchanged except for reading two additional optional columns.
+- No new external services or dependencies beyond the already-decided, already-implemented,
+  already-feature-flagged UPCitemdb provider.
+
+## 35.9 Suggested build order
+
+Ship in this order so each step is independently useful and testable:
+
+1. `POST /api/models/:id/image` + an image-upload control on `ModelDetail` (smallest, immediately
+   useful on its own, no workflow changes yet).
+2. `AddModelForm` + "+ Add model" button on `/models` (solves "add many other models" without
+   touching the build flow).
+3. `/projects/new` New Build wizard (search-or-create model, then build details).
+4. `GET /api/catalog/search` + the barcode-lookup convenience field inside `AddModelForm`.
+5. Extend the CSV importer's column set for bulk power users.

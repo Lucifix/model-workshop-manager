@@ -63,10 +63,10 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
 1,05,Revell 05 White,Enamel,Matt,14,#F2F2EE,White,Sample paint
 1,09,Revell 09 Anthracite,Enamel,Matt,14,#37393B,Grey,Sample paint
 2,XF-1,Tamiya XF-1 Flat Black,Acrylic,Matt,10,#0A0A0A,Black,Sample paint`,
-      models: `manufacturerId,kitNumber,name,scale,category,difficulty,partCount,description
-1,05239,Smit Houston,1:200,Ship,Intermediate,200,Ocean-going tug
-1,05240,Another Ship,1:400,Ship,Beginner,150,Sample model
-2,TAM1234,Tamiya Model,1:72,Aircraft,Advanced,500,Fighter aircraft`,
+      models: `manufacturerId,kitNumber,name,scale,category,difficulty,partCount,description,imageUrl,instructionUrl
+1,05239,Smit Houston,1:200,Ship,Intermediate,200,Ocean-going tug,https://example.com/05239.jpg,
+1,05240,Another Ship,1:400,Ship,Beginner,150,Sample model,,
+2,TAM1234,Tamiya Model,1:72,Aircraft,Advanced,500,Fighter aircraft,,`,
     };
     return samples[importType];
   };

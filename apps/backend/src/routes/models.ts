@@ -1,5 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
+import { mkdirSync, createWriteStream } from "node:fs";
+import { join } from "node:path";
+import { pipeline } from "node:stream/promises";
 import { db } from "../db/client.js";
 import {
   models,
@@ -13,6 +16,8 @@ import {
 import { modelCreateSchema, modelUpdateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
 import { paintAvailability } from "../lib/paintAvailability.js";
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
 export async function modelRoutes(app: FastifyInstance) {
   app.get("/api/models", async (req) => {
@@ -104,5 +109,29 @@ export async function modelRoutes(app: FastifyInstance) {
     const id = Number((req.params as { id: string }).id);
     await db.delete(models).where(eq(models.id, id));
     reply.code(204).send();
+  });
+
+  // Upload a personal photo of the box/kit — see docs/PLAN.md §35.5 (method 2).
+  // Local file storage only; never a fetch of a manufacturer's own product image.
+  app.post("/api/models/:id/image", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const existing = db.select().from(models).where(eq(models.id, id)).get();
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "no_file" });
+
+    const dir = join(UPLOAD_DIR, "models", String(id));
+    mkdirSync(dir, { recursive: true });
+    const filename = `${Date.now()}-${file.filename}`;
+    await pipeline(file.file, createWriteStream(join(dir, filename)));
+
+    const imageUrl = `/uploads/models/${id}/${filename}`;
+    const [row] = await db
+      .update(models)
+      .set({ imageUrl, updatedAt: new Date().toISOString() })
+      .where(eq(models.id, id))
+      .returning();
+    reply.code(201).send(row);
   });
 }
