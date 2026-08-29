@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./apps/backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: /data/database/workshop.db
+      DATA_DIR: /data
+      UPLOAD_DIR: /data/uploads
+      UPCITEMDB_ENABLED: ${UPCITEMDB_ENABLED:-false}
+    volumes:
+      - workshop-data:/data
+    expose:
+      - "3001"
+
+  frontend:
+    build:
+      context: ./apps/frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${HOST_PORT:-8080}:80"
+
+volumes:
+  workshop-data:
+    name: workshop-data

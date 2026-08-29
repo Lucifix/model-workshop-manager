@@ -1,0 +1,134 @@
+import type { FastifyInstance } from "fastify";
+import { eq } from "drizzle-orm";
+import { mkdirSync, createWriteStream } from "node:fs";
+import { join } from "node:path";
+import { pipeline } from "node:stream/promises";
+import { db } from "../db/client.js";
+import {
+  projects,
+  models,
+  buildLogEntries,
+  projectPhotos,
+  projectPaints,
+  paints,
+} from "../db/schema.js";
+import {
+  projectCreateSchema,
+  projectUpdateSchema,
+  buildLogCreateSchema,
+  projectPaintCreateSchema,
+} from "../lib/schemas.js";
+import { parseBody } from "../lib/validate.js";
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
+
+export async function projectRoutes(app: FastifyInstance) {
+  app.get("/api/projects", async (req) => {
+    const { status } = req.query as Record<string, string | undefined>;
+    let rows = db
+      .select({ project: projects, model: models })
+      .from(projects)
+      .leftJoin(models, eq(projects.modelId, models.id))
+      .all();
+    if (status) rows = rows.filter((r) => r.project.status === status);
+    return rows;
+  });
+
+  app.post("/api/projects", async (req, reply) => {
+    const body = parseBody(projectCreateSchema, req.body, reply);
+    if (!body) return;
+    const [row] = await db.insert(projects).values(body).returning();
+    reply.code(201).send(row);
+  });
+
+  app.get("/api/projects/:id", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const project = db.select().from(projects).where(eq(projects.id, id)).get();
+    if (!project) return reply.code(404).send({ error: "not_found" });
+    const model = db.select().from(models).where(eq(models.id, project.modelId)).get();
+    const log = db
+      .select()
+      .from(buildLogEntries)
+      .where(eq(buildLogEntries.projectId, id))
+      .all()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const photos = db.select().from(projectPhotos).where(eq(projectPhotos.projectId, id)).all();
+    const usedPaints = db
+      .select({ projectPaint: projectPaints, paint: paints })
+      .from(projectPaints)
+      .leftJoin(paints, eq(projectPaints.paintId, paints.id))
+      .where(eq(projectPaints.projectId, id))
+      .all();
+    return { ...project, model, log, photos, usedPaints };
+  });
+
+  app.patch("/api/projects/:id", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const body = parseBody(projectUpdateSchema, req.body, reply);
+    if (!body) return;
+    const [row] = await db
+      .update(projects)
+      .set({ ...body, updatedAt: new Date().toISOString() })
+      .where(eq(projects.id, id))
+      .returning();
+    if (!row) return reply.code(404).send({ error: "not_found" });
+    return row;
+  });
+
+  // --- build log: fast "+ Add progress" workflow (spec §15) ----------------
+  app.get("/api/projects/:id/log", async (req) => {
+    const id = Number((req.params as { id: string }).id);
+    return db.select().from(buildLogEntries).where(eq(buildLogEntries.projectId, id)).all();
+  });
+
+  app.post("/api/projects/:id/log", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const body = parseBody(buildLogCreateSchema, req.body, reply);
+    if (!body) return;
+    const [row] = await db
+      .insert(buildLogEntries)
+      .values({ ...body, projectId: id })
+      .returning();
+    reply.code(201).send(row);
+  });
+
+  // --- photos ---------------------------------------------------------------
+  app.get("/api/projects/:id/photos", async (req) => {
+    const id = Number((req.params as { id: string }).id);
+    return db.select().from(projectPhotos).where(eq(projectPhotos.projectId, id)).all();
+  });
+
+  app.post("/api/projects/:id/photos", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "no_file" });
+
+    const dir = join(UPLOAD_DIR, "projects", String(id));
+    mkdirSync(dir, { recursive: true });
+    const filename = `${Date.now()}-${file.filename}`;
+    const destPath = join(dir, filename);
+    await pipeline(file.file, createWriteStream(destPath));
+
+    const [row] = await db
+      .insert(projectPhotos)
+      .values({
+        projectId: id,
+        filename: join("projects", String(id), filename),
+        originalFilename: file.filename,
+      })
+      .returning();
+    reply.code(201).send(row);
+  });
+
+  // --- paints actually used on this build -----------------------------------
+  app.post("/api/projects/:id/paints", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    const body = parseBody(projectPaintCreateSchema, req.body, reply);
+    if (!body) return;
+    const [row] = await db
+      .insert(projectPaints)
+      .values({ ...body, projectId: id })
+      .returning();
+    reply.code(201).send(row);
+  });
+}
