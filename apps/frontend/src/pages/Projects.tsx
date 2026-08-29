@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useProjects } from "../api/client";
 import { Card, LoadingState, ErrorState, EmptyState, Badge } from "../components/ui";
 
@@ -10,6 +11,7 @@ const statusTone = {
 } as const;
 
 export default function Projects() {
+  const navigate = useNavigate();
   const { data, isLoading, isError } = useProjects();
 
   if (isLoading) return <LoadingState />;
@@ -19,7 +21,11 @@ export default function Projects() {
   return (
     <div className="flex flex-col gap-3">
       {data.map((row) => (
-        <Card key={row.project.id}>
+        <Card
+          key={row.project.id}
+          className="cursor-pointer transition-all hover:border-workshop-accent hover:bg-slate-800"
+          onClick={() => navigate(`/projects/${row.project.id}`)}
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-slate-100">{row.project.name}</div>

@@ -208,3 +208,108 @@ export function useAddPaintToInventory() {
     },
   });
 }
+
+// --- Projects -------------------------------------------------------
+
+export interface ProjectDetail {
+  id: number;
+  modelId: number;
+  name: string;
+  status: string;
+  progressPercent: number;
+  startedAt?: string;
+  completedAt?: string;
+  notes?: string;
+  model: { id: number; name: string; kitNumber: string } | null;
+  log: { id: number; projectId: number; title: string; description?: string; createdAt: string }[];
+  photos: { id: number; projectId: number; filename: string; originalFilename?: string; caption?: string; takenAt?: string; createdAt: string }[];
+  usedPaints: { projectPaint: { projectId: number; paintId: number; purpose: string; notes?: string }; paint: any }[];
+}
+
+export function useProjectDetail(id: number) {
+  return useQuery({
+    queryKey: ["project", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch project");
+      return res.json() as Promise<ProjectDetail>;
+    },
+  });
+}
+
+export function useUpdateProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { progressPercent?: number; status?: string; notes?: string } }) => {
+      const res = await fetch(`/api/projects/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update project");
+      return res.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useAddBuildLogEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, data }: { projectId: number; data: { title: string; description?: string } }) => {
+      const res = await fetch(`/api/projects/${projectId}/log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add build log entry");
+      return res.json();
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    },
+  });
+}
+
+export function useUploadProjectPhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, file }: { projectId: number; file: File }) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/projects/${projectId}/photos`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to upload photo");
+      return res.json();
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+    },
+  });
+}
+
+// --- Shopping List -------------------------------------------------------
+
+export function useAddShoppingListItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { paintId?: number; description: string; quantity?: number; priority?: "low" | "normal" | "high" }) => {
+      const res = await fetch("/api/shopping-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add shopping list item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+    },
+  });
+}

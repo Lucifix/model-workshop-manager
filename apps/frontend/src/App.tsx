@@ -8,6 +8,7 @@ import Paints from "./pages/Paints";
 import PaintDetail from "./pages/PaintDetail";
 import PaintInventory from "./pages/PaintInventory";
 import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
 import ShoppingList from "./pages/ShoppingList";
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/paints/:id" element={<PaintDetail />} />
           <Route path="/paint-inventory" element={<PaintInventory />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
         </Routes>
       </main>
