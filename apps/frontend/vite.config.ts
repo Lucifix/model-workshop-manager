@@ -28,6 +28,16 @@ export default defineConfig({
         // network-first for API calls so stale data is never silently shown.
         runtimeCaching: [
           {
+            // Backup archives can be many MB — pass straight through with no
+            // caching/timeout handling. NetworkFirst's 5s timeout + cache
+            // fallback (with nothing ever cached for a one-off filename)
+            // otherwise surfaces as a "no-response" error on download.
+            // Must be listed before the general /api/.* rule below, since
+            // workbox matches routes in registration order.
+            urlPattern: /\/api\/backup\/.*/,
+            handler: "NetworkOnly",
+          },
+          {
             urlPattern: /\/api\/.*/,
             handler: "NetworkFirst",
             options: { cacheName: "api-cache", networkTimeoutSeconds: 5 },
