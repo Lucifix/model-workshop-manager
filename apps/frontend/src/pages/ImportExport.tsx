@@ -1,19 +1,90 @@
 import { useState } from "react";
-import { useImportManufacturers, useImportPaints, useImportModels, useExportData, ImportResult } from "../api/client";
-import { Card, Button, Select, PageHeader } from "../components/ui";
+import {
+  useImportManufacturers,
+  useImportPaints,
+  useImportModels,
+  useExportData,
+  useBackups,
+  useCreateBackup,
+  useDeleteBackup,
+  useRestoreBackup,
+  ImportResult,
+} from "../api/client";
+import { Card, Button, Select, PageHeader, LoadingState, EmptyState } from "../components/ui";
 
 type ImportType = "manufacturers" | "paints" | "models";
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+  return `${value.toFixed(1)} ${units[unitIndex]}`;
+}
+
 export default function ImportExport() {
-  const [activeTab, setActiveTab] = useState<"import" | "export">("import");
+  const [activeTab, setActiveTab] = useState<"import" | "export" | "backups">("import");
   const [importType, setImportType] = useState<ImportType>("paints");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [restoringFilename, setRestoringFilename] = useState<string | null>(null);
+  const [backupError, setBackupError] = useState<string | null>(null);
 
   const importMfrs = useImportManufacturers();
   const importPaints = useImportPaints();
   const importModels = useImportModels();
   const exportData = useExportData();
+  const backups = useBackups();
+  const createBackup = useCreateBackup();
+  const deleteBackup = useDeleteBackup();
+  const restoreBackup = useRestoreBackup();
+
+  const handleCreateBackup = () => {
+    setBackupError(null);
+    createBackup.mutate();
+  };
+
+  const handleDeleteBackup = (filename: string) => {
+    setBackupError(null);
+    if (!confirm(`Delete backup "${filename}"? This can't be undone.`)) return;
+    deleteBackup.mutate(filename, {
+      onError: (err) => setBackupError(err.message),
+    });
+  };
+
+  const pollUntilHealthy = () => {
+    const check = () => {
+      fetch("/api/health")
+        .then((res) => {
+          if (res.ok) window.location.reload();
+          else setTimeout(check, 2000);
+        })
+        .catch(() => setTimeout(check, 2000));
+    };
+    setTimeout(check, 2000);
+  };
+
+  const handleRestore = (filename: string) => {
+    setBackupError(null);
+    if (
+      !confirm(
+        `Restore from "${filename}"?\n\nThis replaces ALL current data — catalog, inventory, builds, and photos — with what's in this backup, and briefly restarts the server. This can't be undone.`
+      )
+    )
+      return;
+    setRestoringFilename(filename);
+    restoreBackup.mutate(filename, {
+      onSuccess: () => pollUntilHealthy(),
+      onError: (err) => {
+        setRestoringFilename(null);
+        setBackupError(err.message);
+      },
+    });
+  };
 
   const handleImport = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +145,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
   const tabs = [
     { id: "import" as const, label: "Import Data" },
     { id: "export" as const, label: "Export Data" },
+    { id: "backups" as const, label: "Backups" },
   ];
 
   return (
@@ -275,6 +347,88 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                 <strong className="text-slate-300">Duplicates:</strong> The import system skips records that already exist (based on unique keys).
               </li>
             </ul>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === "backups" && (
+        <div className="flex flex-col gap-4">
+          {restoringFilename && (
+            <Card className="border-workshop-accent/50 bg-workshop-accent/10">
+              <div className="flex items-center gap-3">
+                <span className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-workshop-accent/40 border-t-workshop-accent" />
+                <p className="text-sm text-slate-200">
+                  Restoring from <strong>{restoringFilename}</strong> — the server is restarting and will
+                  reconnect automatically. This page will reload once it's back.
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {backupError && (
+            <Card className="border-red-500/40 bg-red-950/30">
+              <p className="text-sm text-red-300">{backupError}</p>
+            </Card>
+          )}
+
+          <Card>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100">Backups</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Full snapshots of everything — catalog, inventory, builds, and photos. Includes both
+                  nightly automatic backups and any you create here.
+                </p>
+              </div>
+              <Button onClick={handleCreateBackup} disabled={createBackup.isPending || !!restoringFilename}>
+                {createBackup.isPending ? "Creating…" : "Create backup now"}
+              </Button>
+            </div>
+
+            {backups.isLoading && <LoadingState />}
+            {backups.isError && <p className="text-sm text-red-400">Failed to load backups.</p>}
+            {backups.data && backups.data.length === 0 && (
+              <EmptyState message="No backups yet — create one above, or wait for tonight's automatic backup." />
+            )}
+            {backups.data && backups.data.length > 0 && (
+              <ul className="divide-y divide-workshop-border">
+                {backups.data.map((backup) => (
+                  <li key={backup.filename} className="flex items-center justify-between gap-4 py-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-slate-100">{backup.filename}</div>
+                      <div className="text-xs text-slate-400">
+                        {new Date(backup.createdAt).toLocaleString()} · {formatBytes(backup.sizeBytes)}
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-1">
+                      <a
+                        href={`/api/backup/${encodeURIComponent(backup.filename)}/download`}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-100"
+                      >
+                        Download
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRestore(backup.filename)}
+                        disabled={!!restoringFilename}
+                      >
+                        Restore
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                        onClick={() => handleDeleteBackup(backup.filename)}
+                        disabled={deleteBackup.isPending || !!restoringFilename}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </div>
       )}

@@ -758,3 +758,54 @@ export function useExportData() {
     },
   });
 }
+
+// --- Backups -----------------------------------------------------------
+
+export interface BackupFile {
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export function useBackups() {
+  return useQuery({ queryKey: ["backups"], queryFn: () => apiFetch<BackupFile[]>("/backup") });
+}
+
+export function useCreateBackup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/backup", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to create backup");
+      return res.json() as Promise<BackupFile>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["backups"] });
+    },
+  });
+}
+
+export function useDeleteBackup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (filename: string) => {
+      const res = await fetch(`/api/backup/${encodeURIComponent(filename)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete backup");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["backups"] });
+    },
+  });
+}
+
+export function useRestoreBackup() {
+  return useMutation({
+    mutationFn: async (filename: string) => {
+      const res = await fetch(`/api/backup/${encodeURIComponent(filename)}/restore`, { method: "POST" });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "Failed to restore backup");
+      }
+    },
+  });
+}
