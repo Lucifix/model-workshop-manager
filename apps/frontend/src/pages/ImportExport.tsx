@@ -32,6 +32,7 @@ export default function ImportExport() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [restoringFilename, setRestoringFilename] = useState<string | null>(null);
+  const [downloadingFilename, setDownloadingFilename] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
 
   const importMfrs = useImportManufacturers();
@@ -46,6 +47,32 @@ export default function ImportExport() {
   const handleCreateBackup = () => {
     setBackupError(null);
     createBackup.mutate();
+  };
+
+  const handleDownloadBackup = async (filename: string) => {
+    setBackupError(null);
+    setDownloadingFilename(filename);
+    try {
+      // Plain <a href> would make this a navigation request — once the PWA's
+      // service worker intercepts a navigation, Chrome stops treating a
+      // Content-Disposition: attachment response as a download and renders
+      // it as a blank page instead. Fetching it as data and saving via a
+      // Blob + synthetic click (same pattern as the JSON export below)
+      // sidesteps that entirely.
+      const res = await fetch(`/api/backup/${encodeURIComponent(filename)}/download`);
+      if (!res.ok) throw new Error("Failed to download backup");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setBackupError(err instanceof Error ? err.message : "Failed to download backup");
+    } finally {
+      setDownloadingFilename(null);
+    }
   };
 
   const handleDeleteBackup = (filename: string) => {
@@ -401,12 +428,14 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                       </div>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-1">
-                      <a
-                        href={`/api/backup/${encodeURIComponent(backup.filename)}/download`}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-100"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownloadBackup(backup.filename)}
+                        disabled={downloadingFilename === backup.filename}
                       >
-                        Download
-                      </a>
+                        {downloadingFilename === backup.filename ? "Downloading…" : "Download"}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
