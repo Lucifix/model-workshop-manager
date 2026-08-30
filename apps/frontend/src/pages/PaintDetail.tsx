@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   usePaintDetail,
   useAddPaintToInventory,
@@ -14,6 +14,11 @@ const PAINT_TYPES = ["Acrylic", "Enamel", "Lacquer", "Primer", "Wash", "Panel Li
 export default function PaintDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // location.key is "default" when there's no in-app history to go back to
+  // (e.g. a direct link or page refresh) — fall back to the plain list route
+  // rather than navigating the browser away from the app entirely.
+  const goBackToPaints = () => (location.key === "default" ? navigate("/paints") : navigate(-1));
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     quantity: 1,
@@ -108,7 +113,7 @@ export default function PaintDetail() {
     setDeleteError(null);
     if (!confirm(`Delete "${paint.name}"? This can't be undone.`)) return;
     deletePaint.mutate(paint.id, {
-      onSuccess: () => navigate("/paints"),
+      onSuccess: () => goBackToPaints(),
       onError: (err) => setDeleteError(err.message),
     });
   };
@@ -118,7 +123,7 @@ export default function PaintDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/paints")} className="self-start -ml-2.5">
+      <Button variant="ghost" size="sm" onClick={goBackToPaints} className="self-start -ml-2.5">
         ← Back to paints
       </Button>
 

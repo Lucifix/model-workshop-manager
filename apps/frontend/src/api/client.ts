@@ -89,6 +89,7 @@ export interface Manufacturer {
   slug: string;
   website?: string;
   logoUrl?: string;
+  paintCount?: number;
 }
 
 export function useManufacturers() {

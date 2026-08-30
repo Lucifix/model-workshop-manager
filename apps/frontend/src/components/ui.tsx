@@ -204,6 +204,64 @@ export function ModelThumbnail({
   );
 }
 
+const avatarSizes = {
+  sm: "h-8 w-8 text-xs",
+  md: "h-11 w-11 text-sm",
+};
+
+const avatarPalette = [
+  "bg-rose-500/15 text-rose-300",
+  "bg-amber-500/15 text-amber-300",
+  "bg-emerald-500/15 text-emerald-300",
+  "bg-sky-500/15 text-sky-300",
+  "bg-violet-500/15 text-violet-300",
+  "bg-pink-500/15 text-pink-300",
+  "bg-teal-500/15 text-teal-300",
+  "bg-orange-500/15 text-orange-300",
+];
+
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
+  return (words[0]![0]! + words[1]![0]!).toUpperCase();
+}
+
+/**
+ * No real manufacturer logos are bundled (bulk-sourcing third-party brand
+ * marks isn't something we do — see project history). Falls back to a
+ * deterministic colored initials badge; upgrades to `logoUrl` automatically
+ * if one is ever set on the manufacturer record.
+ */
+export function ManufacturerAvatar({
+  manufacturer,
+  size = "md",
+  className = "",
+}: {
+  manufacturer: { id: number; name: string; logoUrl?: string | null };
+  size?: keyof typeof avatarSizes;
+  className?: string;
+}) {
+  const sizeClass = avatarSizes[size];
+  if (manufacturer.logoUrl) {
+    return (
+      <img
+        src={manufacturer.logoUrl}
+        alt={manufacturer.name}
+        className={`${sizeClass} flex-shrink-0 rounded-full border border-workshop-border object-contain bg-white p-1 ${className}`}
+      />
+    );
+  }
+  const colorClass = avatarPalette[manufacturer.id % avatarPalette.length];
+  return (
+    <span
+      className={`flex ${sizeClass} flex-shrink-0 items-center justify-center rounded-full font-bold ${colorClass} ${className}`}
+      aria-hidden
+    >
+      {initials(manufacturer.name)}
+    </span>
+  );
+}
+
 export function MediaCard({
   image,
   imageAlt = "",

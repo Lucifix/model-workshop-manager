@@ -3,4 +3,7 @@ dist/
 data/
 .env
 *.log
-.DS_Storeapps/frontend/tsconfig.tsbuildinfo
+.DS_Store
+apps/frontend/tsconfig.tsbuildinfo
+apps/backend/backups/
+backups/

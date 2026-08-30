@@ -1,13 +1,21 @@
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { manufacturers } from "../db/schema.js";
+import { manufacturers, paints } from "../db/schema.js";
 import { manufacturerCreateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
 
 export async function manufacturerRoutes(app: FastifyInstance) {
   app.get("/api/manufacturers", async () => {
-    return db.select().from(manufacturers).all();
+    const rows = db.select().from(manufacturers).all();
+    const paintManufacturerIds = db.select({ manufacturerId: paints.manufacturerId }).from(paints).all();
+
+    const countByManufacturer = new Map<number, number>();
+    for (const { manufacturerId } of paintManufacturerIds) {
+      countByManufacturer.set(manufacturerId, (countByManufacturer.get(manufacturerId) ?? 0) + 1);
+    }
+
+    return rows.map((m) => ({ ...m, paintCount: countByManufacturer.get(m.id) ?? 0 }));
   });
 
   app.post("/api/manufacturers", async (req, reply) => {
