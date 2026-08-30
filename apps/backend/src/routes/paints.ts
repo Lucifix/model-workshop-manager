@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { paints, paintInventory, manufacturers } from "../db/schema.js";
+import { paints, paintInventory, manufacturers, modelPaints, projectPaints, shoppingListItems } from "../db/schema.js";
 import { paintCreateSchema, paintUpdateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
 
@@ -65,6 +65,24 @@ export async function paintRoutes(app: FastifyInstance) {
 
   app.delete("/api/paints/:id", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
+
+    const blockers: string[] = [];
+    const inventoryCount = db.select().from(paintInventory).where(eq(paintInventory.paintId, id)).all().length;
+    if (inventoryCount > 0) blockers.push(`${inventoryCount} inventory ${inventoryCount === 1 ? "entry" : "entries"}`);
+    const modelReqCount = db.select().from(modelPaints).where(eq(modelPaints.paintId, id)).all().length;
+    if (modelReqCount > 0) blockers.push(`${modelReqCount} model requirement${modelReqCount === 1 ? "" : "s"}`);
+    const buildUseCount = db.select().from(projectPaints).where(eq(projectPaints.paintId, id)).all().length;
+    if (buildUseCount > 0) blockers.push(`${buildUseCount} build${buildUseCount === 1 ? "" : "s"}`);
+    const shoppingCount = db.select().from(shoppingListItems).where(eq(shoppingListItems.paintId, id)).all().length;
+    if (shoppingCount > 0) blockers.push(`${shoppingCount} shopping list item${shoppingCount === 1 ? "" : "s"}`);
+
+    if (blockers.length > 0) {
+      return reply.code(409).send({
+        error: "in_use",
+        message: `Can't delete — still referenced by ${blockers.join(", ")}. Remove those first.`,
+      });
+    }
+
     await db.delete(paints).where(eq(paints.id, id));
     reply.code(204).send();
   });

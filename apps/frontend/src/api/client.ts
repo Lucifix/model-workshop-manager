@@ -262,6 +262,54 @@ export function usePaintDetail(id: number) {
   });
 }
 
+export interface PaintUpdateInput {
+  manufacturerId?: number;
+  productCode?: string;
+  name?: string;
+  type?: string;
+  finish?: string;
+  sizeMl?: number;
+  colorHex?: string;
+  colorFamily?: string;
+  notes?: string;
+}
+
+export function useUpdatePaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: PaintUpdateInput }) => {
+      const res = await fetch(`/api/paints/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update paint");
+      return res.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["paint", id] });
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+    },
+  });
+}
+
+export function useDeletePaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/paints/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "Failed to delete paint");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
 // --- Mutations -----------------------------------------------------------
 
 export interface ModelCreateInput {
