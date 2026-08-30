@@ -3,6 +3,8 @@ services:
     build:
       context: ./apps/backend
     restart: unless-stopped
+    labels:
+      - docker-volume-backup.stop-during-backup=workshop
     environment:
       NODE_ENV: production
       PORT: 3001
@@ -27,6 +29,20 @@ services:
       - backend
     ports:
       - "${HOST_PORT:-8080}:80"
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    restart: unless-stopped
+    environment:
+      BACKUP_CRON: "0 3 * * *"
+      BACKUP_FILENAME: "workshop-backup-%Y-%m-%d_%H-%M-%S.tar.gz"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-14}"
+      BACKUP_STOP_DURING_BACKUP_LABEL: "workshop"
+      BACKUP_PRUNING_LEEWAY: "5m"
+    volumes:
+      - workshop-data:/backup/workshop-data:ro
+      - ${BACKUP_DIR:-./backups}:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   workshop-data:
