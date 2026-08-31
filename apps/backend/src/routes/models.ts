@@ -42,7 +42,15 @@ export async function modelRoutes(app: FastifyInstance) {
     if (manufacturerId) rows = rows.filter((r) => r.model.manufacturerId === Number(manufacturerId));
     if (scale) rows = rows.filter((r) => r.model.scale === scale);
     if (category) rows = rows.filter((r) => r.model.category === category);
-    return rows;
+
+    const ownershipByModelId = new Map<number, (typeof ownedModels.$inferSelect)[]>();
+    for (const row of db.select().from(ownedModels).all()) {
+      const list = ownershipByModelId.get(row.modelId) ?? [];
+      list.push(row);
+      ownershipByModelId.set(row.modelId, list);
+    }
+
+    return rows.map((r) => ({ ...r, ownership: ownershipByModelId.get(r.model.id) ?? [] }));
   });
 
   app.post("/api/models", async (req, reply) => {

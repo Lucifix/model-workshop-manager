@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {
-  ArchiveIcon,
-  BeakerIcon,
   BoxIcon,
   CartIcon,
   CloseIcon,
@@ -29,23 +27,11 @@ interface NavGroup {
 }
 
 const groups: NavGroup[] = [
-  { items: [{ to: "/", label: "Dashboard", icon: HomeIcon }] },
-  {
-    section: "Models",
-    items: [
-      { to: "/models", label: "Catalog", icon: BoxIcon },
-      { to: "/owned-models", label: "My Collection", icon: ArchiveIcon },
-    ],
-  },
-  {
-    section: "Paints",
-    items: [
-      { to: "/paints", label: "Catalog", icon: DropletIcon },
-      { to: "/paint-inventory", label: "My Inventory", icon: BeakerIcon },
-    ],
-  },
   {
     items: [
+      { to: "/", label: "Dashboard", icon: HomeIcon },
+      { to: "/models", label: "Models", icon: BoxIcon },
+      { to: "/paints", label: "Paints", icon: DropletIcon },
       { to: "/projects", label: "Builds", icon: HammerIcon },
       { to: "/shopping-list", label: "Shopping List", icon: CartIcon },
       { to: "/import-export", label: "Import & Export", icon: DatabaseIcon },

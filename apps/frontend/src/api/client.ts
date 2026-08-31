@@ -81,6 +81,7 @@ export interface ModelListRow {
     imageUrl?: string;
   };
   manufacturer: { id: number; name: string } | null;
+  ownership: { id: number; modelId: number; quantity: number; condition?: string; storageLocation?: string }[];
 }
 
 export interface Manufacturer {
@@ -132,12 +133,13 @@ export interface PaintListRow {
     colorHex?: string;
   };
   manufacturer: { id: number; name: string } | null;
+  inventory: { id: number; paintId: number; quantity: number; fillLevel: string; status: string; storageLocation?: string }[];
 }
 
-/** requireFilter: when true, the query only runs once search or manufacturerId is set — the
- * paints catalog is large (10k+ rows across 34 manufacturers), so the page shouldn't
- * fetch/render everything on load. */
-export function usePaints(search?: string, manufacturerId?: number, requireFilter = false) {
+/** requireFilter: when true, the query only runs once search, manufacturerId, or hasOwnedFilter
+ * is set — the paints catalog is large (10k+ rows across 34 manufacturers), so the page
+ * shouldn't fetch/render everything on load. */
+export function usePaints(search?: string, manufacturerId?: number, requireFilter = false, hasOwnedFilter = false) {
   return useQuery({
     queryKey: ["paints", search, manufacturerId],
     queryFn: () => {
@@ -147,7 +149,7 @@ export function usePaints(search?: string, manufacturerId?: number, requireFilte
       const qs = params.toString();
       return apiFetch<PaintListRow[]>(`/paints${qs ? `?${qs}` : ""}`);
     },
-    enabled: !requireFilter || !!search?.trim() || !!manufacturerId,
+    enabled: !requireFilter || !!search?.trim() || !!manufacturerId || hasOwnedFilter,
   });
 }
 
@@ -483,9 +485,11 @@ export function useAddModelToInventory() {
       if (!res.ok) throw new Error("Failed to add model to inventory");
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
     },
   });
 }
@@ -502,9 +506,11 @@ export function useAddPaintToInventory() {
       if (!res.ok) throw new Error("Failed to add paint to inventory");
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, { paintId }) => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["paint", paintId] });
     },
   });
 }

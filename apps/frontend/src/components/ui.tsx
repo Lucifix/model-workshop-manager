@@ -298,6 +298,35 @@ export function MediaCard({
   );
 }
 
+export function SegmentedControl<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="inline-flex flex-wrap gap-1 rounded-lg border border-workshop-border bg-workshop-panelmuted p-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            value === opt.value
+              ? "bg-workshop-accent text-white"
+              : "text-slate-400 hover:text-slate-100"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function SectionCard({ title, children, actions }: PropsWithChildren<{ title: string; actions?: ReactNode }>) {
   return (
     <Card>

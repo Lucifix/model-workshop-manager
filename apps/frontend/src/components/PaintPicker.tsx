@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { usePaints } from "../api/client";
-import { Input } from "./ui";
+import { Badge, Input } from "./ui";
 
 export interface PickedPaint {
   id: number;
@@ -38,27 +38,32 @@ export function PaintPicker({
           {!isFetching && data?.length === 0 && (
             <div className="px-3 py-2 text-xs text-slate-500">No matches.</div>
           )}
-          {data?.slice(0, 20).map((row) => (
-            <button
-              key={row.paint.id}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                onSelect(row.paint);
-                setQuery("");
-                setOpen(false);
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-workshop-panelmuted"
-            >
-              <span
-                className="h-4 w-4 flex-shrink-0 rounded-full border border-workshop-border"
-                style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
-              />
-              <span className="truncate">
-                {row.paint.name} <span className="text-slate-500">({row.paint.productCode})</span>
-              </span>
-            </button>
-          ))}
+          {data
+            ?.slice()
+            .sort((a, b) => Number(b.inventory.length > 0) - Number(a.inventory.length > 0))
+            .slice(0, 20)
+            .map((row) => (
+              <button
+                key={row.paint.id}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onSelect(row.paint);
+                  setQuery("");
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-workshop-panelmuted"
+              >
+                <span
+                  className="h-4 w-4 flex-shrink-0 rounded-full border border-workshop-border"
+                  style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
+                />
+                <span className="flex-1 truncate">
+                  {row.paint.name} <span className="text-slate-500">({row.paint.productCode})</span>
+                </span>
+                {row.inventory.length > 0 && <Badge tone="ok">In inventory</Badge>}
+              </button>
+            ))}
         </div>
       )}
     </div>

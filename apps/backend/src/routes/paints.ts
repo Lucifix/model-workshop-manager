@@ -24,7 +24,15 @@ export async function paintRoutes(app: FastifyInstance) {
     }
     if (manufacturerId) rows = rows.filter((r) => r.paint.manufacturerId === Number(manufacturerId));
     if (type) rows = rows.filter((r) => r.paint.type === type);
-    return rows;
+
+    const inventoryByPaintId = new Map<number, (typeof paintInventory.$inferSelect)[]>();
+    for (const row of db.select().from(paintInventory).all()) {
+      const list = inventoryByPaintId.get(row.paintId) ?? [];
+      list.push(row);
+      inventoryByPaintId.set(row.paintId, list);
+    }
+
+    return rows.map((r) => ({ ...r, inventory: inventoryByPaintId.get(r.paint.id) ?? [] }));
   });
 
   app.post("/api/paints", async (req, reply) => {

@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { useAuthStatus } from "./api/client";
 import { LoadingState } from "./components/ui";
@@ -6,10 +6,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Models from "./pages/Models";
 import ModelDetail from "./pages/ModelDetail";
-import OwnedModels from "./pages/OwnedModels";
 import Paints from "./pages/Paints";
 import PaintDetail from "./pages/PaintDetail";
-import PaintInventory from "./pages/PaintInventory";
 import Projects from "./pages/Projects";
 import ProjectNew from "./pages/ProjectNew";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -39,10 +37,10 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/models" element={<Models />} />
           <Route path="/models/:id" element={<ModelDetail />} />
-          <Route path="/owned-models" element={<OwnedModels />} />
+          <Route path="/owned-models" element={<Navigate to="/models?filter=owned" replace />} />
           <Route path="/paints" element={<Paints />} />
           <Route path="/paints/:id" element={<PaintDetail />} />
-          <Route path="/paint-inventory" element={<PaintInventory />} />
+          <Route path="/paint-inventory" element={<Navigate to="/paints?filter=owned" replace />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/new" element={<ProjectNew />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />

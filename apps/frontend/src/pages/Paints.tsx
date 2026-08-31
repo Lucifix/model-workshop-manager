@@ -1,16 +1,60 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { usePaints, useManufacturers } from "../api/client";
-import { Card, LoadingState, ErrorState, EmptyState, Badge, PageHeader, Input, Select, ManufacturerAvatar } from "../components/ui";
+import { usePaints, useManufacturers, useAddPaintToInventory, type PaintListRow } from "../api/client";
+import {
+  Card,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  Badge,
+  PageHeader,
+  Input,
+  Select,
+  Button,
+  ManufacturerAvatar,
+  SegmentedControl,
+} from "../components/ui";
+
+type StatusFilter = "all" | "owned" | "not_owned";
+
+function InventoryQuickAction({ row }: { row: PaintListRow }) {
+  const addToInventory = useAddPaintToInventory();
+  const inStock = row.inventory.length > 0;
+
+  if (inStock) {
+    const totalQty = row.inventory.reduce((sum, i) => sum + i.quantity, 0);
+    return <Badge tone="ok">✓ In stock{totalQty > 1 ? ` (${totalQty})` : ""}</Badge>;
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      disabled={addToInventory.isPending}
+      onClick={(e) => {
+        e.stopPropagation();
+        addToInventory.mutate({ paintId: row.paint.id, quantity: 1 });
+      }}
+    >
+      {addToInventory.isPending ? "Adding…" : "+ Add to inventory"}
+    </Button>
+  );
+}
 
 export default function Paints() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("q") ?? "";
   const manufacturerId = searchParams.get("manufacturerId") ?? "";
+  const status = (searchParams.get("filter") as StatusFilter) ?? "all";
   const { data: manufacturers } = useManufacturers();
-  const { data, isLoading, isError } = usePaints(search, manufacturerId ? Number(manufacturerId) : undefined, true);
+  const { data, isLoading, isError } = usePaints(
+    search,
+    manufacturerId ? Number(manufacturerId) : undefined,
+    true,
+    status !== "all"
+  );
 
-  const hasFilter = !!search.trim() || !!manufacturerId;
+  const hasFilter = !!search.trim() || !!manufacturerId || status !== "all";
   const selectedManufacturer = manufacturers?.find((m) => m.id === Number(manufacturerId));
 
   const updateParams = (updates: Record<string, string>) => {
@@ -22,11 +66,17 @@ export default function Paints() {
     setSearchParams(next, { replace: true });
   };
 
+  const filtered = data?.filter((row) => {
+    if (status === "owned") return row.inventory.length > 0;
+    if (status === "not_owned") return row.inventory.length === 0;
+    return true;
+  });
+
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Paint Catalog" description="Every paint in the shared catalog." />
+      <PageHeader title="Paints" description="Every paint in the catalog — owned and wishlist." />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           value={search}
           onChange={(e) => updateParams({ q: e.target.value })}
@@ -46,6 +96,15 @@ export default function Paints() {
             </option>
           ))}
         </Select>
+        <SegmentedControl
+          value={status}
+          onChange={(value) => updateParams({ filter: value === "all" ? "" : value })}
+          options={[
+            { value: "all", label: "All" },
+            { value: "owned", label: "Owned" },
+            { value: "not_owned", label: "Not owned" },
+          ]}
+        />
       </div>
 
       {!hasFilter && (
@@ -86,11 +145,21 @@ export default function Paints() {
 
       {hasFilter && isLoading && <LoadingState />}
       {hasFilter && isError && <ErrorState message="Could not load paints." />}
-      {hasFilter && data && data.length === 0 && <EmptyState message="No paints match that search." />}
+      {hasFilter && filtered && filtered.length === 0 && (
+        <EmptyState
+          message={
+            status === "owned"
+              ? "None of these are in your inventory yet."
+              : status === "not_owned"
+                ? "Everything matching this search is already in your inventory."
+                : "No paints match that search."
+          }
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {hasFilter &&
-          data?.map((row) => (
+          filtered?.map((row) => (
             <Card
               key={row.paint.id}
               className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
@@ -110,6 +179,9 @@ export default function Paints() {
                   {row.manufacturer?.name} · {row.paint.productCode}
                   {row.paint.finish ? ` · ${row.paint.finish}` : ""}
                 </div>
+              </div>
+              <div className="flex-shrink-0">
+                <InventoryQuickAction row={row} />
               </div>
             </Card>
           ))}
