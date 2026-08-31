@@ -229,7 +229,7 @@ export interface ModelDetail {
   manufacturer: Manufacturer | null;
   requiredPaints: ModelDetailPaint[];
   availability: { totalRequired: number; ownedCount: number; missingCount: number; coveragePercent: number };
-  ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string }[];
+  ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string; storageLocation?: string; notes?: string }[];
   projects: { id: number; modelId: number; name: string; status: string; progressPercent: number }[];
 }
 
@@ -494,6 +494,22 @@ export function useAddModelToInventory() {
   });
 }
 
+export function useRemoveModelFromInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: number; modelId: number }) => {
+      const res = await fetch(`/api/inventory/models/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove model from inventory");
+    },
+    onSuccess: (_, { modelId }) => {
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+    },
+  });
+}
+
 export function useAddPaintToInventory() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -505,6 +521,22 @@ export function useAddPaintToInventory() {
       });
       if (!res.ok) throw new Error("Failed to add paint to inventory");
       return res.json();
+    },
+    onSuccess: (_, { paintId }) => {
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["paint", paintId] });
+    },
+  });
+}
+
+export function useRemovePaintFromInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: number; paintId: number }) => {
+      const res = await fetch(`/api/inventory/paints/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove paint from inventory");
     },
     onSuccess: (_, { paintId }) => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });

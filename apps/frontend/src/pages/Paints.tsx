@@ -1,5 +1,11 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { usePaints, useManufacturers, useAddPaintToInventory, type PaintListRow } from "../api/client";
+import {
+  usePaints,
+  useManufacturers,
+  useAddPaintToInventory,
+  useRemovePaintFromInventory,
+  type PaintListRow,
+} from "../api/client";
 import {
   Card,
   LoadingState,
@@ -18,25 +24,56 @@ type StatusFilter = "all" | "owned" | "not_owned";
 
 function InventoryQuickAction({ row }: { row: PaintListRow }) {
   const addToInventory = useAddPaintToInventory();
+  const removeFromInventory = useRemovePaintFromInventory();
   const inStock = row.inventory.length > 0;
+  const busy = addToInventory.isPending || removeFromInventory.isPending;
 
-  if (inStock) {
-    const totalQty = row.inventory.reduce((sum, i) => sum + i.quantity, 0);
-    return <Badge tone="ok">✓ In stock{totalQty > 1 ? ` (${totalQty})` : ""}</Badge>;
+  if (!inStock) {
+    return (
+      <Button
+        size="sm"
+        variant="secondary"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          addToInventory.mutate({ paintId: row.paint.id, quantity: 1 });
+        }}
+      >
+        {busy ? "Adding…" : "+ Add to inventory"}
+      </Button>
+    );
   }
 
+  const totalQty = row.inventory.reduce((sum, i) => sum + i.quantity, 0);
   return (
-    <Button
-      size="sm"
-      variant="secondary"
-      disabled={addToInventory.isPending}
-      onClick={(e) => {
-        e.stopPropagation();
-        addToInventory.mutate({ paintId: row.paint.id, quantity: 1 });
-      }}
-    >
-      {addToInventory.isPending ? "Adding…" : "+ Add to inventory"}
-    </Button>
+    <div className="flex items-center rounded-lg border border-workshop-border">
+      <button
+        type="button"
+        title="Remove one (undo)"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          const last = row.inventory[row.inventory.length - 1]!;
+          removeFromInventory.mutate({ id: last.id, paintId: row.paint.id });
+        }}
+        className="px-2 py-1 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
+      >
+        −
+      </button>
+      <span className="px-1 text-xs font-semibold text-emerald-400">✓ In stock{totalQty > 1 ? ` (${totalQty})` : ""}</span>
+      <button
+        type="button"
+        title="Add another"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          addToInventory.mutate({ paintId: row.paint.id, quantity: 1 });
+        }}
+        className="px-2 py-1 text-sm font-medium text-slate-400 transition-colors hover:text-emerald-400 disabled:opacity-50"
+      >
+        +
+      </button>
+    </div>
   );
 }
 

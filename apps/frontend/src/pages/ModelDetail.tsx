@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   useModelDetail,
   useAddModelToInventory,
+  useRemoveModelFromInventory,
   useUploadModelImage,
   useUploadModelInstructions,
   useAddModelPaint,
@@ -42,6 +43,7 @@ export default function ModelDetail() {
   const { data: model, isLoading, isError } = useModelDetail(Number(id));
   const { data: manufacturers } = useManufacturers();
   const { mutate: addToInventory, isPending } = useAddModelToInventory();
+  const removeFromInventory = useRemoveModelFromInventory();
   const uploadImage = useUploadModelImage();
   const uploadInstructions = useUploadModelInstructions();
   const addModelPaint = useAddModelPaint();
@@ -370,6 +372,42 @@ export default function ModelDetail() {
           </div>
         </div>
       </Card>
+
+      {isInInventory && (
+        <Card>
+          <h2 className="mb-4 text-sm font-semibold text-slate-300">Your collection</h2>
+          <ul className="space-y-2">
+            {model.ownership.map((entry) => (
+              <li
+                key={entry.id}
+                className="group flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm"
+              >
+                <div>
+                  <div className="font-medium text-slate-100">
+                    {entry.quantity} cop{entry.quantity !== 1 ? "ies" : "y"}
+                    {entry.condition ? ` - ${entry.condition}` : ""}
+                  </div>
+                  {entry.storageLocation && (
+                    <div className="text-xs text-slate-500">Location: {entry.storageLocation}</div>
+                  )}
+                  {entry.notes && <div className="text-xs text-slate-500">Notes: {entry.notes}</div>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Remove this entry from your collection?")) {
+                      removeFromInventory.mutate({ id: entry.id, modelId: model.id });
+                    }
+                  }}
+                  className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card>
         <div className="mb-4 flex items-center justify-between">

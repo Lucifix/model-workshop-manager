@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useModels, useAddModelToInventory, type ModelListRow } from "../api/client";
 import {
-  Card,
+  useModels,
+  useAddModelToInventory,
+  useRemoveModelFromInventory,
+  type ModelListRow,
+} from "../api/client";
+import {
   LoadingState,
   ErrorState,
   EmptyState,
@@ -10,38 +14,66 @@ import {
   PageHeader,
   Input,
   Button,
-  ModelThumbnail,
+  MediaCard,
   SegmentedControl,
 } from "../components/ui";
 import { AddModelForm } from "../components/AddModelForm";
 
 type StatusFilter = "all" | "owned" | "not_owned";
 
-function OwnershipQuickAction({ row }: { row: ModelListRow }) {
+function OwnershipControl({ row }: { row: ModelListRow }) {
   const addToInventory = useAddModelToInventory();
+  const removeFromInventory = useRemoveModelFromInventory();
   const owned = row.ownership.length > 0;
+  const totalQty = row.ownership.reduce((sum, o) => sum + o.quantity, 0);
+  const busy = addToInventory.isPending || removeFromInventory.isPending;
 
-  if (owned) {
-    const totalQty = row.ownership.reduce((sum, o) => sum + o.quantity, 0);
+  if (!owned) {
     return (
-      <Badge tone="ok">
-        ✓ Owned{totalQty > 1 ? ` (${totalQty})` : ""}
-      </Badge>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="w-full"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          addToInventory.mutate({ modelId: row.model.id, quantity: 1 });
+        }}
+      >
+        {busy ? "Adding…" : "+ Mark owned"}
+      </Button>
     );
   }
 
   return (
-    <Button
-      size="sm"
-      variant="secondary"
-      disabled={addToInventory.isPending}
-      onClick={(e) => {
-        e.stopPropagation();
-        addToInventory.mutate({ modelId: row.model.id, quantity: 1 });
-      }}
-    >
-      {addToInventory.isPending ? "Adding…" : "+ Mark owned"}
-    </Button>
+    <div className="flex w-full items-center justify-between rounded-lg border border-workshop-border">
+      <button
+        type="button"
+        title="Remove one (undo)"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          const last = row.ownership[row.ownership.length - 1]!;
+          removeFromInventory.mutate({ id: last.id, modelId: row.model.id });
+        }}
+        className="px-2.5 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
+      >
+        −
+      </button>
+      <span className="flex-1 text-center text-xs font-semibold text-emerald-400">✓ Owned{totalQty > 1 ? ` (${totalQty})` : ""}</span>
+      <button
+        type="button"
+        title="Add another copy"
+        disabled={busy}
+        onClick={(e) => {
+          e.stopPropagation();
+          addToInventory.mutate({ modelId: row.model.id, quantity: 1 });
+        }}
+        className="px-2.5 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:text-emerald-400 disabled:opacity-50"
+      >
+        +
+      </button>
+    </div>
   );
 }
 
@@ -113,27 +145,22 @@ export default function Models() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {filtered?.map((row) => (
-          <Card
+          <MediaCard
             key={row.model.id}
-            className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
+            image={row.model.imageUrl}
+            imageAlt={row.model.name}
+            className="cursor-pointer animate-fade-up"
             onClick={() => navigate(`/models/${row.model.id}`)}
+            overlay={row.model.scale && <Badge variant="secondary">{row.model.scale}</Badge>}
           >
-            <ModelThumbnail imageUrl={row.model.imageUrl} size="sm" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="truncate font-medium text-slate-100">{row.model.name}</span>
-                {row.model.scale && <Badge>{row.model.scale}</Badge>}
-              </div>
-              <div className="text-xs text-slate-400">
-                {row.manufacturer?.name} · {row.model.kitNumber}
-              </div>
+            <h3 className="mb-1 truncate font-semibold text-slate-100">{row.model.name}</h3>
+            <div className="mb-3 truncate text-xs text-slate-400">
+              {row.manufacturer?.name} · {row.model.kitNumber}
             </div>
-            <div className="flex-shrink-0">
-              <OwnershipQuickAction row={row} />
-            </div>
-          </Card>
+            <OwnershipControl row={row} />
+          </MediaCard>
         ))}
       </div>
     </div>

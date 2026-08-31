@@ -26,6 +26,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
     reply.code(201).send(row);
   });
 
+  app.delete("/api/inventory/models/:id", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    await db.delete(ownedModels).where(eq(ownedModels.id, id));
+    reply.code(204).send();
+  });
+
   // --- paint inventory ------------------------------------------------------
   app.get("/api/inventory/paints", async (req) => {
     const { status, fillLevel } = req.query as Record<string, string | undefined>;
@@ -57,5 +63,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       .returning();
     if (!row) return reply.code(404).send({ error: "not_found" });
     return row;
+  });
+
+  app.delete("/api/inventory/paints/:id", async (req, reply) => {
+    const id = Number((req.params as { id: string }).id);
+    await db.delete(paintInventory).where(eq(paintInventory.id, id));
+    reply.code(204).send();
   });
 }

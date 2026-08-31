@@ -2,6 +2,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   usePaintDetail,
   useAddPaintToInventory,
+  useRemovePaintFromInventory,
   useUpdatePaint,
   useDeletePaint,
   useManufacturers,
@@ -43,6 +44,7 @@ export default function PaintDetail() {
   const { data: paint, isLoading, isError } = usePaintDetail(Number(id));
   const { data: manufacturers } = useManufacturers();
   const { mutate: addToInventory, isPending } = useAddPaintToInventory();
+  const removeFromInventory = useRemovePaintFromInventory();
   const updatePaint = useUpdatePaint();
   const deletePaint = useDeletePaint();
 
@@ -335,7 +337,7 @@ export default function PaintDetail() {
             {paint.inventory.map((inv) => (
               <li
                 key={inv.id}
-                className="flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm"
+                className="group flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm"
               >
                 <div>
                   <div className="font-medium text-slate-100">
@@ -346,6 +348,17 @@ export default function PaintDetail() {
                   )}
                   {inv.notes && <div className="text-xs text-slate-500">Notes: {inv.notes}</div>}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Remove this entry from your inventory?")) {
+                      removeFromInventory.mutate({ id: inv.id, paintId: paint.id });
+                    }
+                  }}
+                  className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
+                >
+                  Remove
+                </button>
               </li>
             ))}
           </ul>
