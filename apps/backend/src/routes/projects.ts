@@ -19,6 +19,7 @@ import {
   projectPaintCreateSchema,
 } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
+import { resolveCoverPhotoUrls } from "../lib/coverPhotos.js";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
@@ -31,7 +32,9 @@ export async function projectRoutes(app: FastifyInstance) {
       .leftJoin(models, eq(projects.modelId, models.id))
       .all();
     if (status) rows = rows.filter((r) => r.project.status === status);
-    return rows;
+
+    const coverPhotoUrls = resolveCoverPhotoUrls(rows.map((r) => r.project));
+    return rows.map((r) => ({ ...r, coverPhotoUrl: coverPhotoUrls.get(r.project.id) }));
   });
 
   app.post("/api/projects", async (req, reply) => {
@@ -69,6 +72,13 @@ export async function projectRoutes(app: FastifyInstance) {
 
     const existing = db.select().from(projects).where(eq(projects.id, id)).get();
     if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    if (body.coverPhotoId != null) {
+      const photo = db.select().from(projectPhotos).where(eq(projectPhotos.id, body.coverPhotoId)).get();
+      if (!photo || photo.projectId !== id) {
+        return reply.code(400).send({ error: "invalid_cover_photo" });
+      }
+    }
 
     const now = new Date().toISOString();
     const patch: typeof body & { startedAt?: string; completedAt?: string } = { ...body };

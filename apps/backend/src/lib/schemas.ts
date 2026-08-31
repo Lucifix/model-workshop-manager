@@ -76,7 +76,9 @@ export const projectCreateSchema = z.object({
   completedAt: z.string().optional(),
   notes: z.string().optional(),
 });
-export const projectUpdateSchema = projectCreateSchema.partial();
+export const projectUpdateSchema = projectCreateSchema.partial().extend({
+  coverPhotoId: z.number().int().positive().nullable().optional(),
+});
 
 export const projectPaintCreateSchema = z.object({
   paintId: z.number().int().positive(),

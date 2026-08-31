@@ -6,6 +6,7 @@ import {
   real,
   primaryKey,
   index,
+  type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
@@ -180,6 +181,7 @@ export const projects = sqliteTable("projects", {
   startedAt: text("started_at"),
   completedAt: text("completed_at"),
   notes: text("notes"),
+  coverPhotoId: integer("cover_photo_id").references((): AnySQLiteColumn => projectPhotos.id, { onDelete: "set null" }),
   ...timestamps,
 });
 

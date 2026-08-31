@@ -10,7 +10,7 @@ import {
   useUpdateModel,
   useManufacturers,
 } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar, FieldLabel } from "../components/ui";
+import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar, FieldLabel, ModelThumbnail } from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 import { useState } from "react";
 
@@ -507,15 +507,22 @@ export default function ModelDetail() {
           <h2 className="mb-4 text-sm font-semibold text-slate-300">Build History</h2>
           <ul className="space-y-2">
             {model.projects.map((project) => (
-              <li key={project.id} className="flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm">
-                <div>
-                  <div className="font-medium text-slate-100">{project.name}</div>
-                  <div className="text-xs text-slate-500">{project.status}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium text-slate-300">{project.progressPercent}%</div>
-                  <ProgressBar percent={project.progressPercent} className="mt-1 w-16" />
-                </div>
+              <li key={project.id}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  className="flex w-full items-center gap-3 rounded-lg border border-workshop-border p-2 text-left text-sm transition-colors hover:border-workshop-accent hover:bg-slate-800/60"
+                >
+                  <ModelThumbnail imageUrl={project.coverPhotoUrl} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-slate-100">{project.name}</div>
+                    <div className="text-xs text-slate-500">{project.status}</div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="text-xs font-medium text-slate-300">{project.progressPercent}%</div>
+                    <ProgressBar percent={project.progressPercent} className="mt-1 w-16" />
+                  </div>
+                </button>
               </li>
             ))}
           </ul>

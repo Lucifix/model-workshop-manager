@@ -181,6 +181,7 @@ export interface ProjectListRow {
     startedAt?: string;
   };
   model: { id: number; name: string; kitNumber: string; imageUrl?: string } | null;
+  coverPhotoUrl?: string;
 }
 
 export function useProjects() {
@@ -249,7 +250,7 @@ export interface ModelDetail {
   requiredPaints: ModelDetailPaint[];
   availability: { totalRequired: number; ownedCount: number; missingCount: number; coveragePercent: number };
   ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string; storageLocation?: string; notes?: string }[];
-  projects: { id: number; modelId: number; name: string; status: string; progressPercent: number }[];
+  projects: { id: number; modelId: number; name: string; status: string; progressPercent: number; coverPhotoUrl?: string }[];
 }
 
 export function useModelDetail(id: number) {
@@ -568,6 +569,16 @@ export function useRemovePaintFromInventory() {
 
 // --- Projects -------------------------------------------------------
 
+export interface ProjectPhoto {
+  id: number;
+  projectId: number;
+  filename: string;
+  originalFilename?: string;
+  caption?: string;
+  takenAt?: string;
+  createdAt: string;
+}
+
 export interface ProjectDetail {
   id: number;
   modelId: number;
@@ -577,9 +588,10 @@ export interface ProjectDetail {
   startedAt?: string;
   completedAt?: string;
   notes?: string;
+  coverPhotoId?: number | null;
   model: { id: number; name: string; kitNumber: string; imageUrl?: string } | null;
   log: { id: number; projectId: number; title: string; description?: string; createdAt: string }[];
-  photos: { id: number; projectId: number; filename: string; originalFilename?: string; caption?: string; takenAt?: string; createdAt: string }[];
+  photos: ProjectPhoto[];
   usedPaints: { projectPaint: { projectId: number; paintId: number; purpose: string; notes?: string }; paint: any }[];
 }
 
@@ -616,7 +628,13 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: { progressPercent?: number; status?: string; notes?: string } }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: { progressPercent?: number; status?: string; notes?: string; coverPhotoId?: number | null };
+    }) => {
       const res = await fetch(`/api/projects/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

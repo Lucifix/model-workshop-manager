@@ -8,9 +8,15 @@ import {
   useAddProjectPaint,
   useRemoveProjectPaint,
   useDeleteProjectPhoto,
+  type ProjectPhoto,
 } from "../api/client";
 import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar, ModelThumbnail } from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
+import { Lightbox, type LightboxPhoto } from "../components/Lightbox";
+
+function photoUrl(photo: ProjectPhoto) {
+  return `/uploads/${photo.filename}`;
+}
 
 type TabType = "overview" | "paints" | "log" | "photos" | "notes";
 
@@ -24,6 +30,7 @@ export default function ProjectDetail() {
   const [logTitle, setLogTitle] = useState("");
   const [logDesc, setLogDesc] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showAddPaint, setShowAddPaint] = useState(false);
   const [selectedPaint, setSelectedPaint] = useState<PickedPaint | null>(null);
   const [paintPurpose, setPaintPurpose] = useState<"required" | "optional" | "weathering" | "already_substituted">(
@@ -88,6 +95,31 @@ export default function ProjectDetail() {
     });
   };
 
+  const handleHeroPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadPhoto({ projectId: project.id, file });
+    e.target.value = "";
+  };
+
+  const photos = project.photos ?? [];
+  const mostRecentPhoto = photos.length > 0 ? [...photos].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] : undefined;
+  const coverPhoto = (project.coverPhotoId ? photos.find((p) => p.id === project.coverPhotoId) : undefined) ?? mostRecentPhoto;
+  const lightboxPhotos: LightboxPhoto[] = photos.map((p) => ({ id: p.id, url: photoUrl(p), caption: p.caption }));
+
+  const handleSetCover = (photo: LightboxPhoto) => {
+    const isCurrentCover = coverPhoto?.id === photo.id;
+    updateProject({ id: project.id, data: { coverPhotoId: isCurrentCover ? null : photo.id } });
+  };
+
+  const handleDeletePhoto = (photo: LightboxPhoto) => {
+    if (!confirm("Delete this photo?")) return;
+    deletePhoto.mutate(
+      { projectId: project.id, photoId: photo.id },
+      { onSuccess: () => setLightboxIndex(null) }
+    );
+  };
+
   const tabs: Array<{ id: TabType; label: string }> = [
     { id: "overview", label: "Overview" },
     { id: "paints", label: "Paints" },
@@ -102,18 +134,44 @@ export default function ProjectDetail() {
         ← Back to builds
       </Button>
 
+      {coverPhoto ? (
+        <button
+          type="button"
+          onClick={() => setLightboxIndex(photos.findIndex((p) => p.id === coverPhoto.id))}
+          className="group relative overflow-hidden rounded-2xl border border-workshop-border"
+        >
+          <img
+            src={photoUrl(coverPhoto)}
+            alt={project.name}
+            className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-105 sm:h-72"
+          />
+          <span className="absolute bottom-3 right-3 rounded-lg bg-black/60 px-2 py-1 text-xs text-slate-200 opacity-0 transition-opacity group-hover:opacity-100">
+            View photo
+          </span>
+        </button>
+      ) : (
+        <label className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-workshop-border text-sm text-slate-400 transition-colors hover:border-workshop-accent hover:text-slate-200 sm:h-48">
+          <input type="file" accept="image/*" onChange={handleHeroPhotoChange} className="hidden" />
+          <span className="text-2xl">📷</span>
+          <span>{isUploadingPhoto ? "Uploading…" : "Add your first build photo"}</span>
+        </label>
+      )}
+
       <Card className="mb-2">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3 sm:flex-1">
-            <ModelThumbnail imageUrl={project.model?.imageUrl} size="lg" />
-            <div className="min-w-0">
-              <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">{project.name}</h1>
-              {project.model && (
-                <p className="truncate text-sm text-slate-400">
-                  {project.model.name} ({project.model.kitNumber})
-                </p>
-              )}
-            </div>
+          <div className="min-w-0 sm:flex-1">
+            <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">{project.name}</h1>
+            {project.model && (
+              <button
+                onClick={() => navigate(`/models/${project.model!.id}`)}
+                className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200"
+              >
+                <ModelThumbnail imageUrl={project.model.imageUrl} size="sm" />
+                <span className="truncate">
+                  Based on {project.model.name} ({project.model.kitNumber})
+                </span>
+              </button>
+            )}
           </div>
           <div className="w-full flex-shrink-0 sm:w-44">
             <Select value={project.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
@@ -253,16 +311,16 @@ export default function ProjectDetail() {
                   {project.photos?.length ? `View all (${project.photos.length})` : "Add photos"}
                 </button>
               </div>
-              {project.photos && project.photos.length > 0 ? (
+              {photos.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {project.photos.slice(0, 8).map((photo) => (
+                  {photos.slice(0, 8).map((photo) => (
                     <button
                       key={photo.id}
-                      onClick={() => setActiveTab("photos")}
+                      onClick={() => setLightboxIndex(photos.findIndex((p) => p.id === photo.id))}
                       className="overflow-hidden rounded-lg border border-workshop-border"
                     >
                       <img
-                        src={`/uploads/${photo.filename}`}
+                        src={photoUrl(photo)}
                         alt={photo.originalFilename || "Project photo"}
                         className="aspect-square w-full object-cover transition-transform hover:scale-105"
                       />
@@ -457,18 +515,27 @@ export default function ProjectDetail() {
               </Card>
             )}
 
-            {project.photos && project.photos.length > 0 ? (
+            {photos.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {project.photos.map((photo) => (
-                  <div key={photo.id} className="group relative overflow-hidden rounded-xl border border-workshop-border">
+                {photos.map((photo, i) => (
+                  <button
+                    type="button"
+                    key={photo.id}
+                    onClick={() => setLightboxIndex(i)}
+                    className="group relative overflow-hidden rounded-xl border border-workshop-border text-left"
+                  >
                     <img
-                      src={`/uploads/${photo.filename}`}
+                      src={photoUrl(photo)}
                       alt={photo.originalFilename || "Project photo"}
-                      className="h-32 w-full object-cover"
+                      className="h-32 w-full object-cover transition-transform group-hover:scale-105"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
+                    {coverPhoto?.id === photo.id && (
+                      <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-xs text-amber-300">★</span>
+                    )}
+                    <span
+                      role="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (confirm("Delete this photo?")) {
                           deletePhoto.mutate({ projectId: project.id, photoId: photo.id });
                         }
@@ -476,11 +543,11 @@ export default function ProjectDetail() {
                       className="absolute right-1.5 top-1.5 rounded-lg bg-black/60 px-2 py-1 text-xs text-slate-200 opacity-0 transition-opacity hover:bg-red-900/80 group-hover:opacity-100"
                     >
                       Delete
-                    </button>
+                    </span>
                     {photo.caption && (
                       <div className="bg-workshop-panelmuted p-2 text-xs text-slate-300">{photo.caption}</div>
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -500,6 +567,18 @@ export default function ProjectDetail() {
           </Card>
         )}
       </div>
+
+      {lightboxIndex !== null && lightboxPhotos.length > 0 && (
+        <Lightbox
+          photos={lightboxPhotos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+          isCover={(photo) => coverPhoto?.id === photo.id}
+          onSetCover={handleSetCover}
+          onDelete={handleDeletePhoto}
+        />
+      )}
     </div>
   );
 }

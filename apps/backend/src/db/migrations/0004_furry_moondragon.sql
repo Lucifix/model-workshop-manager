@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `cover_photo_id` integer REFERENCES project_photos(id) ON DELETE SET NULL;

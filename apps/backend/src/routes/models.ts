@@ -16,6 +16,7 @@ import {
 import { modelCreateSchema, modelUpdateSchema, modelPaintCreateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
 import { paintAvailability } from "../lib/paintAvailability.js";
+import { resolveCoverPhotoUrls } from "../lib/coverPhotos.js";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
@@ -84,6 +85,7 @@ export async function modelRoutes(app: FastifyInstance) {
 
     const ownership = db.select().from(ownedModels).where(eq(ownedModels.modelId, id)).all();
     const projectHistory = db.select().from(projects).where(eq(projects.modelId, id)).all();
+    const coverPhotoUrls = resolveCoverPhotoUrls(projectHistory);
 
     return {
       ...model,
@@ -98,7 +100,7 @@ export async function modelRoutes(app: FastifyInstance) {
         requiredPaints.map((r) => (r.paint ? ownedPaintIds.has(r.paint.id) : false)),
       ),
       ownership,
-      projects: projectHistory,
+      projects: projectHistory.map((p) => ({ ...p, coverPhotoUrl: coverPhotoUrls.get(p.id) })),
     };
   });
 

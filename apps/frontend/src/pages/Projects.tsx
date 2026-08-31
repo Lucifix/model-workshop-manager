@@ -30,8 +30,8 @@ export default function Projects() {
         {data?.map((row) => (
           <MediaCard
             key={row.project.id}
-            image={row.model?.imageUrl}
-            imageAlt={row.model?.name}
+            image={row.coverPhotoUrl ?? row.model?.imageUrl}
+            imageAlt={row.project.name}
             className="cursor-pointer animate-fade-up"
             onClick={() => navigate(`/projects/${row.project.id}`)}
             overlay={
