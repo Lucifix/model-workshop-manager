@@ -103,11 +103,11 @@ export default function ProjectDetail() {
       </Button>
 
       <Card className="mb-2">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3 sm:flex-1">
             <ModelThumbnail imageUrl={project.model?.imageUrl} size="lg" />
             <div className="min-w-0">
-              <h1 className="mb-1 truncate text-3xl font-bold text-slate-100">{project.name}</h1>
+              <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">{project.name}</h1>
               {project.model && (
                 <p className="truncate text-sm text-slate-400">
                   {project.model.name} ({project.model.kitNumber})
@@ -115,7 +115,7 @@ export default function ProjectDetail() {
               )}
             </div>
           </div>
-          <div className="w-44 flex-shrink-0">
+          <div className="w-full flex-shrink-0 sm:w-44">
             <Select value={project.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
               <option value="Planned">Planned</option>
               <option value="In Progress">In Progress</option>
