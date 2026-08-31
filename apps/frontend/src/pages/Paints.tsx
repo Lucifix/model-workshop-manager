@@ -1,3 +1,4 @@
+import { memo, useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   usePaints,
@@ -5,6 +6,7 @@ import {
   useAddPaintToInventory,
   useRemovePaintFromInventory,
   type PaintListRow,
+  type PaintStatusFilter,
 } from "../api/client";
 import {
   Card,
@@ -20,9 +22,11 @@ import {
   SegmentedControl,
 } from "../components/ui";
 
-type StatusFilter = "all" | "owned" | "not_owned";
+type StatusFilter = PaintStatusFilter;
 
-function InventoryQuickAction({ row }: { row: PaintListRow }) {
+const SEARCH_DEBOUNCE_MS = 300;
+
+const InventoryQuickAction = memo(function InventoryQuickAction({ row }: { row: PaintListRow }) {
   const addToInventory = useAddPaintToInventory();
   const removeFromInventory = useRemovePaintFromInventory();
   const inStock = row.inventory.length > 0;
@@ -75,7 +79,41 @@ function InventoryQuickAction({ row }: { row: PaintListRow }) {
       </button>
     </div>
   );
-}
+});
+
+const PaintRow = memo(function PaintRow({
+  row,
+  onOpen,
+}: {
+  row: PaintListRow;
+  onOpen: (id: number) => void;
+}) {
+  return (
+    <Card
+      className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
+      onClick={() => onOpen(row.paint.id)}
+    >
+      <span
+        className="h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
+        style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
+        aria-hidden
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="truncate font-medium text-slate-100">{row.paint.name}</span>
+          <Badge>{row.paint.type}</Badge>
+        </div>
+        <div className="text-xs text-slate-400">
+          {row.manufacturer?.name} · {row.paint.productCode}
+          {row.paint.finish ? ` · ${row.paint.finish}` : ""}
+        </div>
+      </div>
+      <div className="flex-shrink-0">
+        <InventoryQuickAction row={row} />
+      </div>
+    </Card>
+  );
+});
 
 export default function Paints() {
   const navigate = useNavigate();
@@ -84,15 +122,9 @@ export default function Paints() {
   const manufacturerId = searchParams.get("manufacturerId") ?? "";
   const status = (searchParams.get("filter") as StatusFilter) ?? "all";
   const { data: manufacturers } = useManufacturers();
-  const { data, isLoading, isError } = usePaints(
-    search,
-    manufacturerId ? Number(manufacturerId) : undefined,
-    true,
-    status !== "all"
-  );
 
-  const hasFilter = !!search.trim() || !!manufacturerId || status !== "all";
-  const selectedManufacturer = manufacturers?.find((m) => m.id === Number(manufacturerId));
+  const [searchDraft, setSearchDraft] = useState(search);
+  useEffect(() => setSearchDraft(search), [search]);
 
   const updateParams = (updates: Record<string, string>) => {
     const next = new URLSearchParams(searchParams);
@@ -103,11 +135,25 @@ export default function Paints() {
     setSearchParams(next, { replace: true });
   };
 
-  const filtered = data?.filter((row) => {
-    if (status === "owned") return row.inventory.length > 0;
-    if (status === "not_owned") return row.inventory.length === 0;
-    return true;
-  });
+  useEffect(() => {
+    if (searchDraft === search) return;
+    const handle = setTimeout(() => updateParams({ q: searchDraft }), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchDraft]);
+
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = usePaints(
+    search,
+    manufacturerId ? Number(manufacturerId) : undefined,
+    true,
+    status
+  );
+
+  const hasFilter = !!search.trim() || !!manufacturerId || status !== "all";
+  const selectedManufacturer = manufacturers?.find((m) => m.id === Number(manufacturerId));
+  const openPaint = useCallback((id: number) => navigate(`/paints/${id}`), [navigate]);
+
+  const filtered = data?.pages.flatMap((page) => page.rows);
 
   return (
     <div className="flex flex-col gap-4">
@@ -115,8 +161,8 @@ export default function Paints() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
-          value={search}
-          onChange={(e) => updateParams({ q: e.target.value })}
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
           placeholder="Search paints (name or product code)…"
           className="flex-1"
         />
@@ -195,34 +241,16 @@ export default function Paints() {
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {hasFilter &&
-          filtered?.map((row) => (
-            <Card
-              key={row.paint.id}
-              className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
-              onClick={() => navigate(`/paints/${row.paint.id}`)}
-            >
-              <span
-                className="h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
-                style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
-                aria-hidden
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-medium text-slate-100">{row.paint.name}</span>
-                  <Badge>{row.paint.type}</Badge>
-                </div>
-                <div className="text-xs text-slate-400">
-                  {row.manufacturer?.name} · {row.paint.productCode}
-                  {row.paint.finish ? ` · ${row.paint.finish}` : ""}
-                </div>
-              </div>
-              <div className="flex-shrink-0">
-                <InventoryQuickAction row={row} />
-              </div>
-            </Card>
-          ))}
+        {hasFilter && filtered?.map((row) => <PaintRow key={row.paint.id} row={row} onOpen={openPaint} />)}
       </div>
+
+      {hasFilter && hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <Button variant="secondary" disabled={isFetchingNextPage} onClick={() => fetchNextPage()}>
+            {isFetchingNextPage ? "Loading…" : "Load more"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

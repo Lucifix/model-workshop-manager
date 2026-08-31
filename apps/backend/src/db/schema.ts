@@ -5,6 +5,7 @@ import {
   integer,
   real,
   primaryKey,
+  index,
 } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
@@ -61,7 +62,9 @@ export const paints = sqliteTable("paints", {
   importedAt: text("imported_at"), // When this record was imported from external source
   lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
   ...timestamps,
-});
+}, (table) => ({
+  manufacturerIdx: index("paints_manufacturer_id_idx").on(table.manufacturerId),
+}));
 
 export const models = sqliteTable("models", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -137,7 +140,9 @@ export const paintInventory = sqliteTable("paint_inventory", {
   storageLocation: text("storage_location"),
   notes: text("notes"),
   ...timestamps,
-});
+}, (table) => ({
+  paintIdx: index("paint_inventory_paint_id_idx").on(table.paintId),
+}));
 
 /** Generic tools/supplies inventory — brushes, cement, tape, airbrush gear, etc. */
 export const supplies = sqliteTable("supplies", {

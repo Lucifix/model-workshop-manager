@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`);
@@ -136,20 +136,39 @@ export interface PaintListRow {
   inventory: { id: number; paintId: number; quantity: number; fillLevel: string; status: string; storageLocation?: string }[];
 }
 
-/** requireFilter: when true, the query only runs once search, manufacturerId, or hasOwnedFilter
+interface PaintListPage {
+  rows: PaintListRow[];
+  hasMore: boolean;
+}
+
+export type PaintStatusFilter = "all" | "owned" | "not_owned";
+
+const PAINTS_PAGE_SIZE = 60;
+
+/** requireFilter: when true, the query only runs once search, manufacturerId, or status
  * is set — the paints catalog is large (10k+ rows across 34 manufacturers), so the page
- * shouldn't fetch/render everything on load. */
-export function usePaints(search?: string, manufacturerId?: number, requireFilter = false, hasOwnedFilter = false) {
-  return useQuery({
-    queryKey: ["paints", search, manufacturerId],
-    queryFn: () => {
+ * shouldn't fetch/render everything on load. Results are paginated server-side
+ * (PAINTS_PAGE_SIZE per page) and filtered/searched in SQL, not in the browser. */
+export function usePaints(
+  search?: string,
+  manufacturerId?: number,
+  requireFilter = false,
+  status: PaintStatusFilter = "all",
+) {
+  return useInfiniteQuery({
+    queryKey: ["paints", search, manufacturerId, status],
+    queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
       if (search) params.set("q", search);
       if (manufacturerId) params.set("manufacturerId", String(manufacturerId));
-      const qs = params.toString();
-      return apiFetch<PaintListRow[]>(`/paints${qs ? `?${qs}` : ""}`);
+      if (status !== "all") params.set("status", status);
+      params.set("limit", String(PAINTS_PAGE_SIZE));
+      params.set("offset", String(pageParam));
+      return apiFetch<PaintListPage>(`/paints?${params.toString()}`);
     },
-    enabled: !requireFilter || !!search?.trim() || !!manufacturerId || hasOwnedFilter,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length * PAINTS_PAGE_SIZE : undefined),
+    enabled: !requireFilter || !!search?.trim() || !!manufacturerId || status !== "all",
   });
 }
 

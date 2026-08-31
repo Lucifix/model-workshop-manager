@@ -19,6 +19,7 @@ export function PaintPicker({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const { data, isFetching } = usePaints(query, undefined, true);
+  const results = data?.pages[0]?.rows;
 
   return (
     <div className="relative">
@@ -35,10 +36,10 @@ export function PaintPicker({
       {open && query.trim() && (
         <div className="absolute z-10 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-workshop-border bg-workshop-panel shadow-lift">
           {isFetching && <div className="px-3 py-2 text-xs text-slate-500">Searching…</div>}
-          {!isFetching && data?.length === 0 && (
+          {!isFetching && results?.length === 0 && (
             <div className="px-3 py-2 text-xs text-slate-500">No matches.</div>
           )}
-          {data
+          {results
             ?.slice()
             .sort((a, b) => Number(b.inventory.length > 0) - Number(a.inventory.length > 0))
             .slice(0, 20)
