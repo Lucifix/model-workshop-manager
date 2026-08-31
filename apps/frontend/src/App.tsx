@@ -12,6 +12,8 @@ import Projects from "./pages/Projects";
 import ProjectNew from "./pages/ProjectNew";
 import ProjectDetail from "./pages/ProjectDetail";
 import ShoppingList from "./pages/ShoppingList";
+import Wishlist from "./pages/Wishlist";
+import Supplies from "./pages/Supplies";
 import ImportExport from "./pages/ImportExport";
 
 export default function App() {
@@ -45,6 +47,8 @@ export default function App() {
           <Route path="/projects/new" element={<ProjectNew />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/supplies" element={<Supplies />} />
           <Route path="/import-export" element={<ImportExport />} />
         </Routes>
       </main>

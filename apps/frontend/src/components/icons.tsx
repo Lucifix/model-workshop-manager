@@ -119,6 +119,23 @@ export function CloseIcon(props: IconProps) {
   );
 }
 
+export function HeartIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 20.5s-7.5-4.7-10-9.6C.4 7.4 2.2 4 5.7 4c2 0 3.7 1.1 4.6 2.7C11.2 5.1 12.9 4 14.9 4c3.5 0 5.3 3.4 3.7 6.9-2.5 4.9-10 9.6-10 9.6Z" />
+    </svg>
+  );
+}
+
+export function DollarIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 2.5v19" />
+      <path d="M16.5 6.5c0-1.7-2-3-4.5-3S7.5 4.8 7.5 6.5 9.5 9.5 12 9.5s4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3" />
+    </svg>
+  );
+}
+
 export function WrenchIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

@@ -64,11 +64,13 @@ per §32 — no separate object storage, no message queue, no GraphQL gateway.
 
 See `apps/backend/src/db/schema.ts` for the authoritative definitions. Table families:
 
-- **Catalog** (never touched by "my" data): `manufacturers`, `paints`, `models`, `model_paints`
+- **Catalog** (never touched by "my" data): `manufacturers`, `paints`, `models`, `model_paints`,
+  `tags`, `model_tags` (free-form multi-tag layer, additive alongside `models.category`)
 - **My inventory** (ownership only, no build state): `owned_models`, `paint_inventory`
 - **My builds** (build state only, references a catalog model): `projects`, `project_paints`,
   `build_log_entries`, `project_photos`
-- **Cross-cutting**: `shopping_list_items`, `supplies` (generic tools/consumables inventory)
+- **Cross-cutting**: `shopping_list_items`, `wishlist_items` ("want, not buying yet" — distinct
+  from the "buying soon" shopping list), `supplies` (generic tools/consumables inventory)
 
 Foreign keys: `paints.manufacturer_id -> manufacturers.id`, `models.manufacturer_id ->
 manufacturers.id`, `model_paints.{model_id,paint_id}`, `owned_models.model_id -> models.id`,

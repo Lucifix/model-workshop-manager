@@ -12,7 +12,9 @@ import {
   ProgressBar,
   Badge,
 } from "../components/ui";
-import { ArchiveIcon, BeakerIcon, BoxIcon, CartIcon, DropletIcon, HammerIcon } from "../components/icons";
+import { ArchiveIcon, BeakerIcon, BoxIcon, CartIcon, DollarIcon, DropletIcon, HammerIcon, WrenchIcon } from "../components/icons";
+
+const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -43,6 +45,18 @@ export default function Dashboard() {
           value={data.lowStockCount}
           icon={<BeakerIcon className="h-5 w-5" />}
           tone={data.lowStockCount > 0 ? "warn" : "neutral"}
+        />
+        <StatTile
+          label="Supplies low"
+          value={data.lowStockSuppliesCount}
+          icon={<WrenchIcon className="h-5 w-5" />}
+          tone={data.lowStockSuppliesCount > 0 ? "warn" : "neutral"}
+        />
+        <StatTile
+          label="Stash value"
+          value={currencyFormatter.format(data.totalStashValue)}
+          icon={<DollarIcon className="h-5 w-5" />}
+          tone="ok"
         />
       </div>
 

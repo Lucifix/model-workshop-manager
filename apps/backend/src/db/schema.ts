@@ -109,6 +109,28 @@ export const modelPaints = sqliteTable(
   }),
 );
 
+/** Free-form multi-tag layer for models (Gunpla, diorama, 40k, historical, …) —
+ * additive alongside the single-value `category` column, not a replacement. */
+export const tags = sqliteTable("tags", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+});
+
+export const modelTags = sqliteTable(
+  "model_tags",
+  {
+    modelId: integer("model_id")
+      .notNull()
+      .references(() => models.id, { onDelete: "cascade" }),
+    tagId: integer("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.modelId, t.tagId] }),
+  }),
+);
+
 // ---------------------------------------------------------------------------
 // MY INVENTORY — physical ownership only. No build/progress fields live here.
 // ---------------------------------------------------------------------------
@@ -139,20 +161,34 @@ export const paintInventory = sqliteTable("paint_inventory", {
   fillLevel: text("fill_level").notNull().default("Full"), // one of FILL_LEVELS
   status: text("status").notNull().default("in_stock"), // in_stock | empty | discontinued
   storageLocation: text("storage_location"),
+  purchasePrice: real("purchase_price"),
   notes: text("notes"),
   ...timestamps,
 }, (table) => ({
   paintIdx: index("paint_inventory_paint_id_idx").on(table.paintId),
 }));
 
+/** Supply category enum values (documented, not DB-enforced, to keep SQLite simple) */
+export const SUPPLY_CATEGORIES = [
+  "brush",
+  "knife",
+  "cement",
+  "tape",
+  "airbrush",
+  "putty",
+  "sandpaper",
+  "other",
+] as const;
+
 /** Generic tools/supplies inventory — brushes, cement, tape, airbrush gear, etc. */
 export const supplies = sqliteTable("supplies", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  category: text("category"), // brush | knife | cement | tape | airbrush | other
+  category: text("category"), // one of SUPPLY_CATEGORIES
   quantity: integer("quantity").notNull().default(1),
   condition: text("condition"),
   storageLocation: text("storage_location"),
+  purchasePrice: real("purchase_price"),
   notes: text("notes"),
   ...timestamps,
 });
@@ -238,6 +274,21 @@ export const projectPhotos = sqliteTable("project_photos", {
 // ---------------------------------------------------------------------------
 // CROSS-CUTTING
 // ---------------------------------------------------------------------------
+
+/** Aspirational "want, not buying yet" list — distinct from shoppingListItems'
+ * "buying soon" semantics. moveWishlistItemToShoppingList (routes/wishlist.ts)
+ * is the bridge between the two. */
+export const wishlistItems = sqliteTable("wishlist_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  paintId: integer("paint_id").references(() => paints.id), // nullable: may be a generic item
+  description: text("description").notNull(),
+  priority: text("priority").notNull().default("normal"), // low | normal | high
+  targetPrice: real("target_price"),
+  notes: text("notes"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+});
 
 export const shoppingListItems = sqliteTable("shopping_list_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),

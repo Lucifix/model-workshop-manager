@@ -36,6 +36,34 @@
       "when": 1788191422168,
       "tag": "0004_furry_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1788205555528,
+      "tag": "0005_right_invaders",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1788205834847,
+      "tag": "0006_bent_william_stryker",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1788205923764,
+      "tag": "0007_charming_bill_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1788206155216,
+      "tag": "0008_dapper_reavers",
+      "breakpoints": true
     }
   ]
 }

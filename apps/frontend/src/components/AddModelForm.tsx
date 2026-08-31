@@ -7,6 +7,7 @@ import {
   type CatalogSearchResult,
 } from "../api/client";
 import { Button, Input, Select, Textarea, FieldLabel, Card } from "./ui";
+import { TagInput } from "./TagInput";
 
 function slugify(name: string): string {
   return name
@@ -40,6 +41,7 @@ export function AddModelForm({
   const [name, setName] = useState("");
   const [scale, setScale] = useState("");
   const [category, setCategory] = useState("");
+  const [tagNames, setTagNames] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("");
   const [partCount, setPartCount] = useState("");
   const [description, setDescription] = useState("");
@@ -154,6 +156,7 @@ export function AddModelForm({
         imageUrl: imageUrl || undefined,
         sourceUrl: sourceUrl || undefined,
         instructionUrl: instructionUrl || undefined,
+        tagNames: tagNames.length > 0 ? tagNames : undefined,
       });
       onCreated(created);
     } catch {
@@ -233,6 +236,11 @@ export function AddModelForm({
               placeholder="200"
             />
           </div>
+        </div>
+
+        <div>
+          <FieldLabel>Tags</FieldLabel>
+          <TagInput value={tagNames} onChange={setTagNames} />
         </div>
 
         <div>

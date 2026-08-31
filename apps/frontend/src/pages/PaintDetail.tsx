@@ -25,6 +25,7 @@ export default function PaintDetail() {
     quantity: 1,
     fillLevel: "Full",
     storageLocation: "",
+    purchasePrice: "",
     notes: "",
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -63,12 +64,13 @@ export default function PaintDetail() {
         quantity: formData.quantity || 1,
         fillLevel: formData.fillLevel as "Full" | "Mostly Full" | "Half" | "Low" | "Empty",
         storageLocation: formData.storageLocation || undefined,
+        purchasePrice: formData.purchasePrice ? Number(formData.purchasePrice) : undefined,
         notes: formData.notes || undefined,
       },
       {
         onSuccess: () => {
           setShowAddForm(false);
-          setFormData({ quantity: 1, fillLevel: "Full", storageLocation: "", notes: "" });
+          setFormData({ quantity: 1, fillLevel: "Full", storageLocation: "", purchasePrice: "", notes: "" });
         },
       }
     );
@@ -302,6 +304,14 @@ export default function PaintDetail() {
                           onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
                           placeholder="Storage location"
                         />
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.purchasePrice}
+                          onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                          placeholder="Price paid (optional)"
+                        />
                         <Textarea
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -345,6 +355,9 @@ export default function PaintDetail() {
                   </div>
                   {inv.storageLocation && (
                     <div className="text-xs text-slate-500">Location: {inv.storageLocation}</div>
+                  )}
+                  {inv.purchasePrice != null && (
+                    <div className="text-xs text-slate-500">Paid: ${inv.purchasePrice.toFixed(2)}</div>
                   )}
                   {inv.notes && <div className="text-xs text-slate-500">Notes: {inv.notes}</div>}
                 </div>

@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar, FieldLabel, ModelThumbnail } from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
+import { TagInput } from "../components/TagInput";
 import { useState } from "react";
 
 export default function ModelDetail() {
@@ -38,6 +39,7 @@ export default function ModelDetail() {
     description: string;
     sourceUrl: string;
     instructionUrl: string;
+    tagNames: string[];
   } | null>(null);
 
   const { data: model, isLoading, isError } = useModelDetail(Number(id));
@@ -116,6 +118,7 @@ export default function ModelDetail() {
       description: model.description ?? "",
       sourceUrl: model.sourceUrl ?? "",
       instructionUrl: model.instructionUrl ?? "",
+      tagNames: model.tags?.map((t) => t.name) ?? [],
     });
     setIsEditing(true);
   };
@@ -137,6 +140,7 @@ export default function ModelDetail() {
           description: editForm.description || undefined,
           sourceUrl: editForm.sourceUrl || undefined,
           instructionUrl: editForm.instructionUrl || undefined,
+          tagNames: editForm.tagNames,
         },
       },
       { onSuccess: () => setIsEditing(false) }
@@ -215,6 +219,13 @@ export default function ModelDetail() {
                 />
               </div>
               <div>
+                <FieldLabel>Tags</FieldLabel>
+                <TagInput
+                  value={editForm.tagNames}
+                  onChange={(tagNames) => setEditForm({ ...editForm, tagNames })}
+                />
+              </div>
+              <div>
                 <FieldLabel>Description</FieldLabel>
                 <Textarea
                   value={editForm.description}
@@ -251,6 +262,9 @@ export default function ModelDetail() {
                     {model.scale && <Badge variant="secondary">{model.scale}</Badge>}
                     {model.category && <Badge variant="secondary">{model.category}</Badge>}
                     {model.difficulty && <Badge variant="secondary">{model.difficulty}</Badge>}
+                    {model.tags?.map((t) => (
+                      <Badge key={t.id}>{t.name}</Badge>
+                    ))}
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleStartEdit} className="flex-shrink-0">

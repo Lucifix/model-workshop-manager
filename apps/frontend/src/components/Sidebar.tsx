@@ -7,9 +7,11 @@ import {
   DatabaseIcon,
   DropletIcon,
   HammerIcon,
+  HeartIcon,
   HomeIcon,
   MenuIcon,
   ShipIcon,
+  WrenchIcon,
 } from "./icons";
 import type { ComponentType } from "react";
 import type { IconProps } from "./icons";
@@ -34,6 +36,8 @@ const groups: NavGroup[] = [
       { to: "/paints", label: "Paints", icon: DropletIcon },
       { to: "/projects", label: "Builds", icon: HammerIcon },
       { to: "/shopping-list", label: "Shopping List", icon: CartIcon },
+      { to: "/wishlist", label: "Wishlist", icon: HeartIcon },
+      { to: "/supplies", label: "Supplies", icon: WrenchIcon },
       { to: "/import-export", label: "Import & Export", icon: DatabaseIcon },
     ],
   },

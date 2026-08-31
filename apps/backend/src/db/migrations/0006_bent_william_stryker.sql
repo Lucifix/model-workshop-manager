@@ -1,0 +1,1 @@
+ALTER TABLE `paint_inventory` ADD `purchase_price` real;

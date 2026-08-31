@@ -4,6 +4,7 @@ import {
   useModels,
   useAddModelToInventory,
   useRemoveModelFromInventory,
+  useTags,
   type ModelListRow,
 } from "../api/client";
 import {
@@ -13,6 +14,7 @@ import {
   Badge,
   PageHeader,
   Input,
+  Select,
   Button,
   MediaCard,
   SegmentedControl,
@@ -83,12 +85,21 @@ export default function Models() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const status = (searchParams.get("filter") as StatusFilter) ?? "all";
-  const { data, isLoading, isError } = useModels(search);
+  const tag = searchParams.get("tag") ?? "";
+  const { data: allTags } = useTags();
+  const { data, isLoading, isError } = useModels(search, tag || undefined);
 
   const setStatus = (value: StatusFilter) => {
     const next = new URLSearchParams(searchParams);
     if (value === "all") next.delete("filter");
     else next.set("filter", value);
+    setSearchParams(next, { replace: true });
+  };
+
+  const setTag = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set("tag", value);
+    else next.delete("tag");
     setSearchParams(next, { replace: true });
   };
 
@@ -120,6 +131,14 @@ export default function Models() {
           placeholder="Search models (name or kit number)…"
           className="sm:max-w-sm"
         />
+        <Select value={tag} onChange={(e) => setTag(e.target.value)} className="sm:w-48">
+          <option value="">All tags</option>
+          {allTags?.map((t) => (
+            <option key={t.id} value={t.name}>
+              {t.name}
+            </option>
+          ))}
+        </Select>
         <SegmentedControl
           value={status}
           onChange={setStatus}
@@ -156,10 +175,21 @@ export default function Models() {
             overlay={row.model.scale && <Badge variant="secondary">{row.model.scale}</Badge>}
           >
             <h3 className="mb-1 truncate font-semibold text-slate-100">{row.model.name}</h3>
-            <div className="mb-3 truncate text-xs text-slate-400">
+            <div className="mb-1.5 truncate text-xs text-slate-400">
               {row.manufacturer?.name} · {row.model.kitNumber}
             </div>
-            <OwnershipControl row={row} />
+            {row.tags.length > 0 && (
+              <div className="mb-1.5 flex flex-wrap gap-1">
+                {row.tags.map((t) => (
+                  <Badge key={t.id} variant="secondary">
+                    {t.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <div className="mt-2">
+              <OwnershipControl row={row} />
+            </div>
           </MediaCard>
         ))}
       </div>

@@ -12,6 +12,8 @@ import {
   paintInventory,
   ownedModels,
   projects,
+  tags,
+  modelTags,
 } from "../db/schema.js";
 import { modelCreateSchema, modelUpdateSchema, modelPaintCreateSchema } from "../lib/schemas.js";
 import { parseBody } from "../lib/validate.js";
@@ -20,9 +22,24 @@ import { resolveCoverPhotoUrls } from "../lib/coverPhotos.js";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 
+/** Find-or-create each tag by name and link it to the model. Used by both
+ * create and update — update replaces the full tag set (see PATCH handler). */
+async function attachTags(modelId: number, names: string[]) {
+  for (const rawName of names) {
+    const name = rawName.trim();
+    if (!name) continue;
+    let tag = db.select().from(tags).where(eq(tags.name, name)).get();
+    if (!tag) {
+      const [created] = await db.insert(tags).values({ name }).returning();
+      tag = created;
+    }
+    await db.insert(modelTags).values({ modelId, tagId: tag!.id }).returning();
+  }
+}
+
 export async function modelRoutes(app: FastifyInstance) {
   app.get("/api/models", async (req) => {
-    const { q, manufacturerId, scale, category } = req.query as Record<
+    const { q, manufacturerId, scale, category, tag } = req.query as Record<
       string,
       string | undefined
     >;
@@ -51,16 +68,39 @@ export async function modelRoutes(app: FastifyInstance) {
       ownershipByModelId.set(row.modelId, list);
     }
 
-    return rows.map((r) => ({ ...r, ownership: ownershipByModelId.get(r.model.id) ?? [] }));
+    const tagRows = db
+      .select({ modelId: modelTags.modelId, tag: tags })
+      .from(modelTags)
+      .leftJoin(tags, eq(modelTags.tagId, tags.id))
+      .all();
+    const tagsByModelId = new Map<number, { id: number; name: string }[]>();
+    for (const r of tagRows) {
+      if (!r.tag) continue;
+      const list = tagsByModelId.get(r.modelId) ?? [];
+      list.push(r.tag);
+      tagsByModelId.set(r.modelId, list);
+    }
+    if (tag) {
+      const modelIdsWithTag = new Set(tagRows.filter((r) => r.tag?.name === tag).map((r) => r.modelId));
+      rows = rows.filter((r) => modelIdsWithTag.has(r.model.id));
+    }
+
+    return rows.map((r) => ({
+      ...r,
+      ownership: ownershipByModelId.get(r.model.id) ?? [],
+      tags: tagsByModelId.get(r.model.id) ?? [],
+    }));
   });
 
   app.post("/api/models", async (req, reply) => {
     const body = parseBody(modelCreateSchema, req.body, reply);
     if (!body) return;
+    const { tagNames, ...modelData } = body;
     const [row] = await db
       .insert(models)
-      .values({ ...body, source: body.source ?? "manual" })
+      .values({ ...modelData, source: modelData.source ?? "manual" })
       .returning();
+    if (tagNames && tagNames.length > 0) await attachTags(row!.id, tagNames);
     reply.code(201).send(row);
   });
 
@@ -87,9 +127,17 @@ export async function modelRoutes(app: FastifyInstance) {
     const projectHistory = db.select().from(projects).where(eq(projects.modelId, id)).all();
     const coverPhotoUrls = resolveCoverPhotoUrls(projectHistory);
 
+    const modelTagRows = db
+      .select({ tag: tags })
+      .from(modelTags)
+      .leftJoin(tags, eq(modelTags.tagId, tags.id))
+      .where(eq(modelTags.modelId, id))
+      .all();
+
     return {
       ...model,
       manufacturer,
+      tags: modelTagRows.map((r) => r.tag).filter((t): t is { id: number; name: string } => t != null),
       requiredPaints: requiredPaints.map((r) => ({
         ...r.paint,
         usage: r.modelPaint.usage,
@@ -108,12 +156,17 @@ export async function modelRoutes(app: FastifyInstance) {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(modelUpdateSchema, req.body, reply);
     if (!body) return;
+    const { tagNames, ...modelData } = body;
     const [row] = await db
       .update(models)
-      .set({ ...body, updatedAt: new Date().toISOString() })
+      .set({ ...modelData, updatedAt: new Date().toISOString() })
       .where(eq(models.id, id))
       .returning();
     if (!row) return reply.code(404).send({ error: "not_found" });
+    if (tagNames) {
+      await db.delete(modelTags).where(eq(modelTags.modelId, id));
+      if (tagNames.length > 0) await attachTags(id, tagNames);
+    }
     return row;
   });
 

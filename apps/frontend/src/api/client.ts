@@ -62,6 +62,9 @@ export interface DashboardData {
   plannedCount: number;
   totalPaints: number;
   lowStockCount: number;
+  totalSupplies: number;
+  lowStockSuppliesCount: number;
+  totalStashValue: number;
   recentActivity: { projectName?: string; title: string; createdAt: string }[];
   recentlyAddedModels: { id: number; name: string; kitNumber: string; imageUrl?: string }[];
   recentlyCompletedBuilds: { id: number; name: string; completedAt?: string }[];
@@ -69,6 +72,11 @@ export interface DashboardData {
 
 export function useDashboard() {
   return useQuery({ queryKey: ["dashboard"], queryFn: () => apiFetch<DashboardData>("/dashboard") });
+}
+
+export interface Tag {
+  id: number;
+  name: string;
 }
 
 export interface ModelListRow {
@@ -82,6 +90,11 @@ export interface ModelListRow {
   };
   manufacturer: { id: number; name: string } | null;
   ownership: { id: number; modelId: number; quantity: number; condition?: string; storageLocation?: string }[];
+  tags: Tag[];
+}
+
+export function useTags() {
+  return useQuery({ queryKey: ["tags"], queryFn: () => apiFetch<Tag[]>("/tags") });
 }
 
 export interface Manufacturer {
@@ -116,10 +129,16 @@ export function useCreateManufacturer() {
   });
 }
 
-export function useModels(search?: string) {
+export function useModels(search?: string, tag?: string) {
   return useQuery({
-    queryKey: ["models", search],
-    queryFn: () => apiFetch<ModelListRow[]>(`/models${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+    queryKey: ["models", search, tag],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (search) params.set("q", search);
+      if (tag) params.set("tag", tag);
+      const qs = params.toString();
+      return apiFetch<ModelListRow[]>(`/models${qs ? `?${qs}` : ""}`);
+    },
   });
 }
 
@@ -247,6 +266,7 @@ export interface ModelDetail {
   source: string;
   sourceUrl?: string;
   manufacturer: Manufacturer | null;
+  tags: Tag[];
   requiredPaints: ModelDetailPaint[];
   availability: { totalRequired: number; ownedCount: number; missingCount: number; coveragePercent: number };
   ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string; storageLocation?: string; notes?: string }[];
@@ -275,7 +295,7 @@ export interface PaintDetail {
   source: string;
   sourceUrl?: string;
   manufacturer: Manufacturer | null;
-  inventory: { id: number; paintId: number; quantity: number; fillLevel: string; storageLocation?: string; notes?: string }[];
+  inventory: { id: number; paintId: number; quantity: number; fillLevel: string; storageLocation?: string; purchasePrice?: number; notes?: string }[];
 }
 
 export function usePaintDetail(id: number) {
@@ -347,6 +367,7 @@ export interface ModelCreateInput {
   imageUrl?: string;
   instructionUrl?: string;
   sourceUrl?: string;
+  tagNames?: string[];
 }
 
 export function useCreateModel() {
@@ -364,6 +385,7 @@ export function useCreateModel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
   });
 }
@@ -383,6 +405,7 @@ export function useUpdateModel() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["model", id] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
   });
 }
@@ -533,7 +556,7 @@ export function useRemoveModelFromInventory() {
 export function useAddPaintToInventory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { paintId: number; quantity?: number; fillLevel?: string; storageLocation?: string; notes?: string }) => {
+    mutationFn: async (data: { paintId: number; quantity?: number; fillLevel?: string; storageLocation?: string; purchasePrice?: number; notes?: string }) => {
       const res = await fetch("/api/inventory/paints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -754,6 +777,165 @@ export function useAddShoppingListItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+    },
+  });
+}
+
+// --- Wishlist ---------------------------------------------------------
+
+export interface WishlistRow {
+  item: {
+    id: number;
+    description: string;
+    priority: string;
+    targetPrice?: number;
+    notes?: string;
+  };
+  paint: { id: number; name: string; colorHex?: string } | null;
+}
+
+export function useWishlist() {
+  return useQuery({
+    queryKey: ["wishlist"],
+    queryFn: () => apiFetch<WishlistRow[]>("/wishlist"),
+  });
+}
+
+export function useAddWishlistItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { paintId?: number; description: string; priority?: "low" | "normal" | "high"; targetPrice?: number }) => {
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to add wishlist item");
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
+  });
+}
+
+export function useDeleteWishlistItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/wishlist/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove wishlist item");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
+  });
+}
+
+export function useMoveWishlistItemToShoppingList() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/wishlist/${id}/move-to-shopping-list`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to move item to shopping list");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+    },
+  });
+}
+
+// --- Supplies -------------------------------------------------------------
+
+export interface Supply {
+  id: number;
+  name: string;
+  category?: string;
+  quantity: number;
+  condition?: string;
+  storageLocation?: string;
+  purchasePrice?: number;
+  notes?: string;
+}
+
+export interface SupplyInput {
+  name: string;
+  category?: string;
+  quantity?: number;
+  condition?: string;
+  storageLocation?: string;
+  purchasePrice?: number;
+  notes?: string;
+}
+
+export function useSupplies(search?: string, category?: string) {
+  return useQuery({
+    queryKey: ["supplies", search, category],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (search) params.set("q", search);
+      if (category) params.set("category", category);
+      const qs = params.toString();
+      return apiFetch<Supply[]>(`/supplies${qs ? `?${qs}` : ""}`);
+    },
+  });
+}
+
+export function useSupply(id: number) {
+  return useQuery({
+    queryKey: ["supply", id],
+    queryFn: () => apiFetch<Supply>(`/supplies/${id}`),
+    enabled: Number.isFinite(id),
+  });
+}
+
+export function useCreateSupply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: SupplyInput) => {
+      const res = await fetch("/api/supplies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create supply");
+      return res.json() as Promise<Supply>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["supplies"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateSupply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<SupplyInput> }) => {
+      const res = await fetch(`/api/supplies/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update supply");
+      return res.json() as Promise<Supply>;
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["supply", id] });
+      queryClient.invalidateQueries({ queryKey: ["supplies"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useDeleteSupply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/supplies/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete supply");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["supplies"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

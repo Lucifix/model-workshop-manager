@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAINT_TYPES, FILL_LEVELS, PROJECT_STATUSES, PAINT_PURPOSES } from "../db/schema.js";
+import { PAINT_TYPES, FILL_LEVELS, PROJECT_STATUSES, PAINT_PURPOSES, SUPPLY_CATEGORIES } from "../db/schema.js";
 
 export const manufacturerCreateSchema = z.object({
   name: z.string().min(1),
@@ -36,8 +36,13 @@ export const modelCreateSchema = z.object({
   sourceUrl: z.string().url().optional(),
   imageUrl: z.string().url().optional(),
   instructionUrl: z.string().url().optional(),
+  tagNames: z.array(z.string().min(1)).optional(),
 });
 export const modelUpdateSchema = modelCreateSchema.partial();
+
+export const tagCreateSchema = z.object({
+  name: z.string().min(1),
+});
 
 export const modelPaintCreateSchema = z.object({
   paintId: z.number().int().positive(),
@@ -63,6 +68,7 @@ export const paintInventoryCreateSchema = z.object({
   fillLevel: z.enum(FILL_LEVELS).default("Full"),
   status: z.string().optional(),
   storageLocation: z.string().optional(),
+  purchasePrice: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
 export const paintInventoryUpdateSchema = paintInventoryCreateSchema.partial();
@@ -91,9 +97,29 @@ export const buildLogCreateSchema = z.object({
   description: z.string().optional(),
 });
 
+export const supplyCreateSchema = z.object({
+  name: z.string().min(1),
+  category: z.enum(SUPPLY_CATEGORIES).optional(),
+  quantity: z.number().int().nonnegative().default(1),
+  condition: z.string().optional(),
+  storageLocation: z.string().optional(),
+  purchasePrice: z.number().nonnegative().optional(),
+  notes: z.string().optional(),
+});
+export const supplyUpdateSchema = supplyCreateSchema.partial();
+
 export const shoppingListCreateSchema = z.object({
   paintId: z.number().int().positive().optional(),
   description: z.string().min(1),
   quantity: z.number().int().positive().default(1),
   priority: z.enum(["low", "normal", "high"]).default("normal"),
 });
+
+export const wishlistCreateSchema = z.object({
+  paintId: z.number().int().positive().optional(),
+  description: z.string().min(1),
+  priority: z.enum(["low", "normal", "high"]).default("normal"),
+  targetPrice: z.number().nonnegative().optional(),
+  notes: z.string().optional(),
+});
+export const wishlistUpdateSchema = wishlistCreateSchema.partial();
