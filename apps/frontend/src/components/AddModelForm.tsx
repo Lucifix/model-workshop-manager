@@ -68,12 +68,27 @@ export function AddModelForm({
         return;
       }
       if (hit.name) setName(hit.name);
+
+      let manufacturerNote = "";
+      if (hit.manufacturerName && hit.manufacturerName !== "Unknown") {
+        const match = manufacturers?.find(
+          (m) => m.name.toLowerCase() === hit.manufacturerName.toLowerCase()
+        );
+        if (match) {
+          setManufacturerId(String(match.id));
+        } else {
+          setManufacturerId("__new__");
+          setNewManufacturerName(hit.manufacturerName);
+          manufacturerNote = ` "${hit.manufacturerName}" isn't in your manufacturer list yet — it'll be added when you save.`;
+        }
+      }
+
       if (hit.imageUrl) {
         setImageUrl(hit.imageUrl);
-        setLookupMessage(`Found: ${hit.name}. Review the fields below before saving.`);
+        setLookupMessage(`Found: ${hit.name}. Review the fields below before saving.${manufacturerNote}`);
       } else {
         setLookupMessage(
-          `Found: ${hit.name} — but no image for it. Paste one below, or upload your own photo after saving.`
+          `Found: ${hit.name} — but no image for it. Paste one below, or upload your own photo after saving.${manufacturerNote}`
         );
       }
     } catch {
