@@ -90,25 +90,27 @@ const PaintRow = memo(function PaintRow({
 }) {
   return (
     <Card
-      className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
+      className="flex cursor-pointer flex-col gap-2 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
       onClick={() => onOpen(row.paint.id)}
     >
-      <span
-        className="h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
-        style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
-        aria-hidden
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="truncate font-medium text-slate-100">{row.paint.name}</span>
-          <Badge>{row.paint.type}</Badge>
-        </div>
-        <div className="text-xs text-slate-400">
-          {row.manufacturer?.name} · {row.paint.productCode}
-          {row.paint.finish ? ` · ${row.paint.finish}` : ""}
+      <div className="flex items-start gap-3">
+        <span
+          className="mt-0.5 h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
+          style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
+          aria-hidden
+        />
+        <div className="min-w-0 flex-1">
+          <div className="font-medium leading-snug text-slate-100">{row.paint.name}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+            <Badge>{row.paint.type}</Badge>
+            <span>
+              {row.manufacturer?.name} · {row.paint.productCode}
+              {row.paint.finish ? ` · ${row.paint.finish}` : ""}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="flex-shrink-0">
+      <div className="flex justify-end">
         <InventoryQuickAction row={row} />
       </div>
     </Card>
