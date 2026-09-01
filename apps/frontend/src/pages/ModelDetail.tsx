@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   useModelDetail,
   useAddModelToInventory,
@@ -409,9 +410,26 @@ export default function ModelDetail() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm("Remove this entry from your collection?")) {
-                      removeFromInventory.mutate({ id: entry.id, modelId: model.id });
-                    }
+                    removeFromInventory.mutate(
+                      { id: entry.id, modelId: model.id },
+                      {
+                        onSuccess: () => {
+                          toast(`Removed "${model.name}" from your collection`, {
+                            action: {
+                              label: "Undo",
+                              onClick: () =>
+                                addToInventory({
+                                  modelId: model.id,
+                                  quantity: entry.quantity,
+                                  condition: entry.condition ?? undefined,
+                                  storageLocation: entry.storageLocation ?? undefined,
+                                  notes: entry.notes ?? undefined,
+                                }),
+                            },
+                          });
+                        },
+                      }
+                    );
                   }}
                   className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
                 >
@@ -502,7 +520,29 @@ export default function ModelDetail() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => removeModelPaint.mutate({ modelId: model.id, paintId: paint.id })}
+                    onClick={() =>
+                      removeModelPaint.mutate(
+                        { modelId: model.id, paintId: paint.id },
+                        {
+                          onSuccess: () => {
+                            toast(`Removed "${paint.name}" from requirements`, {
+                              action: {
+                                label: "Undo",
+                                onClick: () =>
+                                  addModelPaint.mutate({
+                                    modelId: model.id,
+                                    data: {
+                                      paintId: paint.id,
+                                      usage: paint.usage ?? undefined,
+                                      confidence: paint.confidence ?? undefined,
+                                    },
+                                  }),
+                              },
+                            });
+                          },
+                        }
+                      )
+                    }
                     className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
                   >
                     Remove

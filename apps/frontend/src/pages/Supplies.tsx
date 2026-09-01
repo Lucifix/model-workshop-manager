@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useSupplies, useCreateSupply, useUpdateSupply, useDeleteSupply, type Supply } from "../api/client";
 import {
   Card,
@@ -58,6 +59,26 @@ export default function Supplies() {
   const adjustQuantity = (supply: Supply, delta: number) => {
     const quantity = Math.max(0, supply.quantity + delta);
     updateSupply.mutate({ id: supply.id, data: { quantity } });
+  };
+
+  const handleDelete = (supply: Supply) => {
+    deleteSupply.mutate(supply.id, {
+      onSuccess: () => {
+        toast(`Removed "${supply.name}"`, {
+          action: {
+            label: "Undo",
+            onClick: () =>
+              createSupply.mutate({
+                name: supply.name,
+                category: supply.category ?? undefined,
+                quantity: supply.quantity,
+                storageLocation: supply.storageLocation ?? undefined,
+                purchasePrice: supply.purchasePrice ?? undefined,
+              }),
+          },
+        });
+      },
+    });
   };
 
   if (isLoading) return <LoadingState />;
@@ -201,7 +222,7 @@ export default function Supplies() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => deleteSupply.mutate(supply.id)}
+                    onClick={() => handleDelete(supply)}
                     disabled={deleteSupply.isPending}
                   >
                     Remove

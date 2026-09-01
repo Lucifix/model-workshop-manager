@@ -1,4 +1,9 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+function toastError(err: unknown) {
+  toast.error(err instanceof Error ? err.message : "Something went wrong");
+}
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`);
@@ -125,7 +130,11 @@ export function useCreateManufacturer() {
       if (!res.ok) throw new Error("Failed to create manufacturer");
       return res.json() as Promise<Manufacturer>;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["manufacturers"] }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["manufacturers"] });
+      toast.success(`Added manufacturer "${data.name}"`);
+    },
+    onError: toastError,
   });
 }
 
@@ -233,7 +242,11 @@ export function useMarkPurchased() {
       if (!res.ok) throw new Error("Failed to update item");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shopping-list"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+      toast.success("Marked as purchased");
+    },
+    onError: toastError,
   });
 }
 
@@ -332,7 +345,9 @@ export function useUpdatePaint() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["paint", id] });
       queryClient.invalidateQueries({ queryKey: ["paints"] });
+      toast.success("Paint updated");
     },
+    onError: toastError,
   });
 }
 
@@ -349,7 +364,9 @@ export function useDeletePaint() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paints"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Paint deleted from catalog");
     },
+    // No toastError here — PaintDetail already shows delete failures inline.
   });
 }
 
@@ -382,11 +399,13 @@ export function useCreateModel() {
       if (!res.ok) throw new Error("Failed to create model");
       return res.json() as Promise<{ id: number; name: string; kitNumber: string }>;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success(`Added "${data.name}" to catalog`);
     },
+    onError: toastError,
   });
 }
 
@@ -406,7 +425,9 @@ export function useUpdateModel() {
       queryClient.invalidateQueries({ queryKey: ["model", id] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["tags"] });
+      toast.success("Model updated");
     },
+    onError: toastError,
   });
 }
 
@@ -426,7 +447,9 @@ export function useUploadModelImage() {
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
+      toast.success("Photo uploaded");
     },
+    onError: toastError,
   });
 }
 
@@ -445,7 +468,9 @@ export function useUploadModelInstructions() {
     },
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+      toast.success("Instructions uploaded");
     },
+    onError: toastError,
   });
 }
 
@@ -477,7 +502,9 @@ export function useAddModelPaint() {
     },
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+      toast.success("Added required paint");
     },
+    onError: toastError,
   });
 }
 
@@ -491,6 +518,7 @@ export function useRemoveModelPaint() {
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
     },
+    onError: toastError,
   });
 }
 
@@ -513,6 +541,7 @@ export function useCatalogSearch() {
       const data = (await res.json()) as { results: CatalogSearchResult[] };
       return data.results;
     },
+    onError: toastError,
   });
 }
 
@@ -533,7 +562,9 @@ export function useAddModelToInventory() {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
+      toast.success("Added to your collection");
     },
+    onError: toastError,
   });
 }
 
@@ -550,6 +581,7 @@ export function useRemoveModelFromInventory() {
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
     },
+    onError: toastError,
   });
 }
 
@@ -570,7 +602,9 @@ export function useAddPaintToInventory() {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["paints"] });
       queryClient.invalidateQueries({ queryKey: ["paint", paintId] });
+      toast.success("Added to inventory");
     },
+    onError: toastError,
   });
 }
 
@@ -587,6 +621,7 @@ export function useRemovePaintFromInventory() {
       queryClient.invalidateQueries({ queryKey: ["paints"] });
       queryClient.invalidateQueries({ queryKey: ["paint", paintId] });
     },
+    onError: toastError,
   });
 }
 
@@ -641,10 +676,12 @@ export function useCreateProject() {
       if (!res.ok) throw new Error("Failed to create project");
       return res.json() as Promise<{ id: number }>;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`Started build "${variables.name}"`);
     },
+    onError: toastError,
   });
 }
 
@@ -670,7 +707,9 @@ export function useUpdateProject() {
       queryClient.invalidateQueries({ queryKey: ["project", id] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Build updated");
     },
+    onError: toastError,
   });
 }
 
@@ -686,9 +725,11 @@ export function useAddBuildLogEntry() {
       if (!res.ok) throw new Error("Failed to add build log entry");
       return res.json();
     },
-    onSuccess: (_, { projectId }) => {
+    onSuccess: (_, { projectId, data }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success(`Logged "${data.title}"`);
     },
+    onError: toastError,
   });
 }
 
@@ -707,7 +748,9 @@ export function useUploadProjectPhoto() {
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Photo added");
     },
+    onError: toastError,
   });
 }
 
@@ -720,7 +763,9 @@ export function useDeleteProjectPhoto() {
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Photo deleted");
     },
+    onError: toastError,
   });
 }
 
@@ -744,7 +789,9 @@ export function useAddProjectPaint() {
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Added paint to build");
     },
+    onError: toastError,
   });
 }
 
@@ -758,6 +805,7 @@ export function useRemoveProjectPaint() {
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
     },
+    onError: toastError,
   });
 }
 
@@ -775,9 +823,11 @@ export function useAddShoppingListItem() {
       if (!res.ok) throw new Error("Failed to add shopping list item");
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+      toast.success(`Added "${variables.description}" to shopping list`);
     },
+    onError: toastError,
   });
 }
 
@@ -813,7 +863,11 @@ export function useAddWishlistItem() {
       if (!res.ok) throw new Error("Failed to add wishlist item");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      toast.success(`Added "${variables.description}" to wishlist`);
+    },
+    onError: toastError,
   });
 }
 
@@ -825,6 +879,7 @@ export function useDeleteWishlistItem() {
       if (!res.ok) throw new Error("Failed to remove wishlist item");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
+    onError: toastError,
   });
 }
 
@@ -839,7 +894,9 @@ export function useMoveWishlistItemToShoppingList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["shopping-list"] });
+      toast.success("Moved to shopping list");
     },
+    onError: toastError,
   });
 }
 
@@ -899,10 +956,12 @@ export function useCreateSupply() {
       if (!res.ok) throw new Error("Failed to create supply");
       return res.json() as Promise<Supply>;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["supplies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`Added "${data.name}"`);
     },
+    onError: toastError,
   });
 }
 
@@ -923,6 +982,9 @@ export function useUpdateSupply() {
       queryClient.invalidateQueries({ queryKey: ["supplies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
+    // No success toast — this also backs the quantity +/- stepper, which
+    // would spam a toast per click. Errors still surface.
+    onError: toastError,
   });
 }
 
@@ -933,6 +995,7 @@ export function useDeleteSupply() {
       const res = await fetch(`/api/supplies/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete supply");
     },
+    onError: toastError,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["supplies"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });

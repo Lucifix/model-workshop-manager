@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import { Sidebar } from "./components/Sidebar";
 import { useAuthStatus } from "./api/client";
 import { LoadingState } from "./components/ui";
@@ -19,39 +20,38 @@ import ImportExport from "./pages/ImportExport";
 export default function App() {
   const { data: auth, isLoading } = useAuthStatus();
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <LoadingState />
-      </div>
-    );
-  }
-
-  if (!auth?.authenticated) {
-    return <Login />;
-  }
-
   return (
-    <div className="min-h-screen lg:flex">
-      <Sidebar />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 lg:px-8">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/models" element={<Models />} />
-          <Route path="/models/:id" element={<ModelDetail />} />
-          <Route path="/owned-models" element={<Navigate to="/models?filter=owned" replace />} />
-          <Route path="/paints" element={<Paints />} />
-          <Route path="/paints/:id" element={<PaintDetail />} />
-          <Route path="/paint-inventory" element={<Navigate to="/paints?filter=owned" replace />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/new" element={<ProjectNew />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/shopping-list" element={<ShoppingList />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/supplies" element={<Supplies />} />
-          <Route path="/import-export" element={<ImportExport />} />
-        </Routes>
-      </main>
-    </div>
+    <>
+      <Toaster theme="dark" position="top-center" richColors closeButton />
+      {isLoading ? (
+        <div className="flex min-h-screen items-center justify-center">
+          <LoadingState />
+        </div>
+      ) : !auth?.authenticated ? (
+        <Login />
+      ) : (
+        <div className="min-h-screen lg:flex">
+          <Sidebar />
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 lg:px-8">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/models" element={<Models />} />
+              <Route path="/models/:id" element={<ModelDetail />} />
+              <Route path="/owned-models" element={<Navigate to="/models?filter=owned" replace />} />
+              <Route path="/paints" element={<Paints />} />
+              <Route path="/paints/:id" element={<PaintDetail />} />
+              <Route path="/paint-inventory" element={<Navigate to="/paints?filter=owned" replace />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/new" element={<ProjectNew />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/shopping-list" element={<ShoppingList />} />
+              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/supplies" element={<Supplies />} />
+              <Route path="/import-export" element={<ImportExport />} />
+            </Routes>
+          </main>
+        </div>
+      )}
+    </>
   );
 }

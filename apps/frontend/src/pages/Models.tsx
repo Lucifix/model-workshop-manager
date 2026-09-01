@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   useModels,
   useAddModelToInventory,
@@ -56,7 +57,25 @@ function OwnershipControl({ row }: { row: ModelListRow }) {
         onClick={(e) => {
           e.stopPropagation();
           const last = row.ownership[row.ownership.length - 1]!;
-          removeFromInventory.mutate({ id: last.id, modelId: row.model.id });
+          removeFromInventory.mutate(
+            { id: last.id, modelId: row.model.id },
+            {
+              onSuccess: () => {
+                toast(`Removed "${row.model.name}" from your collection`, {
+                  action: {
+                    label: "Undo",
+                    onClick: () =>
+                      addToInventory.mutate({
+                        modelId: row.model.id,
+                        quantity: last.quantity,
+                        condition: last.condition ?? undefined,
+                        storageLocation: last.storageLocation ?? undefined,
+                      }),
+                  },
+                });
+              },
+            }
+          );
         }}
         className="px-2.5 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
       >

@@ -1,4 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import {
   usePaintDetail,
   useAddPaintToInventory,
@@ -364,9 +365,27 @@ export default function PaintDetail() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm("Remove this entry from your inventory?")) {
-                      removeFromInventory.mutate({ id: inv.id, paintId: paint.id });
-                    }
+                    removeFromInventory.mutate(
+                      { id: inv.id, paintId: paint.id },
+                      {
+                        onSuccess: () => {
+                          toast(`Removed "${paint.name}" from inventory`, {
+                            action: {
+                              label: "Undo",
+                              onClick: () =>
+                                addToInventory({
+                                  paintId: paint.id,
+                                  quantity: inv.quantity,
+                                  fillLevel: inv.fillLevel as "Full" | "Mostly Full" | "Half" | "Low" | "Empty",
+                                  storageLocation: inv.storageLocation ?? undefined,
+                                  purchasePrice: inv.purchasePrice ?? undefined,
+                                  notes: inv.notes ?? undefined,
+                                }),
+                            },
+                          });
+                        },
+                      }
+                    );
                   }}
                   className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
                 >

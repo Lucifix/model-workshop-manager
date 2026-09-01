@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   useProjectDetail,
   useUpdateProject,
@@ -409,7 +410,33 @@ export default function ProjectDetail() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeProjectPaint.mutate({ projectId: project.id, paintId: row.projectPaint.paintId })}
+                        onClick={() =>
+                          removeProjectPaint.mutate(
+                            { projectId: project.id, paintId: row.projectPaint.paintId },
+                            {
+                              onSuccess: () => {
+                                toast(`Removed "${row.paint?.name}" from build`, {
+                                  action: {
+                                    label: "Undo",
+                                    onClick: () =>
+                                      addProjectPaint.mutate({
+                                        projectId: project.id,
+                                        data: {
+                                          paintId: row.projectPaint.paintId,
+                                          purpose: row.projectPaint.purpose as
+                                            | "required"
+                                            | "optional"
+                                            | "weathering"
+                                            | "already_substituted",
+                                          notes: row.projectPaint.notes ?? undefined,
+                                        },
+                                      }),
+                                  },
+                                });
+                              },
+                            }
+                          )
+                        }
                         className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
                       >
                         Remove

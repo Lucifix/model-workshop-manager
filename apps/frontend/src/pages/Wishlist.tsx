@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { useWishlist, useAddWishlistItem, useDeleteWishlistItem, useMoveWishlistItemToShoppingList } from "../api/client";
+import { toast } from "sonner";
+import {
+  useWishlist,
+  useAddWishlistItem,
+  useDeleteWishlistItem,
+  useMoveWishlistItemToShoppingList,
+  type WishlistRow,
+} from "../api/client";
 import {
   Card,
   LoadingState,
@@ -32,6 +39,25 @@ export default function Wishlist() {
   const resetForm = () => {
     setFormData({ description: "", priority: "normal", targetPrice: "" });
     setSelectedPaint(null);
+  };
+
+  const handleDelete = (row: WishlistRow) => {
+    deleteItem.mutate(row.item.id, {
+      onSuccess: () => {
+        toast(`Removed "${row.item.description}" from wishlist`, {
+          action: {
+            label: "Undo",
+            onClick: () =>
+              addItem.mutate({
+                description: row.item.description,
+                priority: row.item.priority as "low" | "normal" | "high",
+                targetPrice: row.item.targetPrice ?? undefined,
+                paintId: row.paint?.id,
+              }),
+          },
+        });
+      },
+    });
   };
 
   const handleAddItem = (e: React.FormEvent) => {
@@ -169,7 +195,7 @@ export default function Wishlist() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => deleteItem.mutate(row.item.id)}
+                  onClick={() => handleDelete(row)}
                   disabled={deleteItem.isPending}
                 >
                   Remove

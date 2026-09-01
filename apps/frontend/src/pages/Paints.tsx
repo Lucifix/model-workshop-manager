@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   usePaints,
   useManufacturers,
@@ -64,7 +65,25 @@ const InventoryQuickAction = memo(function InventoryQuickAction({ row }: { row: 
         onClick={(e) => {
           e.stopPropagation();
           const last = row.inventory[row.inventory.length - 1]!;
-          removeFromInventory.mutate({ id: last.id, paintId: row.paint.id });
+          removeFromInventory.mutate(
+            { id: last.id, paintId: row.paint.id },
+            {
+              onSuccess: () => {
+                toast(`Removed "${row.paint.name}" from inventory`, {
+                  action: {
+                    label: "Undo",
+                    onClick: () =>
+                      addToInventory.mutate({
+                        paintId: row.paint.id,
+                        quantity: last.quantity,
+                        fillLevel: last.fillLevel,
+                        storageLocation: last.storageLocation ?? undefined,
+                      }),
+                  },
+                });
+              },
+            }
+          );
         }}
         className="px-2 py-1 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
       >
