@@ -22,7 +22,7 @@ export default function App() {
 
   return (
     <>
-      <Toaster theme="dark" position="bottom-center" richColors closeButton />
+      <Toaster theme="dark" position="bottom-center" richColors />
       {isLoading ? (
         <div className="flex min-h-screen items-center justify-center">
           <LoadingState />
