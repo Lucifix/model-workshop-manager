@@ -11,6 +11,12 @@ import {
   Input,
   Select,
   FieldLabel,
+  ListCard,
+  ListCardRow,
+  ListCardBody,
+  ListCardTitle,
+  ListCardMeta,
+  ListCardActions,
 } from "../components/ui";
 
 const SUPPLY_CATEGORIES = ["brush", "knife", "cement", "tape", "airbrush", "putty", "sandpaper", "other"] as const;
@@ -161,18 +167,18 @@ export default function Supplies() {
           {rows.map((supply) => {
             const lowStock = supply.quantity <= LOW_STOCK_THRESHOLD;
             return (
-              <Card key={supply.id} className="flex items-center justify-between gap-2 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium text-slate-100">{supply.name}</span>
-                    {supply.category && <Badge variant="secondary">{supply.category}</Badge>}
-                    {lowStock && <Badge tone="warn">Low stock</Badge>}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {supply.storageLocation ?? "No storage location set"}
-                  </div>
-                </div>
-                <div className="flex flex-shrink-0 items-center gap-2">
+              <ListCard key={supply.id}>
+                <ListCardRow>
+                  <ListCardBody>
+                    <ListCardTitle>{supply.name}</ListCardTitle>
+                    <ListCardMeta>
+                      {supply.category && <Badge variant="secondary">{supply.category}</Badge>}
+                      {lowStock && <Badge tone="warn">Low stock</Badge>}
+                      <span>{supply.storageLocation ?? "No storage location set"}</span>
+                    </ListCardMeta>
+                  </ListCardBody>
+                </ListCardRow>
+                <ListCardActions className="items-center gap-2">
                   <div className="flex items-center gap-1.5 rounded-lg border border-workshop-border px-2 py-1">
                     <button
                       type="button"
@@ -200,8 +206,8 @@ export default function Supplies() {
                   >
                     Remove
                   </Button>
-                </div>
-              </Card>
+                </ListCardActions>
+              </ListCard>
             );
           })}
         </div>

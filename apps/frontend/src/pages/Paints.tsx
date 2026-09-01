@@ -20,6 +20,12 @@ import {
   Button,
   ManufacturerAvatar,
   SegmentedControl,
+  ListCard,
+  ListCardRow,
+  ListCardBody,
+  ListCardTitle,
+  ListCardMeta,
+  ListCardActions,
 } from "../components/ui";
 
 type StatusFilter = PaintStatusFilter;
@@ -89,31 +95,28 @@ const PaintRow = memo(function PaintRow({
   onOpen: (id: number) => void;
 }) {
   return (
-    <Card
-      className="flex cursor-pointer flex-col gap-2 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
-      onClick={() => onOpen(row.paint.id)}
-    >
-      <div className="flex items-start gap-3">
+    <ListCard onClick={() => onOpen(row.paint.id)}>
+      <ListCardRow>
         <span
           className="mt-0.5 h-9 w-9 shrink-0 rounded-full border border-workshop-border shadow-inner"
           style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
           aria-hidden
         />
-        <div className="min-w-0 flex-1">
-          <div className="font-medium leading-snug text-slate-100">{row.paint.name}</div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+        <ListCardBody>
+          <ListCardTitle>{row.paint.name}</ListCardTitle>
+          <ListCardMeta>
             <Badge>{row.paint.type}</Badge>
             <span>
               {row.manufacturer?.name} · {row.paint.productCode}
               {row.paint.finish ? ` · ${row.paint.finish}` : ""}
             </span>
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-end">
+          </ListCardMeta>
+        </ListCardBody>
+      </ListCardRow>
+      <ListCardActions>
         <InventoryQuickAction row={row} />
-      </div>
-    </Card>
+      </ListCardActions>
+    </ListCard>
   );
 });
 

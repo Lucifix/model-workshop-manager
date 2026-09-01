@@ -327,6 +327,47 @@ export function SegmentedControl<T extends string>({
   );
 }
 
+/**
+ * Card for a row in a list (paints, supplies, ...): a top area for the
+ * item's identity (media + title + meta, wraps freely) and a bottom row
+ * for actions, kept on its own line so buttons/steppers never squeeze the
+ * title into truncation on narrow screens.
+ */
+export function ListCard({
+  onClick,
+  className = "",
+  children,
+}: PropsWithChildren<{ onClick?: () => void; className?: string }>) {
+  return (
+    <Card
+      className={`flex flex-col gap-2 transition-all hover:border-workshop-accent hover:bg-slate-800/60 ${onClick ? "cursor-pointer" : ""} ${className}`}
+      onClick={onClick}
+    >
+      {children}
+    </Card>
+  );
+}
+
+export function ListCardRow({ children }: PropsWithChildren) {
+  return <div className="flex items-start gap-3">{children}</div>;
+}
+
+export function ListCardBody({ children }: PropsWithChildren) {
+  return <div className="min-w-0 flex-1">{children}</div>;
+}
+
+export function ListCardTitle({ children, className = "" }: PropsWithChildren<{ className?: string }>) {
+  return <div className={`font-medium leading-snug text-slate-100 ${className}`}>{children}</div>;
+}
+
+export function ListCardMeta({ children }: PropsWithChildren) {
+  return <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">{children}</div>;
+}
+
+export function ListCardActions({ children, className = "" }: PropsWithChildren<{ className?: string }>) {
+  return <div className={`flex justify-end ${className}`}>{children}</div>;
+}
+
 export function SectionCard({ title, children, actions }: PropsWithChildren<{ title: string; actions?: ReactNode }>) {
   return (
     <Card>
