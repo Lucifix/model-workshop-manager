@@ -39,7 +39,7 @@ export function StatTile({
     <Card className="flex items-center gap-3">
       {icon && <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${iconTone}`}>{icon}</span>}
       <div className="flex flex-col">
-        <span className="text-2xl font-bold leading-tight text-slate-50">{value}</span>
+        <span className="font-mono text-2xl font-medium leading-tight tabular-nums text-slate-50">{value}</span>
         <span className="text-xs font-medium text-slate-400">{label}</span>
       </div>
     </Card>
@@ -95,7 +95,7 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-50">{title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight text-slate-50">{title}</h1>
         {description && <p className="mt-0.5 text-sm text-slate-400">{description}</p>}
       </div>
       {actions && <div className="flex flex-shrink-0 gap-2">{actions}</div>}
