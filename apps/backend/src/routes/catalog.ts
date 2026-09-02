@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { manualProvider } from "../providers/manualProvider.js";
 import { createUpcItemDbProvider } from "../providers/upcItemDbProvider.js";
 import type { CatalogProvider } from "../providers/types.js";
+import { importMiniaturePaints } from "../scripts/importMiniaturePaints.js";
 
 /**
  * Thin HTTP surface over the CatalogProvider architecture (see
@@ -23,5 +24,15 @@ export async function catalogRoutes(app: FastifyInstance) {
 
     const results = await selected.searchModels(q);
     return { provider: selected.id, results };
+  });
+
+  /**
+   * One-click onboarding action: pulls the MIT-licensed community paint
+   * dataset (github.com/Arcturus5404/miniature-paints) into the catalog.
+   * Opt-in and button-triggered from Import & Export — not run automatically
+   * on startup. Safe to call repeatedly; upserts dedupe on product code.
+   */
+  app.post("/api/catalog/seed-community-paints", async () => {
+    return importMiniaturePaints();
   });
 }

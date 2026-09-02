@@ -318,6 +318,39 @@ export function usePaintDetail(id: number) {
   });
 }
 
+export interface PaintCreateInput {
+  manufacturerId: number;
+  productCode: string;
+  name: string;
+  type: string;
+  finish?: string;
+  sizeMl?: number;
+  colorHex?: string;
+  colorFamily?: string;
+  notes?: string;
+}
+
+export function useCreatePaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: PaintCreateInput) => {
+      const res = await fetch("/api/paints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create paint");
+      return res.json() as Promise<{ id: number; name: string; productCode: string }>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(`Added "${data.name}" to catalog`);
+    },
+    onError: toastError,
+  });
+}
+
 export interface PaintUpdateInput {
   manufacturerId?: number;
   productCode?: string;
@@ -1047,6 +1080,30 @@ export function useImportPaints() {
       queryClient.invalidateQueries({ queryKey: ["paints"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
+  });
+}
+
+export interface SeedCommunityPaintsResult {
+  manufacturersCreated: number;
+  paintsImported: number;
+  paintsSkipped: number;
+  errors: string[];
+}
+
+export function useSeedCommunityPaints() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/catalog/seed-community-paints", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to import starter catalog");
+      return res.json() as Promise<SeedCommunityPaintsResult>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paints"] });
+      queryClient.invalidateQueries({ queryKey: ["manufacturers"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: toastError,
   });
 }
 

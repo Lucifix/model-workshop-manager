@@ -8,7 +8,9 @@ import {
   useCreateBackup,
   useDeleteBackup,
   useRestoreBackup,
+  useSeedCommunityPaints,
   ImportResult,
+  SeedCommunityPaintsResult,
 } from "../api/client";
 import { Card, Button, Select, PageHeader, LoadingState, EmptyState } from "../components/ui";
 
@@ -31,6 +33,7 @@ export default function ImportExport() {
   const [importType, setImportType] = useState<ImportType>("paints");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [seedResult, setSeedResult] = useState<SeedCommunityPaintsResult | null>(null);
   const [restoringFilename, setRestoringFilename] = useState<string | null>(null);
   const [downloadingFilename, setDownloadingFilename] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export default function ImportExport() {
   const importMfrs = useImportManufacturers();
   const importPaints = useImportPaints();
   const importModels = useImportModels();
+  const seedCommunityPaints = useSeedCommunityPaints();
   const exportData = useExportData();
   const backups = useBackups();
   const createBackup = useCreateBackup();
@@ -110,6 +114,13 @@ export default function ImportExport() {
         setRestoringFilename(null);
         setBackupError(err.message);
       },
+    });
+  };
+
+  const handleSeedCommunityPaints = () => {
+    setSeedResult(null);
+    seedCommunityPaints.mutate(undefined, {
+      onSuccess: (result) => setSeedResult(result),
     });
   };
 
@@ -199,6 +210,47 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
 
       {activeTab === "import" && (
         <div className="flex flex-col gap-4">
+          <Card>
+            <h2 className="mb-2 text-lg font-semibold text-slate-100">Starter paint catalog</h2>
+            <p className="mb-4 text-sm text-slate-400">
+              New here and the paint list is empty? Pull in the MIT-licensed community dataset from{" "}
+              <a
+                href="https://github.com/Arcturus5404/miniature-paints"
+                target="_blank"
+                rel="noreferrer"
+                className="text-workshop-accent hover:underline"
+              >
+                Arcturus5404/miniature-paints
+              </a>{" "}
+              — manufacturers, paint names, and colors for most major brands. Safe to run more than
+              once; already-imported paints are skipped.
+            </p>
+            <Button onClick={handleSeedCommunityPaints} disabled={seedCommunityPaints.isPending} className="self-start">
+              {seedCommunityPaints.isPending ? "Importing… this can take a minute" : "Import starter catalog"}
+            </Button>
+
+            {seedResult && (
+              <div className="mt-6 space-y-3 border-t border-workshop-border pt-6">
+                <h3 className="font-semibold text-slate-100">Import Results</h3>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-emerald-500/15 p-3">
+                    <div className="text-2xl font-bold text-emerald-400">{seedResult.paintsImported}</div>
+                    <div className="text-xs text-emerald-300">Paints imported</div>
+                  </div>
+                  <div className="rounded-lg bg-amber-500/15 p-3">
+                    <div className="text-2xl font-bold text-amber-400">{seedResult.paintsSkipped}</div>
+                    <div className="text-xs text-amber-300">Skipped</div>
+                  </div>
+                  <div className="rounded-lg bg-red-500/15 p-3">
+                    <div className="text-2xl font-bold text-red-400">{seedResult.errors.length}</div>
+                    <div className="text-xs text-red-300">Errors</div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">{seedResult.manufacturersCreated} new manufacturer(s) added.</p>
+              </div>
+            )}
+          </Card>
+
           <Card>
             <h2 className="mb-4 text-lg font-semibold text-slate-100">Import CSV or JSON</h2>
             <form onSubmit={handleImport} className="flex flex-col gap-4">

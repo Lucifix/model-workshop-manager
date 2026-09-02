@@ -28,6 +28,7 @@ import {
   ListCardMeta,
   ListCardActions,
 } from "../components/ui";
+import { AddPaintForm } from "../components/AddPaintForm";
 
 type StatusFilter = PaintStatusFilter;
 
@@ -146,6 +147,7 @@ export default function Paints() {
   const manufacturerId = searchParams.get("manufacturerId") ?? "";
   const status = (searchParams.get("filter") as StatusFilter) ?? "all";
   const { data: manufacturers } = useManufacturers();
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const [searchDraft, setSearchDraft] = useState(search);
   useEffect(() => setSearchDraft(search), [search]);
@@ -181,7 +183,21 @@ export default function Paints() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Paints" description="Every paint in the catalog — owned and wishlist." />
+      <PageHeader
+        title="Paints"
+        description="Every paint in the catalog — owned and wishlist."
+        actions={!showAddForm && <Button onClick={() => setShowAddForm(true)}>+ Add paint</Button>}
+      />
+
+      {showAddForm && (
+        <AddPaintForm
+          onCreated={(paint) => {
+            setShowAddForm(false);
+            navigate(`/paints/${paint.id}`);
+          }}
+          onCancel={() => setShowAddForm(false)}
+        />
+      )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input

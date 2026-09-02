@@ -109,7 +109,14 @@ async function upsertManufacturer(name: string, slug: string): Promise<{ id: num
   return { id: row!.id, created: true };
 }
 
-async function main() {
+export interface ImportMiniaturePaintsResult {
+  manufacturersCreated: number;
+  paintsImported: number;
+  paintsSkipped: number;
+  errors: string[];
+}
+
+export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResult> {
   console.log(`Fetching brand file list from github.com/${REPO}...`);
   const listRes = await fetch(`https://api.github.com/repos/${REPO}/contents/paints`);
   if (!listRes.ok) throw new Error(`Failed to list paints/ directory: ${listRes.status}`);
@@ -196,11 +203,17 @@ async function main() {
     for (const e of errors.slice(0, 20)) console.log(`  - ${e}`);
     if (errors.length > 20) console.log(`  ...and ${errors.length - 20} more`);
   }
+
+  return { manufacturersCreated, paintsImported, paintsSkipped, errors };
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+// Only run as a CLI script when invoked directly (`npm run import:miniature-paints`),
+// not when imported by the /api/catalog/seed-community-paints route.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  importMiniaturePaints()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

@@ -7,6 +7,7 @@ import {
   EmptyState,
   PageHeader,
   SectionCard,
+  Card,
   Button,
   ModelThumbnail,
   ProgressBar,
@@ -33,6 +34,24 @@ export default function Dashboard() {
         description="What's on the bench right now."
         actions={<Button onClick={() => navigate("/projects/new")}>+ New Build</Button>}
       />
+
+      {data.totalPaints === 0 && (
+        <Card className="border-workshop-accent/50 bg-workshop-accent/10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-200">
+              No paints in the catalog yet — import a starter catalog, or add your first paint.
+            </p>
+            <div className="flex flex-shrink-0 gap-2">
+              <Button size="sm" variant="secondary" onClick={() => navigate("/paints")}>
+                Add a paint
+              </Button>
+              <Button size="sm" onClick={() => navigate("/import-export")}>
+                Import starter catalog
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatTile label="Model kits" value={data.totalModelKits} icon={<BoxIcon className="h-5 w-5" />} />
