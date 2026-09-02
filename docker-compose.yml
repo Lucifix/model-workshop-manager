@@ -18,7 +18,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in your .env or stack environment — see .env.example}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
     volumes:
-      - workshop-data:/data
+      - ${WORKSHOP_DATA_DIR:-workshop-data}:/data
       - ${BACKUP_DIR:-./backups}:/backups
     expose:
       - "3001"
@@ -42,7 +42,7 @@ services:
       BACKUP_STOP_DURING_BACKUP_LABEL: "workshop"
       BACKUP_PRUNING_LEEWAY: "5m"
     volumes:
-      - workshop-data:/backup/workshop-data:ro
+      - ${WORKSHOP_DATA_DIR:-workshop-data}:/backup/workshop-data:ro
       - ${BACKUP_DIR:-./backups}:/archive
       - /var/run/docker.sock:/var/run/docker.sock:ro
 

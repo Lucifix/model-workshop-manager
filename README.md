@@ -37,6 +37,11 @@ Open `http://localhost:8080` (or whatever `HOST_PORT` you set) and log in.
 **Updating:** `git pull && docker compose up -d --build`
 **Stopping:** `docker compose down` (your data lives in the `workshop-data` volume, untouched)
 
+By default the database and uploaded photos live in a Docker-managed named volume
+(`workshop-data`). If you'd rather point them at a specific host path (a NAS mount, a drive you
+already back up, etc.), set `WORKSHOP_DATA_DIR=/your/path` in `.env` before the first
+`docker compose up` — same pattern as `BACKUP_DIR` below.
+
 > **Before you expose this anywhere:** it's a single-user app meant for your LAN or a VPN
 > (Tailscale/WireGuard), not the open internet. See [Security](#security) below.
 
