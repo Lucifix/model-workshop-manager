@@ -37,13 +37,24 @@ Open `http://localhost:8080` (or whatever `HOST_PORT` you set) and log in.
 **Updating:** `git pull && docker compose up -d --build`
 **Stopping:** `docker compose down` (your data lives in the `workshop-data` volume, untouched)
 
-By default the database and uploaded photos live in a Docker-managed named volume
-(`workshop-data`). If you'd rather point them at a specific host path (a NAS mount, a drive you
-already back up, etc.), set `WORKSHOP_DATA_DIR=/your/path` in `.env` before the first
-`docker compose up` — same pattern as `BACKUP_DIR` below.
-
 > **Before you expose this anywhere:** it's a single-user app meant for your LAN or a VPN
 > (Tailscale/WireGuard), not the open internet. See [Security](#security) below.
+
+### Environment variables
+
+All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
+
+| Variable | Required | Default | What it does |
+|---|---|---|---|
+| `AUTH_USERNAME` | Yes | — | Login username. App refuses to start without it. |
+| `AUTH_PASSWORD` | Yes | — | Login password. |
+| `SESSION_SECRET` | Yes | — | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`. |
+| `SESSION_COOKIE_SECURE` | No | `false` | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails. |
+| `HOST_PORT` | No | `8080` | Host port the app is served on. |
+| `WORKSHOP_DATA_DIR` | No | *(named volume)* | Host path for the database + uploaded photos, instead of the `workshop-data` Docker volume — e.g. a NAS mount. |
+| `BACKUP_DIR` | No | `./backups` | Host path where backups (in-app, manual script, and the nightly job) are written. |
+| `BACKUP_RETENTION_DAYS` | No | `14` | How many days of nightly backups to keep before pruning. |
+| `UPCITEMDB_ENABLED` | No | `false` | Turns on the optional barcode-lookup convenience provider (see Data import below). |
 
 ## Tech stack
 
@@ -106,9 +117,8 @@ produce the same tarball format, so a backup from any one can be restored via an
 - **In-app Backups tab** (Import & Export page) — the easiest path day to day.
 - **Automated nightly backup** — the `backup` service in `docker-compose.yml`
   ([`offen/docker-volume-backup`](https://github.com/offen/docker-volume-backup)) snapshots the
-  `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning anything older than
-  `BACKUP_RETENTION_DAYS` (default 14 days). Point `BACKUP_DIR` at a real host path already
-  covered by whatever backs up your other apps.
+  `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning by `BACKUP_RETENTION_DAYS`.
+  Point `BACKUP_DIR` at a real host path already covered by whatever backs up your other apps.
 - **Manual script** — `./scripts/backup.sh` writes a timestamped `.tar.gz` of the database and
   uploaded photos to `$BACKUP_DIR`. Restore steps are in the comments at the top of the script:
   stop the stack, extract the tarball's `database/` and `uploads/` into the `workshop-data`
