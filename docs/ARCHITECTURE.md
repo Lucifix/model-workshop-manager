@@ -36,10 +36,10 @@ Photo uploads -> Fastify multipart -> filesystem (/data/uploads/projects/{id}/..
                  -> only path/metadata written to SQLite
 ```
 
-Two containers: `backend` (serves `/api/*` and, in prod, the built frontend static files) and
-`frontend` (dev server only; in prod its build output is copied into/served by backend or an
-nginx-compatible proxy container the user already runs on Technest). Kept intentionally simple
-per §32 — no separate object storage, no message queue, no GraphQL gateway.
+Three containers in production (see `docker-compose.yml`): `backend` (Fastify API + SQLite,
+not exposed on the host directly), `frontend` (Nginx serving the built PWA and reverse-proxying
+`/api` and `/uploads` to `backend`), and `backup` (nightly automated volume snapshot). Kept
+intentionally simple per §32 — no separate object storage, no message queue, no GraphQL gateway.
 
 ## Why this shape
 

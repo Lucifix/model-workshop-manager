@@ -12,7 +12,7 @@ and aren't described in this file). For the current state of the app, see the ro
 
 You are an expert full-stack engineer. Build a production-quality self-hosted web application for managing my scale-model hobby.
 
-The application will run on my own home server ("Technest") using Docker.
+The application will run on my own home server using Docker.
 
 I want a modern PWA that works well on both desktop and mobile.
 
