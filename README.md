@@ -3,9 +3,30 @@
 A self-hosted personal app for tracking scale-model kits, paint inventory, and builds.
 Runs on your own server via Docker.
 
-See `docs/ARCHITECTURE.md` for the architecture proposal and `docs/DATA_SOURCES.md` for the
-research into external catalog/API sources (short version: none of the manufacturers publish a
-usable API, so this app is import-first, not fetch-first).
+See `docs/ARCHITECTURE.md` for the architecture, `docs/DATA_SOURCES.md` for the research into
+external catalog/API sources (short version: none of the manufacturers publish a usable API, so
+this app is import-first, not fetch-first), and `docs/ORIGINAL_SPEC.md` for the original brief
+this was built from.
+
+## Features
+
+- **Dashboard** — kit/paint/build counts, low-stock paints, missing-paint alerts on active
+  builds, recent activity.
+- **Models & Paints catalog** — searchable/filterable list and detail views, kept separate from
+  your personal ownership data (see Architecture below).
+- **My Collection** — which kits and paints you actually own, independent of the catalog.
+- **Builds** — a guided "New Build" flow (search-or-create the model, then build details), a
+  build log with timestamped entries, photo upload per build, and automatic paint-availability
+  matching (required vs. owned paints) per project.
+- **Shopping list & Wishlist** — a "buying soon" list (with a one-click "add missing paints for
+  this build" flow) kept separate from a longer-term wishlist.
+- **Supplies** — generic inventory for tools/consumables (brushes, cement, masking tape, etc.).
+- **Import & Export** — CSV/JSON bulk import for models and paints, plus the in-app Backups tab
+  (see Backup & restore below).
+- **Auth** — single-user login, protected API, rate-limited (see Security considerations below).
+- **PWA** — installable on desktop/mobile, offline app shell.
+
+Test coverage is currently light — see Local development below for what's covered today.
 
 ## Architecture
 
@@ -19,7 +40,9 @@ the catalog/inventory/build separation this schema enforces.
 
 ## Local development
 
-Requires Node.js 20+.
+Requires Node.js 22+ (see `.nvmrc`) — `better-sqlite3`'s native build needs a matching Node
+version; running it under an older Node loads a mismatched binding that fails silently rather
+than erroring, which is hard to diagnose.
 
 ```bash
 # Backend
@@ -49,10 +72,11 @@ cp .env.example .env    # adjust HOST_PORT etc. if needed
 docker compose up -d --build
 ```
 
-This starts two containers:
+This starts three containers:
 - `backend` — Fastify API + SQLite, not exposed on the host directly
 - `frontend` — Nginx serving the built PWA and reverse-proxying `/api` and `/uploads`
   to `backend`
+- `backup` — nightly automated volume snapshot (see Backup & restore below)
 
 Visit `http://<technest-host>:8080` (or whatever `HOST_PORT` you set).
 
@@ -65,7 +89,7 @@ Visit `http://<technest-host>:8080` (or whatever `HOST_PORT` you set).
 - Database: named Docker volume `workshop-data`, at `/data/database/workshop.db` inside
   the `backend` container
 - Photos: same volume, at `/data/uploads/projects/{projectId}/...`
-- Backups: written to `./data/backups` on the host by `scripts/backup.sh`
+- Backups: written to `BACKUP_DIR` on the host (default `./backups`) — see Backup & restore below
 
 ### First run
 
@@ -78,14 +102,24 @@ docker compose exec backend npm run db:seed   # optional, sample data only
 
 ## Backup & restore
 
-```bash
-./scripts/backup.sh
-```
+Three layers, from easiest to most manual:
 
-Writes a timestamped `.tar.gz` of the database and uploaded photos to `./data/backups`.
-Restore steps are documented as comments at the top of `scripts/backup.sh` — in short: stop
-the stack, extract the tarball's `database/` and `uploads/` back into the `workshop-data`
-volume, restart.
+1. **In-app Backups tab** (Import & Export page) — create a backup on demand, list existing
+   ones, download, restore, or delete them, all from the UI. This is the easiest path day to
+   day.
+2. **Automated nightly backup** — the `backup` service in `docker-compose.yml`
+   ([`offen/docker-volume-backup`](https://github.com/offen/docker-volume-backup)) snapshots the
+   whole `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning anything older than
+   `BACKUP_RETENTION_DAYS` (default 14). Point `BACKUP_DIR` (in `.env`) at a real host path that's
+   already covered by whatever backs up your other apps — see the comment in `.env.example`.
+3. **Manual script** — `./scripts/backup.sh`, for backing up outside Docker or on demand from a
+   shell. Writes a timestamped `.tar.gz` of the database and uploaded photos to `./data/backups`
+   (or `$BACKUP_DIR`). Restore steps are documented as comments at the top of the script — in
+   short: stop the stack, extract the tarball's `database/` and `uploads/` back into the
+   `workshop-data` volume, restart.
+
+All three write/read the same `database/` + `uploads/` tarball shape, so a backup from any one
+of them can be restored via any other.
 
 ## Data providers / import
 
@@ -146,16 +180,3 @@ behind your reverse proxy and keep it LAN-only or behind a VPN (Tailscale/WireGu
 login raises the bar, it isn't a substitute for not exposing a personal, unaudited app
 to the open internet. File uploads are size-capped (25 MB/file) but not otherwise
 scanned.
-
-## Project status / phases
-
-Implemented so far (**Phase 1**): monorepo structure, full database schema, Fastify API
-covering every resource in the spec, CSV/UPCitemdb/manual provider architecture, seed data,
-Docker Compose, and a working PWA frontend shell with a live Dashboard plus Models/Paints/
-Projects/Shopping-list list views reading real data.
-
-**Not yet built** (Phases 2–5, tracked in `docs/ARCHITECTURE.md`): create/edit forms and
-detail pages in the UI (the API endpoints exist; the forms to drive them don't yet), the
-"Add Model"/"Add Paint" search-and-import workflow in the UI, model/project detail pages
-showing paint availability visually, build-log/photo-upload UI, shopping-list-from-missing-
-paints button, offline-shell testing, and the fuller test suite (API + component tests).

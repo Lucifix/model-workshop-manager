@@ -532,7 +532,7 @@ export interface CatalogSearchResult {
   sourceUrl?: string;
 }
 
-/** Optional barcode-lookup convenience (docs/PLAN.md §35.5, method 3) — never the primary path. */
+/** Optional barcode-lookup convenience (docs/ORIGINAL_SPEC.md §35.5, method 3) — never the primary path. */
 export function useCatalogSearch() {
   return useMutation({
     mutationFn: async (query: string) => {

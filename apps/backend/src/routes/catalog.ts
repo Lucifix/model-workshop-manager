@@ -5,7 +5,7 @@ import type { CatalogProvider } from "../providers/types.js";
 
 /**
  * Thin HTTP surface over the CatalogProvider architecture (see
- * apps/backend/src/providers/ and docs/PLAN.md §35.6). Never scrapes a
+ * apps/backend/src/providers/ and docs/ORIGINAL_SPEC.md §35.6). Never scrapes a
  * manufacturer site directly — see docs/DATA_SOURCES.md for why.
  */
 const providers: Record<string, CatalogProvider> = {

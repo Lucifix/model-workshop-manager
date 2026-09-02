@@ -1,3 +1,13 @@
+# Original project brief
+
+This is the original spec this app was built from — kept as a historical record of the
+requirements and design constraints, not as a living doc. It predates most of the app (only
+Phases 1–3 and the Phase 6 addendum are reflected here; auth, Supplies, and Wishlist came later
+and aren't described in this file). For the current state of the app, see the root
+[README.md](../README.md); for the as-built architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
 # Build a self-hosted Model Workshop Manager PWA
 
 You are an expert full-stack engineer. Build a production-quality self-hosted web application for managing my scale-model hobby.

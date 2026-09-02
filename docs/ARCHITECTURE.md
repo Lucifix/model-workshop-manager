@@ -16,7 +16,7 @@ model-workshop-manager/
     database/workshop.db
     uploads/projects/{projectId}/...
     backups/
-  docs/                ARCHITECTURE.md, DATA_SOURCES.md
+  docs/                ARCHITECTURE.md, DATA_SOURCES.md, ORIGINAL_SPEC.md
   scripts/
     backup.sh
   docker-compose.yml
@@ -96,16 +96,25 @@ catalog rows with `source`/`source_url` set to the file name), `UpcItemDbProvide
 disabled unless `UPCITEMDB_ENABLED=true`, since it's an external network call from a
 self-hosted app that otherwise makes none).
 
-## Phase plan (unchanged from brief, tracked here for continuity)
+## Phase history
 
-1. **Phase 1 (this delivery)**: research, schema, folder structure, monorepo skeleton, backend
-   with Drizzle schema + migrations + health check + seed data, frontend Vite/PWA shell with
-   routing + a live Dashboard page, Docker Compose, docs.
+The app was built out in phases, tracked in full in `docs/ORIGINAL_SPEC.md` (the original brief)
+and its §35 addendum. Summary, in build order:
+
+1. **Phase 1**: research, schema, folder structure, monorepo skeleton, backend with Drizzle
+   schema + migrations + health check + seed data, frontend Vite/PWA shell with routing and a
+   live Dashboard, Docker Compose, docs.
 2. **Phase 2**: full Models/Paints CRUD UI, personal inventory screens, dashboard wired to real
    aggregates.
 3. **Phase 3**: projects/builds, build log, photo upload UI, paint-availability matching UI,
    shopping list UI.
 4. **Phase 4**: CSV/JSON importer UI, provenance display, UPCitemdb toggle.
 5. **Phase 5**: polish, tests, PWA offline shell, backup/restore docs, mobile pass.
+6. **Phase 6** (addendum): streamlined "Add Model" / "New Build" workflow, manufacturer picker,
+   model image upload.
 
-Do not skip to Phase 5 — noted and respected.
+Since then, outside the original phase plan: single-user authentication (login page, signed
+session cookie, rate-limited login), a Supplies (tools/consumables) inventory, a Wishlist
+distinct from the shopping list, model tags, stash-value tracking, and an in-app Backups tab
+(create/list/download/restore/delete) alongside the automated nightly Docker backup sidecar.
+See the root `README.md` for the current feature set.

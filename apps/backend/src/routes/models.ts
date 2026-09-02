@@ -176,7 +176,7 @@ export async function modelRoutes(app: FastifyInstance) {
     reply.code(204).send();
   });
 
-  // Upload a personal photo of the box/kit — see docs/PLAN.md §35.5 (method 2).
+  // Upload a personal photo of the box/kit — see docs/ORIGINAL_SPEC.md §35.5 (method 2).
   // Local file storage only; never a fetch of a manufacturer's own product image.
   app.post("/api/models/:id/image", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
