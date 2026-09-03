@@ -42,9 +42,13 @@ build, and older Node versions fail *silently* rather than erroring.
   `npm run db:generate` (drizzle-kit) to create a migration under
   `src/db/migrations/`, then `npm run db:migrate` to apply it. Don't hand-edit
   generated migration SQL or the `meta/` snapshots.
-- **There is no lint/format config and no CI in this repo.** Don't assume a
-  `lint` script, ESLint/Prettier config, or GitHub Actions workflow exists —
-  none do. Match the surrounding code's style by hand.
+- Lint/format is [oxlint](https://oxc.rs/docs/guide/usage/linter) +
+  [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html), configured at the
+  repo root (`.oxlintrc.json`, `.oxfmtrc.json`) and covering both apps. Run
+  from the repo root (there's a tooling-only root `package.json` for this —
+  it holds no app dependencies and isn't a workspace):
+  `npm run lint` / `npm run lint:fix` / `npm run fmt` / `npm run fmt:check`.
+  **There is no CI in this repo** — these aren't enforced automatically.
 
 ## Conventions
 

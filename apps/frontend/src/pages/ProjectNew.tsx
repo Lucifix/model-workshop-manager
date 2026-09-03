@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  useModels,
-  useModelDetail,
-  useCreateProject,
-  useAddModelToInventory,
-} from "../api/client";
+import { useModels, useModelDetail, useCreateProject, useAddModelToInventory } from "../api/client";
 import { AddModelForm } from "../components/AddModelForm";
 import {
   Card,
@@ -35,7 +30,7 @@ export default function ProjectNew() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: preselect, isLoading: preselectLoading } = useModelDetail(
-    preselectId ? Number(preselectId) : NaN
+    preselectId ? Number(preselectId) : NaN,
   );
   useEffect(() => {
     if (preselect && !selectedModel) {
@@ -56,7 +51,9 @@ export default function ProjectNew() {
 
   const handleStartBuild = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedModel) return;
+    if (!selectedModel) {
+      return;
+    }
     const project = await createProject.mutateAsync({
       modelId: selectedModel.id,
       name: name.trim() || `${selectedModel.name} Build`,
@@ -69,11 +66,16 @@ export default function ProjectNew() {
     navigate(`/projects/${project.id}`);
   };
 
-  if (preselectId && preselectLoading) return <LoadingState />;
+  if (preselectId && preselectLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="New Build" description="Pick a model — or add a new one — then start the build." />
+      <PageHeader
+        title="New Build"
+        description="Pick a model — or add a new one — then start the build."
+      />
 
       {!selectedModel ? (
         <>
@@ -95,7 +97,11 @@ export default function ProjectNew() {
                       key={row.model.id}
                       className="flex cursor-pointer items-center gap-3 transition-all hover:border-workshop-accent hover:bg-slate-800/60"
                       onClick={() =>
-                        setSelectedModel({ id: row.model.id, name: row.model.name, kitNumber: row.model.kitNumber })
+                        setSelectedModel({
+                          id: row.model.id,
+                          name: row.model.name,
+                          kitNumber: row.model.kitNumber,
+                        })
                       }
                     >
                       <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent">
@@ -114,16 +120,25 @@ export default function ProjectNew() {
 
               {results && results.length === 0 && !searchLoading && (
                 <p className="text-sm text-slate-500">
-                  {search ? "No matches in your catalog." : "Start typing to search, or add a new model below."}
+                  {search
+                    ? "No matches in your catalog."
+                    : "Start typing to search, or add a new model below."}
                 </p>
               )}
 
-              <Button variant="secondary" className="self-start" onClick={() => setShowAddForm(true)}>
+              <Button
+                variant="secondary"
+                className="self-start"
+                onClick={() => setShowAddForm(true)}
+              >
                 Can't find it? + Add a new model
               </Button>
             </>
           ) : (
-            <AddModelForm onCreated={(model) => setSelectedModel(model)} onCancel={() => setShowAddForm(false)} />
+            <AddModelForm
+              onCreated={(model) => setSelectedModel(model)}
+              onCancel={() => setShowAddForm(false)}
+            />
           )}
         </>
       ) : (
@@ -132,7 +147,8 @@ export default function ProjectNew() {
             <div>
               <div className="text-xs text-slate-400">Building</div>
               <div className="font-semibold text-slate-100">
-                {selectedModel.name} <span className="text-slate-500">({selectedModel.kitNumber})</span>
+                {selectedModel.name}{" "}
+                <span className="text-slate-500">({selectedModel.kitNumber})</span>
               </div>
             </div>
             <button
@@ -147,7 +163,11 @@ export default function ProjectNew() {
           <form onSubmit={handleStartBuild} className="flex flex-col gap-3">
             <div>
               <FieldLabel>Build name</FieldLabel>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={`${selectedModel.name} Build`} />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={`${selectedModel.name} Build`}
+              />
             </div>
             <div>
               <FieldLabel>Status</FieldLabel>
@@ -173,7 +193,11 @@ export default function ProjectNew() {
               I already own this kit — add it to My Collection too
             </label>
 
-            <Button type="submit" disabled={createProject.isPending || addToInventory.isPending} className="self-start">
+            <Button
+              type="submit"
+              disabled={createProject.isPending || addToInventory.isPending}
+              className="self-start"
+            >
               {createProject.isPending ? "Starting…" : "Start build"}
             </Button>
           </form>

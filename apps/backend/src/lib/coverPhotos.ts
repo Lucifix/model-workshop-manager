@@ -9,10 +9,16 @@ export function resolveCoverPhotoUrls(
 ): Map<number, string> {
   const projectIds = rows.map((r) => r.id);
   const result = new Map<number, string>();
-  if (projectIds.length === 0) return result;
+  if (projectIds.length === 0) {
+    return result;
+  }
 
   const photosByProject = new Map<number, (typeof projectPhotos.$inferSelect)[]>();
-  for (const photo of db.select().from(projectPhotos).where(inArray(projectPhotos.projectId, projectIds)).all()) {
+  for (const photo of db
+    .select()
+    .from(projectPhotos)
+    .where(inArray(projectPhotos.projectId, projectIds))
+    .all()) {
     const list = photosByProject.get(photo.projectId) ?? [];
     list.push(photo);
     photosByProject.set(photo.projectId, list);
@@ -20,7 +26,9 @@ export function resolveCoverPhotoUrls(
 
   for (const row of rows) {
     const photos = photosByProject.get(row.id);
-    if (!photos || photos.length === 0) continue;
+    if (!photos || photos.length === 0) {
+      continue;
+    }
     const cover = row.coverPhotoId ? photos.find((p) => p.id === row.coverPhotoId) : undefined;
     const mostRecent = photos.reduce((a, b) => (b.id > a.id ? b : a));
     const chosen = cover ?? mostRecent;

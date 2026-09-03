@@ -23,10 +23,14 @@ export async function catalogRoutes(app: FastifyInstance) {
 
   app.get("/api/catalog/search", async (req, reply) => {
     const { provider, q } = req.query as Record<string, string | undefined>;
-    if (!q) return reply.code(400).send({ error: "missing_query" });
+    if (!q) {
+      return reply.code(400).send({ error: "missing_query" });
+    }
 
     const selected = providers[provider ?? "manual"];
-    if (!selected) return reply.code(400).send({ error: "unknown_provider" });
+    if (!selected) {
+      return reply.code(400).send({ error: "unknown_provider" });
+    }
 
     const results = await selected.searchModels(q);
     return { provider: selected.id, results };

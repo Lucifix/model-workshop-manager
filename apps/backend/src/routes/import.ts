@@ -2,8 +2,6 @@ import type { FastifyInstance } from "fastify";
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { models, paints, manufacturers, modelPaints } from "../db/schema.js";
-import { modelCreateSchema, paintCreateSchema, manufacturerCreateSchema } from "../lib/schemas.js";
-import { parseBody } from "../lib/validate.js";
 
 interface CSVRow {
   [key: string]: string;
@@ -23,7 +21,9 @@ function parseCSV(content: string): CSVRow[] {
     .trim()
     .split("\n")
     .filter((line) => line.trim().length > 0);
-  if (lines.length < 2) return [];
+  if (lines.length < 2) {
+    return [];
+  }
 
   // Parse headers, splitting by comma and trimming (preserve original casing)
   const headers = lines[0]!.split(",").map((h) => h.trim());
@@ -62,7 +62,9 @@ export async function importRoutes(app: FastifyInstance) {
    */
   app.post("/api/import/manufacturers", async (req, reply) => {
     const file = await req.file();
-    if (!file) return reply.code(400).send({ error: "no_file" });
+    if (!file) {
+      return reply.code(400).send({ error: "no_file" });
+    }
 
     const buffer = await file.toBuffer();
     const content = buffer.toString("utf-8");
@@ -70,7 +72,9 @@ export async function importRoutes(app: FastifyInstance) {
     let rows: any[] = [];
     if (file.filename.endsWith(".json")) {
       rows = JSON.parse(content);
-      if (!Array.isArray(rows)) return reply.code(400).send({ error: "invalid_json_format" });
+      if (!Array.isArray(rows)) {
+        return reply.code(400).send({ error: "invalid_json_format" });
+      }
     } else if (file.filename.endsWith(".csv")) {
       rows = parseCSV(content);
     } else {
@@ -89,7 +93,11 @@ export async function importRoutes(app: FastifyInstance) {
         }
 
         // Check if already exists
-        const existing = db.select().from(manufacturers).where(eq(manufacturers.slug, row.slug)).get();
+        const existing = db
+          .select()
+          .from(manufacturers)
+          .where(eq(manufacturers.slug, row.slug))
+          .get();
         if (existing) {
           result.skipped++;
           continue;
@@ -116,7 +124,9 @@ export async function importRoutes(app: FastifyInstance) {
    */
   app.post("/api/import/paints", async (req, reply) => {
     const file = await req.file();
-    if (!file) return reply.code(400).send({ error: "no_file" });
+    if (!file) {
+      return reply.code(400).send({ error: "no_file" });
+    }
 
     const buffer = await file.toBuffer();
     const content = buffer.toString("utf-8");
@@ -124,7 +134,9 @@ export async function importRoutes(app: FastifyInstance) {
     let rows: any[] = [];
     if (file.filename.endsWith(".json")) {
       rows = JSON.parse(content);
-      if (!Array.isArray(rows)) return reply.code(400).send({ error: "invalid_json_format" });
+      if (!Array.isArray(rows)) {
+        return reply.code(400).send({ error: "invalid_json_format" });
+      }
     } else if (file.filename.endsWith(".csv")) {
       rows = parseCSV(content);
     } else {
@@ -137,7 +149,10 @@ export async function importRoutes(app: FastifyInstance) {
       try {
         const row = rows[i];
         if (!row.manufacturerId || !row.productCode || !row.name || !row.type) {
-          result.errors.push({ row: i + 1, error: "Missing required fields: manufacturerId, productCode, name, type" });
+          result.errors.push({
+            row: i + 1,
+            error: "Missing required fields: manufacturerId, productCode, name, type",
+          });
           result.skipped++;
           continue;
         }
@@ -148,7 +163,7 @@ export async function importRoutes(app: FastifyInstance) {
           .select()
           .from(paints)
           .where(
-            sql`${paints.manufacturerId} = ${mfrId} AND ${paints.productCode} = ${row.productCode}`
+            sql`${paints.manufacturerId} = ${mfrId} AND ${paints.productCode} = ${row.productCode}`,
           )
           .get();
 
@@ -187,7 +202,9 @@ export async function importRoutes(app: FastifyInstance) {
    */
   app.post("/api/import/models", async (req, reply) => {
     const file = await req.file();
-    if (!file) return reply.code(400).send({ error: "no_file" });
+    if (!file) {
+      return reply.code(400).send({ error: "no_file" });
+    }
 
     const buffer = await file.toBuffer();
     const content = buffer.toString("utf-8");
@@ -195,7 +212,9 @@ export async function importRoutes(app: FastifyInstance) {
     let rows: any[] = [];
     if (file.filename.endsWith(".json")) {
       rows = JSON.parse(content);
-      if (!Array.isArray(rows)) return reply.code(400).send({ error: "invalid_json_format" });
+      if (!Array.isArray(rows)) {
+        return reply.code(400).send({ error: "invalid_json_format" });
+      }
     } else if (file.filename.endsWith(".csv")) {
       rows = parseCSV(content);
     } else {
@@ -208,7 +227,10 @@ export async function importRoutes(app: FastifyInstance) {
       try {
         const row = rows[i];
         if (!row.manufacturerId || !row.kitNumber || !row.name) {
-          result.errors.push({ row: i + 1, error: "Missing required fields: manufacturerId, kitNumber, name" });
+          result.errors.push({
+            row: i + 1,
+            error: "Missing required fields: manufacturerId, kitNumber, name",
+          });
           result.skipped++;
           continue;
         }
@@ -219,7 +241,7 @@ export async function importRoutes(app: FastifyInstance) {
           .select()
           .from(models)
           .where(
-            sql`${models.manufacturerId} = ${mfrId} AND ${models.kitNumber} = ${row.kitNumber}`
+            sql`${models.manufacturerId} = ${mfrId} AND ${models.kitNumber} = ${row.kitNumber}`,
           )
           .get();
 

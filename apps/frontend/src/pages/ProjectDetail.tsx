@@ -11,7 +11,17 @@ import {
   useDeleteProjectPhoto,
   type ProjectPhoto,
 } from "../api/client";
-import { Card, LoadingState, ErrorState, Button, Input, Select, Textarea, ProgressBar, ModelThumbnail } from "../components/ui";
+import {
+  Card,
+  LoadingState,
+  ErrorState,
+  Button,
+  Input,
+  Select,
+  Textarea,
+  ProgressBar,
+  ModelThumbnail,
+} from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 import { Lightbox, type LightboxPhoto } from "../components/Lightbox";
 
@@ -34,9 +44,9 @@ export default function ProjectDetail() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showAddPaint, setShowAddPaint] = useState(false);
   const [selectedPaint, setSelectedPaint] = useState<PickedPaint | null>(null);
-  const [paintPurpose, setPaintPurpose] = useState<"required" | "optional" | "weathering" | "already_substituted">(
-    "required"
-  );
+  const [paintPurpose, setPaintPurpose] = useState<
+    "required" | "optional" | "weathering" | "already_substituted"
+  >("required");
 
   const { data: project, isLoading, isError } = useProjectDetail(Number(id!));
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
@@ -50,13 +60,20 @@ export default function ProjectDetail() {
     return <ErrorState message="Invalid project ID." />;
   }
 
-  if (isLoading) return <LoadingState />;
-  if (isError || !project) return <ErrorState message="Could not load project." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError || !project) {
+    return <ErrorState message="Could not load project." />;
+  }
 
   const handleUpdateProgress = () => {
-    updateProject({ id: project.id, data: { progressPercent: newProgress } }, {
-      onSuccess: () => setEditProgress(false),
-    });
+    updateProject(
+      { id: project.id, data: { progressPercent: newProgress } },
+      {
+        onSuccess: () => setEditProgress(false),
+      },
+    );
   };
 
   const handleUpdateStatus = (status: string) => {
@@ -65,18 +82,23 @@ export default function ProjectDetail() {
 
   const handleAddLogEntry = (e: React.FormEvent) => {
     e.preventDefault();
-    addBuildLog({ projectId: project.id, data: { title: logTitle, description: logDesc } }, {
-      onSuccess: () => {
-        setLogTitle("");
-        setLogDesc("");
-        setLogFormOpen(false);
+    addBuildLog(
+      { projectId: project.id, data: { title: logTitle, description: logDesc } },
+      {
+        onSuccess: () => {
+          setLogTitle("");
+          setLogDesc("");
+          setLogFormOpen(false);
+        },
       },
-    });
+    );
   };
 
   const handleAddPaint = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPaint) return;
+    if (!selectedPaint) {
+      return;
+    }
     addProjectPaint.mutate(
       { projectId: project.id, data: { paintId: selectedPaint.id, purpose: paintPurpose } },
       {
@@ -85,28 +107,44 @@ export default function ProjectDetail() {
           setPaintPurpose("required");
           setShowAddPaint(false);
         },
-      }
+      },
     );
   };
 
   const handleUploadPhoto = () => {
-    if (!photoFile) return;
-    uploadPhoto({ projectId: project.id, file: photoFile }, {
-      onSuccess: () => setPhotoFile(null),
-    });
+    if (!photoFile) {
+      return;
+    }
+    uploadPhoto(
+      { projectId: project.id, file: photoFile },
+      {
+        onSuccess: () => setPhotoFile(null),
+      },
+    );
   };
 
   const handleHeroPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     uploadPhoto({ projectId: project.id, file });
     e.target.value = "";
   };
 
   const photos = project.photos ?? [];
-  const mostRecentPhoto = photos.length > 0 ? [...photos].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] : undefined;
-  const coverPhoto = (project.coverPhotoId ? photos.find((p) => p.id === project.coverPhotoId) : undefined) ?? mostRecentPhoto;
-  const lightboxPhotos: LightboxPhoto[] = photos.map((p) => ({ id: p.id, url: photoUrl(p), caption: p.caption }));
+  const mostRecentPhoto =
+    photos.length > 0
+      ? [...photos].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+      : undefined;
+  const coverPhoto =
+    (project.coverPhotoId ? photos.find((p) => p.id === project.coverPhotoId) : undefined) ??
+    mostRecentPhoto;
+  const lightboxPhotos: LightboxPhoto[] = photos.map((p) => ({
+    id: p.id,
+    url: photoUrl(p),
+    caption: p.caption,
+  }));
 
   const handleSetCover = (photo: LightboxPhoto) => {
     const isCurrentCover = coverPhoto?.id === photo.id;
@@ -114,10 +152,12 @@ export default function ProjectDetail() {
   };
 
   const handleDeletePhoto = (photo: LightboxPhoto) => {
-    if (!confirm("Delete this photo?")) return;
+    if (!confirm("Delete this photo?")) {
+      return;
+    }
     deletePhoto.mutate(
       { projectId: project.id, photoId: photo.id },
-      { onSuccess: () => setLightboxIndex(null) }
+      { onSuccess: () => setLightboxIndex(null) },
     );
   };
 
@@ -131,7 +171,12 @@ export default function ProjectDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/projects")} className="self-start -ml-2.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/projects")}
+        className="self-start -ml-2.5"
+      >
         ← Back to builds
       </Button>
 
@@ -161,7 +206,9 @@ export default function ProjectDetail() {
       <Card className="mb-2">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 sm:flex-1">
-            <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">{project.name}</h1>
+            <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">
+              {project.name}
+            </h1>
             {project.model && (
               <button
                 onClick={() => navigate(`/models/${project.model!.id}`)}
@@ -189,7 +236,9 @@ export default function ProjectDetail() {
           <div className="flex-1">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-semibold text-slate-300">Progress</span>
-              <span className="text-sm font-bold text-workshop-accent">{project.progressPercent}%</span>
+              <span className="text-sm font-bold text-workshop-accent">
+                {project.progressPercent}%
+              </span>
             </div>
             <ProgressBar percent={project.progressPercent} className="h-3" />
             {!editProgress ? (
@@ -329,7 +378,9 @@ export default function ProjectDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-500">No photos yet — the Photos tab has a quick upload.</p>
+                <p className="text-xs text-slate-500">
+                  No photos yet — the Photos tab has a quick upload.
+                </p>
               )}
             </Card>
           </div>
@@ -348,7 +399,10 @@ export default function ProjectDetail() {
               </div>
 
               {showAddPaint && (
-                <form onSubmit={handleAddPaint} className="mb-4 flex flex-col gap-2 rounded-lg border border-workshop-border p-3">
+                <form
+                  onSubmit={handleAddPaint}
+                  className="mb-4 flex flex-col gap-2 rounded-lg border border-workshop-border p-3"
+                >
                   {!selectedPaint ? (
                     <PaintPicker onSelect={setSelectedPaint} />
                   ) : (
@@ -358,19 +412,31 @@ export default function ProjectDetail() {
                         style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                       />
                       <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
-                      <button type="button" className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSelectedPaint(null)}>
+                      <button
+                        type="button"
+                        className="text-xs text-slate-500 hover:text-slate-300"
+                        onClick={() => setSelectedPaint(null)}
+                      >
                         change
                       </button>
                     </div>
                   )}
-                  <Select value={paintPurpose} onChange={(e) => setPaintPurpose(e.target.value as typeof paintPurpose)}>
+                  <Select
+                    value={paintPurpose}
+                    onChange={(e) => setPaintPurpose(e.target.value as typeof paintPurpose)}
+                  >
                     <option value="required">Required</option>
                     <option value="optional">Optional</option>
                     <option value="weathering">Weathering</option>
                     <option value="already_substituted">Already substituted</option>
                   </Select>
                   <div className="flex gap-2">
-                    <Button type="submit" size="sm" disabled={!selectedPaint || addProjectPaint.isPending} className="flex-1">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={!selectedPaint || addProjectPaint.isPending}
+                      className="flex-1"
+                    >
                       {addProjectPaint.isPending ? "Adding…" : "Add"}
                     </Button>
                     <Button
@@ -434,7 +500,7 @@ export default function ProjectDetail() {
                                   },
                                 });
                               },
-                            }
+                            },
                           )
                         }
                         className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
@@ -445,7 +511,9 @@ export default function ProjectDetail() {
                   ))}
                 </ul>
               ) : (
-                !showAddPaint && <p className="text-xs text-slate-500">No paints recorded for this build yet.</p>
+                !showAddPaint && (
+                  <p className="text-xs text-slate-500">No paints recorded for this build yet.</p>
+                )
               )}
             </Card>
           </div>
@@ -477,7 +545,12 @@ export default function ProjectDetail() {
                     <Button type="submit" disabled={isAddingLog} className="flex-1">
                       {isAddingLog ? "Adding..." : "Add entry"}
                     </Button>
-                    <Button type="button" variant="secondary" className="flex-1" onClick={() => setLogFormOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => setLogFormOpen(false)}
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -504,7 +577,9 @@ export default function ProjectDetail() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500">No log entries yet. Click "Add progress" to get started!</p>
+              <p className="text-xs text-slate-500">
+                No log entries yet. Click "Add progress" to get started!
+              </p>
             )}
           </div>
         )}
@@ -528,7 +603,9 @@ export default function ProjectDetail() {
                 <div className="flex items-center gap-3">
                   <div>
                     <p className="text-sm font-medium text-slate-100">{photoFile.name}</p>
-                    <p className="text-xs text-slate-500">{(photoFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-xs text-slate-500">
+                      {(photoFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
                   </div>
                   <div className="ml-auto flex gap-2">
                     <Button size="sm" onClick={handleUploadPhoto} disabled={isUploadingPhoto}>
@@ -557,7 +634,9 @@ export default function ProjectDetail() {
                       className="h-32 w-full object-cover transition-transform group-hover:scale-105"
                     />
                     {coverPhoto?.id === photo.id && (
-                      <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-xs text-amber-300">★</span>
+                      <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-xs text-amber-300">
+                        ★
+                      </span>
                     )}
                     <span
                       role="button"
@@ -572,7 +651,9 @@ export default function ProjectDetail() {
                       Delete
                     </span>
                     {photo.caption && (
-                      <div className="bg-workshop-panelmuted p-2 text-xs text-slate-300">{photo.caption}</div>
+                      <div className="bg-workshop-panelmuted p-2 text-xs text-slate-300">
+                        {photo.caption}
+                      </div>
                     )}
                   </button>
                 ))}

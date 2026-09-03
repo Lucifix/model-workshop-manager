@@ -32,7 +32,9 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "./data/uploads";
 // API. All three must be explicitly configured — see .env.example.
 for (const name of ["AUTH_USERNAME", "AUTH_PASSWORD", "SESSION_SECRET"]) {
   if (!process.env[name]) {
-    console.error(`Missing required env var ${name}. See .env.example — this app requires login to be configured.`);
+    console.error(
+      `Missing required env var ${name}. See .env.example — this app requires login to be configured.`,
+    );
     process.exit(1);
   }
 }
@@ -64,7 +66,9 @@ await app.register(secureSession, {
 // lib/auth.ts is the only allow-list. New routes are guarded automatically.
 app.addHook("onRequest", async (req, reply) => {
   const path = req.url.split("?")[0]!;
-  if (isPublicPath(path)) return;
+  if (isPublicPath(path)) {
+    return;
+  }
   if (req.session.get("authenticated") !== true) {
     reply.code(401).send({ error: "unauthenticated" });
   }

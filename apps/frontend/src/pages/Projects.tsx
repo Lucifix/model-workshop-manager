@@ -1,6 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "../api/client";
-import { LoadingState, ErrorState, EmptyState, Badge, PageHeader, ProgressBar, Button, MediaCard } from "../components/ui";
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  Badge,
+  PageHeader,
+  ProgressBar,
+  Button,
+  MediaCard,
+} from "../components/ui";
 
 const statusTone = {
   "In Progress": "ok",
@@ -24,7 +33,9 @@ export default function Projects() {
 
       {isLoading && <LoadingState />}
       {isError && <ErrorState message="Could not load projects." />}
-      {data && data.length === 0 && <EmptyState message="No builds yet — start your first project." />}
+      {data && data.length === 0 && (
+        <EmptyState message="No builds yet — start your first project." />
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.map((row) => (
@@ -46,7 +57,9 @@ export default function Projects() {
             </div>
             <div className="flex items-center gap-2">
               <ProgressBar percent={row.project.progressPercent} className="flex-1" />
-              <span className="text-xs font-medium text-slate-400">{row.project.progressPercent}%</span>
+              <span className="text-xs font-medium text-slate-400">
+                {row.project.progressPercent}%
+              </span>
             </div>
           </MediaCard>
         ))}

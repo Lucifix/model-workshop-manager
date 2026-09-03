@@ -10,12 +10,8 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 };
 
 // ---------------------------------------------------------------------------
@@ -46,27 +42,31 @@ export const PAINT_TYPES = [
   "Other",
 ] as const;
 
-export const paints = sqliteTable("paints", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  manufacturerId: integer("manufacturer_id")
-    .notNull()
-    .references(() => manufacturers.id),
-  productCode: text("product_code").notNull(),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // one of PAINT_TYPES
-  finish: text("finish"), // e.g. Matt, Gloss, Satin
-  sizeMl: real("size_ml"),
-  colorHex: text("color_hex"),
-  colorFamily: text("color_family"),
-  notes: text("notes"),
-  source: text("source").notNull().default("manual"),
-  sourceUrl: text("source_url"),
-  importedAt: text("imported_at"), // When this record was imported from external source
-  lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
-  ...timestamps,
-}, (table) => ({
-  manufacturerIdx: index("paints_manufacturer_id_idx").on(table.manufacturerId),
-}));
+export const paints = sqliteTable(
+  "paints",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    manufacturerId: integer("manufacturer_id")
+      .notNull()
+      .references(() => manufacturers.id),
+    productCode: text("product_code").notNull(),
+    name: text("name").notNull(),
+    type: text("type").notNull(), // one of PAINT_TYPES
+    finish: text("finish"), // e.g. Matt, Gloss, Satin
+    sizeMl: real("size_ml"),
+    colorHex: text("color_hex"),
+    colorFamily: text("color_family"),
+    notes: text("notes"),
+    source: text("source").notNull().default("manual"),
+    sourceUrl: text("source_url"),
+    importedAt: text("imported_at"), // When this record was imported from external source
+    lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
+    ...timestamps,
+  },
+  (table) => ({
+    manufacturerIdx: index("paints_manufacturer_id_idx").on(table.manufacturerId),
+  }),
+);
 
 export const models = sqliteTable("models", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -153,21 +153,25 @@ export const ownedModels = sqliteTable("owned_models", {
 
 export const FILL_LEVELS = ["Full", "Mostly Full", "Half", "Low", "Empty"] as const;
 
-export const paintInventory = sqliteTable("paint_inventory", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  paintId: integer("paint_id")
-    .notNull()
-    .references(() => paints.id),
-  quantity: integer("quantity").notNull().default(1),
-  fillLevel: text("fill_level").notNull().default("Full"), // one of FILL_LEVELS
-  status: text("status").notNull().default("in_stock"), // in_stock | empty | discontinued
-  storageLocation: text("storage_location"),
-  purchasePrice: real("purchase_price"),
-  notes: text("notes"),
-  ...timestamps,
-}, (table) => ({
-  paintIdx: index("paint_inventory_paint_id_idx").on(table.paintId),
-}));
+export const paintInventory = sqliteTable(
+  "paint_inventory",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    paintId: integer("paint_id")
+      .notNull()
+      .references(() => paints.id),
+    quantity: integer("quantity").notNull().default(1),
+    fillLevel: text("fill_level").notNull().default("Full"), // one of FILL_LEVELS
+    status: text("status").notNull().default("in_stock"), // in_stock | empty | discontinued
+    storageLocation: text("storage_location"),
+    purchasePrice: real("purchase_price"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => ({
+    paintIdx: index("paint_inventory_paint_id_idx").on(table.paintId),
+  }),
+);
 
 /** Supply category enum values (documented, not DB-enforced, to keep SQLite simple) */
 export const SUPPLY_CATEGORIES = [
@@ -218,7 +222,9 @@ export const projects = sqliteTable("projects", {
   startedAt: text("started_at"),
   completedAt: text("completed_at"),
   notes: text("notes"),
-  coverPhotoId: integer("cover_photo_id").references((): AnySQLiteColumn => projectPhotos.id, { onDelete: "set null" }),
+  coverPhotoId: integer("cover_photo_id").references((): AnySQLiteColumn => projectPhotos.id, {
+    onDelete: "set null",
+  }),
   ...timestamps,
 });
 
@@ -251,9 +257,7 @@ export const buildLogEntries = sqliteTable("build_log_entries", {
   projectId: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
   title: text("title").notNull(),
   description: text("description"),
 });
@@ -267,9 +271,7 @@ export const projectPhotos = sqliteTable("project_photos", {
   originalFilename: text("original_filename"),
   caption: text("caption"),
   takenAt: text("taken_at"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 });
 
 // ---------------------------------------------------------------------------
@@ -286,9 +288,7 @@ export const wishlistItems = sqliteTable("wishlist_items", {
   priority: text("priority").notNull().default("normal"), // low | normal | high
   targetPrice: real("target_price"),
   notes: text("notes"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 });
 
 export const shoppingListItems = sqliteTable("shopping_list_items", {
@@ -298,8 +298,6 @@ export const shoppingListItems = sqliteTable("shopping_list_items", {
   quantity: integer("quantity").notNull().default(1),
   priority: text("priority").notNull().default("normal"), // low | normal | high
   purchased: integer("purchased", { mode: "boolean" }).notNull().default(false),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
   purchasedAt: text("purchased_at"),
 });

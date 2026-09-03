@@ -27,7 +27,9 @@ function isValidFilename(filename: string): boolean {
 }
 
 function listBackups() {
-  if (!existsSync(BACKUP_DIR)) return [];
+  if (!existsSync(BACKUP_DIR)) {
+    return [];
+  }
   return readdirSync(BACKUP_DIR)
     .filter((f) => f.endsWith(".tar.gz"))
     .map((filename) => {
@@ -47,7 +49,9 @@ function listBackups() {
  * directory actually holds `database/`.
  */
 function findPayloadRoot(stagingDir: string): string {
-  if (existsSync(join(stagingDir, "database"))) return stagingDir;
+  if (existsSync(join(stagingDir, "database"))) {
+    return stagingDir;
+  }
   const entries = readdirSync(stagingDir, { withFileTypes: true });
   const dirs = entries.filter((e) => e.isDirectory());
   if (dirs.length === 1 && existsSync(join(stagingDir, dirs[0]!.name, "database"))) {
@@ -88,10 +92,14 @@ export async function backupRoutes(app: FastifyInstance) {
 
   app.get("/api/backup/:filename/download", async (req, reply) => {
     const { filename } = req.params as { filename: string };
-    if (!isValidFilename(filename)) return reply.code(400).send({ error: "invalid_filename" });
+    if (!isValidFilename(filename)) {
+      return reply.code(400).send({ error: "invalid_filename" });
+    }
 
     const filePath = join(BACKUP_DIR, filename);
-    if (!existsSync(filePath)) return reply.code(404).send({ error: "not_found" });
+    if (!existsSync(filePath)) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     reply.header("Content-Disposition", `attachment; filename="${filename}"`);
     reply.header("Content-Type", "application/gzip");
@@ -100,10 +108,14 @@ export async function backupRoutes(app: FastifyInstance) {
 
   app.delete("/api/backup/:filename", async (req, reply) => {
     const { filename } = req.params as { filename: string };
-    if (!isValidFilename(filename)) return reply.code(400).send({ error: "invalid_filename" });
+    if (!isValidFilename(filename)) {
+      return reply.code(400).send({ error: "invalid_filename" });
+    }
 
     const filePath = join(BACKUP_DIR, filename);
-    if (!existsSync(filePath)) return reply.code(404).send({ error: "not_found" });
+    if (!existsSync(filePath)) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     rmSync(filePath);
     reply.code(204).send();
@@ -111,10 +123,14 @@ export async function backupRoutes(app: FastifyInstance) {
 
   app.post("/api/backup/:filename/restore", async (req, reply) => {
     const { filename } = req.params as { filename: string };
-    if (!isValidFilename(filename)) return reply.code(400).send({ error: "invalid_filename" });
+    if (!isValidFilename(filename)) {
+      return reply.code(400).send({ error: "invalid_filename" });
+    }
 
     const filePath = join(BACKUP_DIR, filename);
-    if (!existsSync(filePath)) return reply.code(404).send({ error: "not_found" });
+    if (!existsSync(filePath)) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     const stagingDir = mkdtempSync(join(tmpdir(), "workshop-restore-"));
     try {
@@ -133,8 +149,12 @@ export async function backupRoutes(app: FastifyInstance) {
       const ts = new Date().toISOString().replace(/[:.]/g, "-");
       sqlite.close();
 
-      if (existsSync(DATABASE_DIR)) renameSync(DATABASE_DIR, `${DATABASE_DIR}.pre-restore-${ts}`);
-      if (existsSync(UPLOAD_DIR)) renameSync(UPLOAD_DIR, `${UPLOAD_DIR}.pre-restore-${ts}`);
+      if (existsSync(DATABASE_DIR)) {
+        renameSync(DATABASE_DIR, `${DATABASE_DIR}.pre-restore-${ts}`);
+      }
+      if (existsSync(UPLOAD_DIR)) {
+        renameSync(UPLOAD_DIR, `${UPLOAD_DIR}.pre-restore-${ts}`);
+      }
 
       renameSync(join(payloadRoot, "database"), DATABASE_DIR);
       const stagedUploads = join(payloadRoot, "uploads");

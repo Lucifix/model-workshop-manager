@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSupplies, useCreateSupply, useUpdateSupply, useDeleteSupply, type Supply } from "../api/client";
+import {
+  useSupplies,
+  useCreateSupply,
+  useUpdateSupply,
+  useDeleteSupply,
+  type Supply,
+} from "../api/client";
 import {
   Card,
   LoadingState,
@@ -20,7 +26,16 @@ import {
   ListCardActions,
 } from "../components/ui";
 
-const SUPPLY_CATEGORIES = ["brush", "knife", "cement", "tape", "airbrush", "putty", "sandpaper", "other"] as const;
+const SUPPLY_CATEGORIES = [
+  "brush",
+  "knife",
+  "cement",
+  "tape",
+  "airbrush",
+  "putty",
+  "sandpaper",
+  "other",
+] as const;
 
 const LOW_STOCK_THRESHOLD = 1;
 
@@ -40,7 +55,8 @@ export default function Supplies() {
     purchasePrice: "",
   });
 
-  const resetForm = () => setFormData({ name: "", category: "", quantity: 1, storageLocation: "", purchasePrice: "" });
+  const resetForm = () =>
+    setFormData({ name: "", category: "", quantity: 1, storageLocation: "", purchasePrice: "" });
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +68,12 @@ export default function Supplies() {
         storageLocation: formData.storageLocation || undefined,
         purchasePrice: formData.purchasePrice ? Number(formData.purchasePrice) : undefined,
       },
-      { onSuccess: () => { resetForm(); setShowForm(false); } }
+      {
+        onSuccess: () => {
+          resetForm();
+          setShowForm(false);
+        },
+      },
     );
   };
 
@@ -81,8 +102,12 @@ export default function Supplies() {
     });
   };
 
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState message="Could not load supplies." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError) {
+    return <ErrorState message="Could not load supplies." />;
+  }
 
   const rows = data ?? [];
 
@@ -110,7 +135,10 @@ export default function Supplies() {
             <div className="flex gap-2">
               <div className="flex-1">
                 <FieldLabel>Category</FieldLabel>
-                <Select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+                <Select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
                   <option value="">—</option>
                   {SUPPLY_CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -125,7 +153,9 @@ export default function Supplies() {
                   type="number"
                   min="0"
                   value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })
+                  }
                 />
               </div>
             </div>
@@ -155,7 +185,15 @@ export default function Supplies() {
               <Button type="submit" disabled={createSupply.isPending} className="flex-1">
                 {createSupply.isPending ? "Adding..." : "Add"}
               </Button>
-              <Button type="button" variant="secondary" className="flex-1" onClick={() => { setShowForm(false); resetForm(); }}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
+              >
                 Cancel
               </Button>
             </div>
@@ -209,7 +247,9 @@ export default function Supplies() {
                     >
                       −
                     </button>
-                    <span className="w-6 text-center text-sm text-slate-100">{supply.quantity}</span>
+                    <span className="w-6 text-center text-sm text-slate-100">
+                      {supply.quantity}
+                    </span>
                     <button
                       type="button"
                       className="text-slate-400 hover:text-slate-100"

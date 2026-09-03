@@ -10,7 +10,9 @@ import { timingSafeEqual } from "node:crypto";
 export function checkCredentials(username: string, password: string): boolean {
   const expectedUsername = process.env.AUTH_USERNAME ?? "";
   const expectedPassword = process.env.AUTH_PASSWORD ?? "";
-  if (!expectedUsername || !expectedPassword) return false;
+  if (!expectedUsername || !expectedPassword) {
+    return false;
+  }
   return safeEqual(username, expectedUsername) && safeEqual(password, expectedPassword);
 }
 
@@ -32,8 +34,12 @@ function safeEqual(a: string, b: string): boolean {
 export const PUBLIC_PATHS = new Set(["/api/health", "/api/auth/login", "/api/auth/me"]);
 
 export function isPublicPath(path: string): boolean {
-  if (PUBLIC_PATHS.has(path)) return true;
+  if (PUBLIC_PATHS.has(path)) {
+    return true;
+  }
   // Vite dev server / browser preflight noise, never guarded.
-  if (path === "/favicon.ico") return true;
+  if (path === "/favicon.ico") {
+    return true;
+  }
   return false;
 }

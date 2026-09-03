@@ -11,7 +11,19 @@ import {
   useUpdateModel,
   useManufacturers,
 } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, ProgressBar, FieldLabel, ModelThumbnail } from "../components/ui";
+import {
+  Card,
+  LoadingState,
+  ErrorState,
+  Badge,
+  Button,
+  Input,
+  Select,
+  Textarea,
+  ProgressBar,
+  FieldLabel,
+  ModelThumbnail,
+} from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 import { TagInput } from "../components/TagInput";
 import { useState } from "react";
@@ -57,8 +69,12 @@ export default function ModelDetail() {
     return <ErrorState message="Invalid model ID." />;
   }
 
-  if (isLoading) return <LoadingState />;
-  if (isError || !model) return <ErrorState message="Could not load model." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError || !model) {
+    return <ErrorState message="Could not load model." />;
+  }
 
   const handleAddToInventory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,27 +91,33 @@ export default function ModelDetail() {
           setShowAddForm(false);
           setFormData({ quantity: 1, condition: "", storageLocation: "", notes: "" });
         },
-      }
+      },
     );
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     uploadImage.mutate({ modelId: model.id, file });
     e.target.value = "";
   };
 
   const handleInstructionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     uploadInstructions.mutate({ modelId: model.id, file });
     e.target.value = "";
   };
 
   const handleAddPaint = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPaint) return;
+    if (!selectedPaint) {
+      return;
+    }
     addModelPaint.mutate(
       { modelId: model.id, data: { paintId: selectedPaint.id, usage: paintUsage || undefined } },
       {
@@ -104,7 +126,7 @@ export default function ModelDetail() {
           setPaintUsage("");
           setShowAddPaint(false);
         },
-      }
+      },
     );
   };
 
@@ -126,7 +148,9 @@ export default function ModelDetail() {
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editForm) return;
+    if (!editForm) {
+      return;
+    }
     updateModel.mutate(
       {
         id: model.id,
@@ -144,7 +168,7 @@ export default function ModelDetail() {
           tagNames: editForm.tagNames,
         },
       },
-      { onSuccess: () => setIsEditing(false) }
+      { onSuccess: () => setIsEditing(false) },
     );
   };
 
@@ -152,7 +176,12 @@ export default function ModelDetail() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Button variant="ghost" size="sm" onClick={() => navigate("/models")} className="self-start -ml-2.5">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate("/models")}
+        className="self-start -ml-2.5"
+      >
         ← Back to models
       </Button>
 
@@ -194,20 +223,33 @@ export default function ModelDetail() {
               </div>
               <div>
                 <FieldLabel>Name</FieldLabel>
-                <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  required
+                />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <FieldLabel>Scale</FieldLabel>
-                  <Input value={editForm.scale} onChange={(e) => setEditForm({ ...editForm, scale: e.target.value })} />
+                  <Input
+                    value={editForm.scale}
+                    onChange={(e) => setEditForm({ ...editForm, scale: e.target.value })}
+                  />
                 </div>
                 <div>
                   <FieldLabel>Category</FieldLabel>
-                  <Input value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
+                  <Input
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  />
                 </div>
                 <div>
                   <FieldLabel>Difficulty</FieldLabel>
-                  <Input value={editForm.difficulty} onChange={(e) => setEditForm({ ...editForm, difficulty: e.target.value })} />
+                  <Input
+                    value={editForm.difficulty}
+                    onChange={(e) => setEditForm({ ...editForm, difficulty: e.target.value })}
+                  />
                 </div>
               </div>
               <div>
@@ -236,7 +278,10 @@ export default function ModelDetail() {
               </div>
               <div>
                 <FieldLabel>Official page</FieldLabel>
-                <Input value={editForm.sourceUrl} onChange={(e) => setEditForm({ ...editForm, sourceUrl: e.target.value })} />
+                <Input
+                  value={editForm.sourceUrl}
+                  onChange={(e) => setEditForm({ ...editForm, sourceUrl: e.target.value })}
+                />
               </div>
               <div>
                 <FieldLabel>Instructions PDF link</FieldLabel>
@@ -249,7 +294,12 @@ export default function ModelDetail() {
                 <Button type="submit" disabled={updateModel.isPending} className="flex-1">
                   {updateModel.isPending ? "Saving…" : "Save changes"}
                 </Button>
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsEditing(false)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setIsEditing(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -263,12 +313,15 @@ export default function ModelDetail() {
                     {model.scale && <Badge variant="secondary">{model.scale}</Badge>}
                     {model.category && <Badge variant="secondary">{model.category}</Badge>}
                     {model.difficulty && <Badge variant="secondary">{model.difficulty}</Badge>}
-                    {model.tags?.map((t) => (
-                      <Badge key={t.id}>{t.name}</Badge>
-                    ))}
+                    {model.tags?.map((t) => <Badge key={t.id}>{t.name}</Badge>)}
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleStartEdit} className="flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleStartEdit}
+                  className="flex-shrink-0"
+                >
                   Edit
                 </Button>
               </div>
@@ -322,8 +375,17 @@ export default function ModelDetail() {
                     <span className="text-slate-500">None attached</span>
                   )}
                   <label className="cursor-pointer text-xs text-slate-400 underline hover:text-slate-200">
-                    <input type="file" accept="application/pdf" onChange={handleInstructionsChange} className="hidden" />
-                    {uploadInstructions.isPending ? "Uploading…" : model.instructionUrl ? "replace" : "attach a PDF"}
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleInstructionsChange}
+                      className="hidden"
+                    />
+                    {uploadInstructions.isPending
+                      ? "Uploading…"
+                      : model.instructionUrl
+                        ? "replace"
+                        : "attach a PDF"}
                   </label>
                 </p>
               </div>
@@ -336,9 +398,14 @@ export default function ModelDetail() {
                 {!isInInventory ? (
                   <Button onClick={() => setShowAddForm(true)}>Add to my models</Button>
                 ) : (
-                  <div className="flex items-center text-sm font-medium text-emerald-400">✓ In your inventory</div>
+                  <div className="flex items-center text-sm font-medium text-emerald-400">
+                    ✓ In your inventory
+                  </div>
                 )}
-                <Button variant="outlineAccent" onClick={() => navigate(`/projects/new?modelId=${model.id}`)}>
+                <Button
+                  variant="outlineAccent"
+                  onClick={() => navigate(`/projects/new?modelId=${model.id}`)}
+                >
                   Create build
                 </Button>
               </>
@@ -378,7 +445,12 @@ export default function ModelDetail() {
                   <Button type="submit" disabled={isPending} className="flex-1">
                     {isPending ? "Adding..." : "Add"}
                   </Button>
-                  <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddForm(false)}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => setShowAddForm(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -405,7 +477,9 @@ export default function ModelDetail() {
                   {entry.storageLocation && (
                     <div className="text-xs text-slate-500">Location: {entry.storageLocation}</div>
                   )}
-                  {entry.notes && <div className="text-xs text-slate-500">Notes: {entry.notes}</div>}
+                  {entry.notes && (
+                    <div className="text-xs text-slate-500">Notes: {entry.notes}</div>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -428,7 +502,7 @@ export default function ModelDetail() {
                             },
                           });
                         },
-                      }
+                      },
                     );
                   }}
                   className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
@@ -452,7 +526,10 @@ export default function ModelDetail() {
         </div>
 
         {showAddPaint && (
-          <form onSubmit={handleAddPaint} className="mb-4 flex flex-col gap-2 rounded-lg border border-workshop-border p-3">
+          <form
+            onSubmit={handleAddPaint}
+            className="mb-4 flex flex-col gap-2 rounded-lg border border-workshop-border p-3"
+          >
             {!selectedPaint ? (
               <PaintPicker onSelect={setSelectedPaint} />
             ) : (
@@ -462,7 +539,11 @@ export default function ModelDetail() {
                   style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                 />
                 <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
-                <button type="button" className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSelectedPaint(null)}>
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 hover:text-slate-300"
+                  onClick={() => setSelectedPaint(null)}
+                >
                   change
                 </button>
               </div>
@@ -473,7 +554,12 @@ export default function ModelDetail() {
               placeholder="Usage (optional) — e.g. Hull, Deck, Weathering"
             />
             <div className="flex gap-2">
-              <Button type="submit" size="sm" disabled={!selectedPaint || addModelPaint.isPending} className="flex-1">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!selectedPaint || addModelPaint.isPending}
+                className="flex-1"
+              >
                 {addModelPaint.isPending ? "Adding…" : "Add requirement"}
               </Button>
               <Button
@@ -496,7 +582,8 @@ export default function ModelDetail() {
         {model.requiredPaints && model.requiredPaints.length > 0 ? (
           <>
             <div className="mb-4 text-xs text-slate-400">
-              {model.availability.ownedCount} / {model.availability.totalRequired} owned ({model.availability.coveragePercent}%)
+              {model.availability.ownedCount} / {model.availability.totalRequired} owned (
+              {model.availability.coveragePercent}%)
             </div>
             <ul className="space-y-2">
               {model.requiredPaints.map((paint) => (
@@ -540,7 +627,7 @@ export default function ModelDetail() {
                               },
                             });
                           },
-                        }
+                        },
                       )
                     }
                     className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
@@ -552,7 +639,9 @@ export default function ModelDetail() {
             </ul>
           </>
         ) : (
-          !showAddPaint && <div className="text-xs text-slate-500">No paint requirements recorded.</div>
+          !showAddPaint && (
+            <div className="text-xs text-slate-500">No paint requirements recorded.</div>
+          )
         )}
       </Card>
 
@@ -573,7 +662,9 @@ export default function ModelDetail() {
                     <div className="text-xs text-slate-500">{project.status}</div>
                   </div>
                   <div className="flex-shrink-0 text-right">
-                    <div className="text-xs font-medium text-slate-300">{project.progressPercent}%</div>
+                    <div className="text-xs font-medium text-slate-300">
+                      {project.progressPercent}%
+                    </div>
                     <ProgressBar percent={project.progressPercent} className="mt-1 w-16" />
                   </div>
                 </button>

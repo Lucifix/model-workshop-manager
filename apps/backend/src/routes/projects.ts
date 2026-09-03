@@ -31,7 +31,9 @@ export async function projectRoutes(app: FastifyInstance) {
       .from(projects)
       .leftJoin(models, eq(projects.modelId, models.id))
       .all();
-    if (status) rows = rows.filter((r) => r.project.status === status);
+    if (status) {
+      rows = rows.filter((r) => r.project.status === status);
+    }
 
     const coverPhotoUrls = resolveCoverPhotoUrls(rows.map((r) => r.project));
     return rows.map((r) => ({ ...r, coverPhotoUrl: coverPhotoUrls.get(r.project.id) }));
@@ -39,7 +41,9 @@ export async function projectRoutes(app: FastifyInstance) {
 
   app.post("/api/projects", async (req, reply) => {
     const body = parseBody(projectCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
     const [row] = await db.insert(projects).values(body).returning();
     reply.code(201).send(row);
   });
@@ -47,7 +51,9 @@ export async function projectRoutes(app: FastifyInstance) {
   app.get("/api/projects/:id", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const project = db.select().from(projects).where(eq(projects.id, id)).get();
-    if (!project) return reply.code(404).send({ error: "not_found" });
+    if (!project) {
+      return reply.code(404).send({ error: "not_found" });
+    }
     const model = db.select().from(models).where(eq(models.id, project.modelId)).get();
     const log = db
       .select()
@@ -68,13 +74,21 @@ export async function projectRoutes(app: FastifyInstance) {
   app.patch("/api/projects/:id", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(projectUpdateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
 
     const existing = db.select().from(projects).where(eq(projects.id, id)).get();
-    if (!existing) return reply.code(404).send({ error: "not_found" });
+    if (!existing) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     if (body.coverPhotoId != null) {
-      const photo = db.select().from(projectPhotos).where(eq(projectPhotos.id, body.coverPhotoId)).get();
+      const photo = db
+        .select()
+        .from(projectPhotos)
+        .where(eq(projectPhotos.id, body.coverPhotoId))
+        .get();
       if (!photo || photo.projectId !== id) {
         return reply.code(400).send({ error: "invalid_cover_photo" });
       }
@@ -108,7 +122,9 @@ export async function projectRoutes(app: FastifyInstance) {
   app.post("/api/projects/:id/log", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(buildLogCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
     const [row] = await db
       .insert(buildLogEntries)
       .values({ ...body, projectId: id })
@@ -125,7 +141,9 @@ export async function projectRoutes(app: FastifyInstance) {
   app.post("/api/projects/:id/photos", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const file = await req.file();
-    if (!file) return reply.code(400).send({ error: "no_file" });
+    if (!file) {
+      return reply.code(400).send({ error: "no_file" });
+    }
 
     const dir = join(UPLOAD_DIR, "projects", String(id));
     mkdirSync(dir, { recursive: true });
@@ -147,7 +165,9 @@ export async function projectRoutes(app: FastifyInstance) {
   app.delete("/api/projects/:id/photos/:photoId", async (req, reply) => {
     const photoId = Number((req.params as { photoId: string }).photoId);
     const photo = db.select().from(projectPhotos).where(eq(projectPhotos.id, photoId)).get();
-    if (!photo) return reply.code(404).send({ error: "not_found" });
+    if (!photo) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     await db.delete(projectPhotos).where(eq(projectPhotos.id, photoId));
     unlink(join(UPLOAD_DIR, photo.filename), () => {
@@ -160,7 +180,9 @@ export async function projectRoutes(app: FastifyInstance) {
   app.post("/api/projects/:id/paints", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(projectPaintCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
 
     const existing = db
       .select()
@@ -168,7 +190,9 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(eq(projectPaints.projectId, id))
       .all()
       .find((r) => r.paintId === body.paintId);
-    if (existing) return reply.code(409).send({ error: "already_linked" });
+    if (existing) {
+      return reply.code(409).send({ error: "already_linked" });
+    }
 
     const [row] = await db
       .insert(projectPaints)

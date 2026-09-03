@@ -22,10 +22,16 @@ async function seed() {
     .returning();
   const [ak] = await db
     .insert(manufacturers)
-    .values({ name: "AK Interactive", slug: "ak-interactive", website: "https://ak-interactive.com" })
+    .values({
+      name: "AK Interactive",
+      slug: "ak-interactive",
+      website: "https://ak-interactive.com",
+    })
     .returning();
 
-  if (!revell || !tamiya || !ak) throw new Error("manufacturer seed failed");
+  if (!revell || !tamiya || !ak) {
+    throw new Error("manufacturer seed failed");
+  }
 
   const [revell05White] = await db
     .insert(paints)
@@ -128,9 +134,24 @@ async function seed() {
   // Only the requirements explicitly given in the brief's own example are seeded.
   // No additional model-paint pairings are invented (see spec §23).
   await db.insert(modelPaints).values([
-    { modelId: smitHouston.id, paintId: revell05White.id, usage: "Hull", confidence: "seed-sample" },
-    { modelId: smitHouston.id, paintId: revell09Anthracite.id, usage: "Superstructure", confidence: "seed-sample" },
-    { modelId: smitHouston.id, paintId: revell15Yellow.id, usage: "Deck accents", confidence: "seed-sample" },
+    {
+      modelId: smitHouston.id,
+      paintId: revell05White.id,
+      usage: "Hull",
+      confidence: "seed-sample",
+    },
+    {
+      modelId: smitHouston.id,
+      paintId: revell09Anthracite.id,
+      usage: "Superstructure",
+      confidence: "seed-sample",
+    },
+    {
+      modelId: smitHouston.id,
+      paintId: revell15Yellow.id,
+      usage: "Deck accents",
+      confidence: "seed-sample",
+    },
   ]);
 
   await db.insert(ownedModels).values({

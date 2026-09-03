@@ -22,7 +22,9 @@ export async function shoppingListRoutes(app: FastifyInstance) {
 
   app.post("/api/shopping-list", async (req, reply) => {
     const body = parseBody(shoppingListCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
     const [row] = await db.insert(shoppingListItems).values(body).returning();
     reply.code(201).send(row);
   });
@@ -34,7 +36,9 @@ export async function shoppingListRoutes(app: FastifyInstance) {
       .set({ purchased: true, purchasedAt: new Date().toISOString() })
       .where(eq(shoppingListItems.id, id))
       .returning();
-    if (!row) return reply.code(404).send({ error: "not_found" });
+    if (!row) {
+      return reply.code(404).send({ error: "not_found" });
+    }
     return row;
   });
 }
