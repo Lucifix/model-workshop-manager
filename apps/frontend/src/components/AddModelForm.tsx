@@ -265,7 +265,7 @@ export function AddModelForm({
           />
           <p className="mt-1.5 text-xs text-slate-500">
             Copy the image address from the kit's official product page — the app won't fetch it
-            for you (see docs/DATA_SOURCES.md). You can also upload your own photo after saving.
+            for you. You can also upload your own photo after saving.
           </p>
           {imageUrl && !imageBroken && (
             <img

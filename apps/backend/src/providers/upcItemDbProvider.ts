@@ -2,10 +2,10 @@ import type { CatalogProvider, ModelDetails, ModelResult, PaintResult } from "./
 
 /**
  * Optional convenience provider around UPCitemdb's free-tier lookup API.
- * Disabled unless UPCITEMDB_ENABLED=true (see docs/DATA_SOURCES.md — generic
- * retail data, not hobby-specific, so it's a nice-to-have quick-fill, never
- * the primary catalog path). Free tier: ~100 lookups/day, no key required
- * for `prod/trial/lookup`.
+ * Disabled unless UPCITEMDB_ENABLED=true — generic retail data, not
+ * hobby-specific, so it's a nice-to-have quick-fill, never the primary
+ * catalog path. Free tier: ~100 lookups/day, no key required for
+ * `prod/trial/lookup`.
  */
 export function createUpcItemDbProvider(): CatalogProvider {
   const enabled = process.env.UPCITEMDB_ENABLED === "true";

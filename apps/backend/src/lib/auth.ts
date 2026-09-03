@@ -1,11 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
 
 /**
- * Single-user credential check against env-configured values (see
- * docs/ORIGINAL_SPEC.md §19 — this app is explicitly single-user; a full users
- * table would be over-engineering). Both AUTH_USERNAME and AUTH_PASSWORD
- * must be set for the server to accept any login at all — see index.ts,
- * which refuses to boot without them.
+ * Single-user credential check against env-configured values. This app is
+ * explicitly single-user by design — a full users table would be
+ * over-engineering. Both AUTH_USERNAME and AUTH_PASSWORD must be set for the
+ * server to accept any login at all — see index.ts, which refuses to boot
+ * without them.
  */
 export function checkCredentials(username: string, password: string): boolean {
   const expectedUsername = process.env.AUTH_USERNAME ?? "";

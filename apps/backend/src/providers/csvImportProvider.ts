@@ -4,7 +4,7 @@ import { parse } from "node:path";
  * Bulk import path for catalog data the user assembles themselves — a
  * spreadsheet they maintain, an export from another tool, or hand-copied
  * data from a reference site like Scalemates (never automated scraping of
- * that site; see docs/DATA_SOURCES.md).
+ * that site — see the comment on CatalogProvider in providers/types.ts).
  *
  * This is intentionally NOT a `CatalogProvider` implementation (it has no
  * "search" concept): it's a one-shot upsert job over a documented row shape.

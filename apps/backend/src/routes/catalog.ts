@@ -6,8 +6,8 @@ import { importMiniaturePaints } from "../scripts/importMiniaturePaints.js";
 
 /**
  * Thin HTTP surface over the CatalogProvider architecture (see
- * apps/backend/src/providers/ and docs/ORIGINAL_SPEC.md §35.6). Never scrapes a
- * manufacturer site directly — see docs/DATA_SOURCES.md for why.
+ * apps/backend/src/providers/). Never scrapes a manufacturer site directly —
+ * see the comment on CatalogProvider in providers/types.ts for why.
  */
 const providers: Record<string, CatalogProvider> = {
   manual: manualProvider,

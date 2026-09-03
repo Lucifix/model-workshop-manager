@@ -5,8 +5,10 @@
  * small surface. Route handlers depend only on this interface, never on a
  * specific provider, so adding a new source never touches core app code.
  *
- * See docs/DATA_SOURCES.md for why no automated manufacturer/aggregator
- * source is wired up by default.
+ * No automated manufacturer/aggregator scraper is wired up by default —
+ * scraping a manufacturer site directly risks breaking their ToS/rate limits,
+ * so any such source should stay opt-in and feature-flagged (see
+ * upcItemDbProvider.ts for the pattern).
  */
 
 export interface ModelResult {

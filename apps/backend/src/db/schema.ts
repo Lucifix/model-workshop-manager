@@ -20,7 +20,8 @@ const timestamps = {
 
 // ---------------------------------------------------------------------------
 // CATALOG DATA — global, shared facts about products. Never contains "I own
-// this" or "I built this" information. See docs/ARCHITECTURE.md §6.
+// this" or "I built this" information (that lives in the inventory/builds
+// tables below).
 // ---------------------------------------------------------------------------
 
 export const manufacturers = sqliteTable("manufacturers", {

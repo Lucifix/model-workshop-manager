@@ -10,8 +10,8 @@ import { manufacturers, paints, PAINT_TYPES } from "../db/schema.js";
  * Deliberately data-only: this script does NOT download or store the
  * repository's manufacturer logo images. Those are each manufacturer's own
  * trademarked artwork — the repo's MIT license covers its own compilation,
- * not third-party marks it doesn't hold the copyright to. See docs/ORIGINAL_SPEC.md
- * §36. Add a logo per-manufacturer yourself (paste a URL or upload a file)
+ * not third-party marks it doesn't hold the copyright to. Add a logo
+ * per-manufacturer yourself (paste a URL or upload a file)
  * if you want one, same as the existing model-image workflow.
  *
  * Run with: npm run import:miniature-paints
@@ -153,7 +153,7 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
 
       // Collect and batch-insert rather than one insert() per row — better-sqlite3
       // crashes under Node 24 when a loop creates thousands of individual
-      // prepared statements (see run notes in docs/ORIGINAL_SPEC.md §36).
+      // prepared statements.
       const now = new Date().toISOString();
       const toInsert: (typeof paints.$inferInsert)[] = [];
       for (const row of rows) {
