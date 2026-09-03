@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { and, eq } from "drizzle-orm";
 import { mkdirSync, createWriteStream } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { db } from "../db/client.js";
 import {
@@ -188,7 +188,7 @@ export async function modelRoutes(app: FastifyInstance) {
 
     const dir = join(UPLOAD_DIR, "models", String(id));
     mkdirSync(dir, { recursive: true });
-    const filename = `${Date.now()}-${file.filename}`;
+    const filename = `${Date.now()}-${basename(file.filename)}`;
     await pipeline(file.file, createWriteStream(join(dir, filename)));
 
     const imageUrl = `/uploads/models/${id}/${filename}`;
@@ -212,7 +212,7 @@ export async function modelRoutes(app: FastifyInstance) {
 
     const dir = join(UPLOAD_DIR, "models", String(id));
     mkdirSync(dir, { recursive: true });
-    const filename = `${Date.now()}-${file.filename}`;
+    const filename = `${Date.now()}-${basename(file.filename)}`;
     await pipeline(file.file, createWriteStream(join(dir, filename)));
 
     const instructionUrl = `/uploads/models/${id}/${filename}`;

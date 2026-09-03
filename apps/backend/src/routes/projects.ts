@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { and, eq } from "drizzle-orm";
 import { mkdirSync, createWriteStream, unlink } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { db } from "../db/client.js";
 import {
@@ -129,7 +129,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
     const dir = join(UPLOAD_DIR, "projects", String(id));
     mkdirSync(dir, { recursive: true });
-    const filename = `${Date.now()}-${file.filename}`;
+    const filename = `${Date.now()}-${basename(file.filename)}`;
     const destPath = join(dir, filename);
     await pipeline(file.file, createWriteStream(destPath));
 
