@@ -125,34 +125,6 @@ produce the same tarball format, so a backup from any one can be restored via an
 
 </details>
 
-## Data import
-
-There's no automated catalog sync from Revell, Tamiya, or AK Interactive — none of them publish a
-usable API. Instead: manual entry always works, CSV/JSON import handles bulk loads, and an
-optional barcode lookup (off by default) gives a quick-fill convenience for generic retail
-metadata.
-
-<details>
-<summary>Adding a new catalog provider</summary>
-
-Implement the `CatalogProvider` interface in `apps/backend/src/providers/types.ts`:
-
-```ts
-interface CatalogProvider {
-  id: string;
-  label: string;
-  searchModels(query: string): Promise<ModelResult[]>;
-  getModel(externalId: string): Promise<ModelDetails | null>;
-  searchPaints(query: string): Promise<PaintResult[]>;
-}
-```
-
-Route handlers only ever depend on this interface, so a new provider never requires touching core
-app code — register it alongside the existing providers and it slots into the same "Add Model" /
-"Add Paint" search flow.
-
-</details>
-
 ## License
 
 [MIT](LICENSE)
