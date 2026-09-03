@@ -7,6 +7,8 @@ you have the right shade of Tamiya paint, or losing track of build progress. Mod
 Manager keeps your catalog, inventory, and builds in one place, installable as an app on your
 phone or desktop, running entirely on your own server.
 
+![Dashboard screenshot](screenshots/dashboard.png)
+
 ## What it does
 
 - **Dashboard** — kit/paint/build counts, low-stock paints, missing-paint alerts, recent activity.
