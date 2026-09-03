@@ -59,8 +59,7 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 ## Tech stack
 
 React + TypeScript PWA &rarr; Fastify REST API &rarr; Drizzle ORM &rarr; SQLite, all behind Docker
-Compose. Photos live on disk, never as DB blobs. Full breakdown, schema, and the reasoning behind
-each choice: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Compose. Photos live on disk, never as DB blobs.
 
 ## Local development
 
@@ -129,9 +128,9 @@ produce the same tarball format, so a backup from any one can be restored via an
 ## Data import
 
 There's no automated catalog sync from Revell, Tamiya, or AK Interactive — none of them publish a
-usable API (see [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) for the research). Instead:
-manual entry always works, CSV/JSON import handles bulk loads, and an optional barcode lookup
-(off by default) gives a quick-fill convenience for generic retail metadata.
+usable API. Instead: manual entry always works, CSV/JSON import handles bulk loads, and an
+optional barcode lookup (off by default) gives a quick-fill convenience for generic retail
+metadata.
 
 <details>
 <summary>Adding a new catalog provider</summary>
@@ -153,13 +152,6 @@ app code — register it alongside the existing providers and it slots into the 
 "Add Paint" search flow.
 
 </details>
-
-## Docs
-
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — domain model, schema, and design rationale.
-- [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) — the catalog/API research behind the
-  import-first design.
-- [`docs/ORIGINAL_SPEC.md`](docs/ORIGINAL_SPEC.md) — the original brief this was built from.
 
 ## License
 
