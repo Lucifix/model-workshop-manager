@@ -565,6 +565,20 @@ export interface CatalogSearchResult {
   sourceUrl?: string;
 }
 
+export interface CatalogProviderInfo {
+  id: string;
+  label: string;
+}
+
+/** Which optional catalog providers (e.g. barcode lookup) are actually enabled server-side. */
+export function useCatalogProviders() {
+  return useQuery({
+    queryKey: ["catalog", "providers"],
+    queryFn: () => apiFetch<CatalogProviderInfo[]>("/catalog/providers"),
+    staleTime: Infinity,
+  });
+}
+
 /** Optional barcode-lookup convenience (docs/ORIGINAL_SPEC.md §35.5, method 3) — never the primary path. */
 export function useCatalogSearch() {
   return useMutation({

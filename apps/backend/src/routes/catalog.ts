@@ -15,6 +15,12 @@ const providers: Record<string, CatalogProvider> = {
 };
 
 export async function catalogRoutes(app: FastifyInstance) {
+  app.get("/api/catalog/providers", async () => {
+    return Object.values(providers)
+      .filter((p) => p.enabled !== false)
+      .map((p) => ({ id: p.id, label: p.label }));
+  });
+
   app.get("/api/catalog/search", async (req, reply) => {
     const { provider, q } = req.query as Record<string, string | undefined>;
     if (!q) return reply.code(400).send({ error: "missing_query" });

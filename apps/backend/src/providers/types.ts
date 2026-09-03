@@ -42,6 +42,8 @@ export interface PaintResult {
 export interface CatalogProvider {
   id: string;
   label: string;
+  /** Whether this provider is actually usable right now (e.g. its feature flag is on). Defaults to true. */
+  enabled?: boolean;
   searchModels(query: string): Promise<ModelResult[]>;
   getModel(externalId: string): Promise<ModelDetails | null>;
   searchPaints(query: string): Promise<PaintResult[]>;

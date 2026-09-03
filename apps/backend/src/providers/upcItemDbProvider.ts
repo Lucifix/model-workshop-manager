@@ -13,6 +13,7 @@ export function createUpcItemDbProvider(): CatalogProvider {
   return {
     id: "upcitemdb",
     label: "Barcode lookup (UPCitemdb)",
+    enabled,
     async searchModels(query: string): Promise<ModelResult[]> {
       if (!enabled) return [];
       const item = await lookup(query);

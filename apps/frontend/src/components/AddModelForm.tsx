@@ -4,6 +4,7 @@ import {
   useCreateManufacturer,
   useCreateModel,
   useCatalogSearch,
+  useCatalogProviders,
   type CatalogSearchResult,
 } from "../api/client";
 import { Button, Input, Select, Textarea, FieldLabel, Card } from "./ui";
@@ -34,6 +35,8 @@ export function AddModelForm({
   const createManufacturer = useCreateManufacturer();
   const createModel = useCreateModel();
   const catalogSearch = useCatalogSearch();
+  const { data: catalogProviders } = useCatalogProviders();
+  const barcodeLookupEnabled = catalogProviders?.some((p) => p.id === "upcitemdb") ?? false;
 
   const [manufacturerId, setManufacturerId] = useState("");
   const [newManufacturerName, setNewManufacturerName] = useState("");
@@ -168,21 +171,23 @@ export function AddModelForm({
     <Card>
       <h2 className="mb-4 text-sm font-semibold text-slate-300">Add a new model</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <FieldLabel>Look up by barcode (optional)</FieldLabel>
-          <div className="flex gap-2">
-            <Input
-              value={barcodeQuery}
-              onChange={(e) => setBarcodeQuery(e.target.value)}
-              placeholder="UPC / EAN on the box"
-              className="flex-1"
-            />
-            <Button type="button" variant="secondary" onClick={handleLookup} disabled={catalogSearch.isPending}>
-              {catalogSearch.isPending ? "Looking up…" : "Look up"}
-            </Button>
+        {barcodeLookupEnabled && (
+          <div>
+            <FieldLabel>Look up by barcode (optional)</FieldLabel>
+            <div className="flex gap-2">
+              <Input
+                value={barcodeQuery}
+                onChange={(e) => setBarcodeQuery(e.target.value)}
+                placeholder="UPC / EAN on the box"
+                className="flex-1"
+              />
+              <Button type="button" variant="secondary" onClick={handleLookup} disabled={catalogSearch.isPending}>
+                {catalogSearch.isPending ? "Looking up…" : "Look up"}
+              </Button>
+            </div>
+            {lookupMessage && <p className="mt-1.5 text-xs text-slate-400">{lookupMessage}</p>}
           </div>
-          {lookupMessage && <p className="mt-1.5 text-xs text-slate-400">{lookupMessage}</p>}
-        </div>
+        )}
 
         <div>
           <FieldLabel>Manufacturer</FieldLabel>
