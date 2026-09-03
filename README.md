@@ -160,3 +160,7 @@ app code — register it alongside the existing providers and it slots into the 
 - [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) — the catalog/API research behind the
   import-first design.
 - [`docs/ORIGINAL_SPEC.md`](docs/ORIGINAL_SPEC.md) — the original brief this was built from.
+
+## License
+
+[MIT](LICENSE)
