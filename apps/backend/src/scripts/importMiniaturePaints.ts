@@ -43,14 +43,32 @@ function displayNameFromFile(stem: string): string {
 
 function inferType(setLabel: string): PaintType {
   const s = setLabel.toLowerCase();
-  if (s.includes("primer")) return "Primer";
-  if (s.includes("panel liner") || s.includes("panel line")) return "Panel Liner";
-  if (s.includes("wash") || s.includes("shade")) return "Wash";
-  if (s.includes("metallic") || s.includes("metal")) return "Metallic";
-  if (s.includes("weathering") || s.includes("pigment") || s.includes("technical") || s.includes("rust"))
+  if (s.includes("primer")) {
+    return "Primer";
+  }
+  if (s.includes("panel liner") || s.includes("panel line")) {
+    return "Panel Liner";
+  }
+  if (s.includes("wash") || s.includes("shade")) {
+    return "Wash";
+  }
+  if (s.includes("metallic") || s.includes("metal")) {
+    return "Metallic";
+  }
+  if (
+    s.includes("weathering") ||
+    s.includes("pigment") ||
+    s.includes("technical") ||
+    s.includes("rust")
+  ) {
     return "Weathering";
-  if (s.includes("enamel")) return "Enamel";
-  if (s.includes("lacquer")) return "Lacquer";
+  }
+  if (s.includes("enamel")) {
+    return "Enamel";
+  }
+  if (s.includes("lacquer")) {
+    return "Lacquer";
+  }
   return "Acrylic";
 }
 
@@ -64,11 +82,14 @@ interface ParsedRow {
 /** Parses the `|Name|Code?|Set|R|G|B|Hex|` markdown table each brand file uses. */
 function parsePaintTable(markdown: string): ParsedRow[] {
   const lines = markdown.split("\n");
-  const headerIdx = lines.findIndex((l) => l.trim().startsWith("|") && l.toLowerCase().includes("name"));
-  if (headerIdx === -1) return [];
+  const headerIdx = lines.findIndex(
+    (l) => l.trim().startsWith("|") && l.toLowerCase().includes("name"),
+  );
+  if (headerIdx === -1) {
+    return [];
+  }
 
-  const headers = lines[headerIdx]!
-    .split("|")
+  const headers = lines[headerIdx]!.split("|")
     .map((h) => h.trim().toLowerCase())
     .filter((h) => h.length > 0);
   const nameIdx = headers.indexOf("name");
@@ -79,11 +100,15 @@ function parsePaintTable(markdown: string): ParsedRow[] {
   const rows: ParsedRow[] = [];
   for (let i = headerIdx + 2; i < lines.length; i++) {
     const line = lines[i]!.trim();
-    if (!line.startsWith("|")) continue;
+    if (!line.startsWith("|")) {
+      continue;
+    }
     const cells = line.split("|").map((c) => c.trim());
     const cols = cells.slice(1, cells.length - 1);
     const name = cols[nameIdx]?.trim();
-    if (!name) continue;
+    if (!name) {
+      continue;
+    }
 
     const hexMatch = hexIdx >= 0 ? cols[hexIdx]?.match(/#([0-9A-Fa-f]{6})/) : null;
     rows.push({
@@ -98,13 +123,20 @@ function parsePaintTable(markdown: string): ParsedRow[] {
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`fetch failed ${res.status}: ${url}`);
+  if (!res.ok) {
+    throw new Error(`fetch failed ${res.status}: ${url}`);
+  }
   return res.text();
 }
 
-async function upsertManufacturer(name: string, slug: string): Promise<{ id: number; created: boolean }> {
+async function upsertManufacturer(
+  name: string,
+  slug: string,
+): Promise<{ id: number; created: boolean }> {
   const existing = db.select().from(manufacturers).where(eq(manufacturers.slug, slug)).get();
-  if (existing) return { id: existing.id, created: false };
+  if (existing) {
+    return { id: existing.id, created: false };
+  }
   const [row] = await db.insert(manufacturers).values({ name, slug }).returning();
   return { id: row!.id, created: true };
 }
@@ -119,7 +151,9 @@ export interface ImportMiniaturePaintsResult {
 export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResult> {
   console.log(`Fetching brand file list from github.com/${REPO}...`);
   const listRes = await fetch(`https://api.github.com/repos/${REPO}/contents/paints`);
-  if (!listRes.ok) throw new Error(`Failed to list paints/ directory: ${listRes.status}`);
+  if (!listRes.ok) {
+    throw new Error(`Failed to list paints/ directory: ${listRes.status}`);
+  }
   const files = (await listRes.json()) as Array<{ name: string }>;
   const mdFiles = files.filter((f) => f.name.endsWith(".md")).map((f) => f.name);
   console.log(`Found ${mdFiles.length} brand files.\n`);
@@ -140,7 +174,9 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
       const rows = parsePaintTable(markdown);
 
       const { id: mfrId, created } = await upsertManufacturer(displayName, slug);
-      if (created) manufacturersCreated++;
+      if (created) {
+        manufacturersCreated++;
+      }
 
       const existingCodes = new Set(
         db
@@ -148,7 +184,7 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
           .from(paints)
           .where(eq(paints.manufacturerId, mfrId))
           .all()
-          .map((r) => r.code)
+          .map((r) => r.code),
       );
 
       // Collect and batch-insert rather than one insert() per row — better-sqlite3
@@ -200,8 +236,12 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
   console.log(`Errors:                ${errors.length}`);
   if (errors.length > 0) {
     console.log("\nErrors:");
-    for (const e of errors.slice(0, 20)) console.log(`  - ${e}`);
-    if (errors.length > 20) console.log(`  ...and ${errors.length - 20} more`);
+    for (const e of errors.slice(0, 20)) {
+      console.log(`  - ${e}`);
+    }
+    if (errors.length > 20) {
+      console.log(`  ...and ${errors.length - 20} more`);
+    }
   }
 
   return { manufacturersCreated, paintsImported, paintsSkipped, errors };

@@ -14,7 +14,9 @@ export async function authRoutes(app: FastifyInstance) {
     { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } },
     async (req, reply) => {
       const body = parseBody(loginSchema, req.body, reply);
-      if (!body) return;
+      if (!body) {
+        return;
+      }
 
       if (!checkCredentials(body.username, body.password)) {
         return reply.code(401).send({ error: "invalid_credentials" });
@@ -23,7 +25,7 @@ export async function authRoutes(app: FastifyInstance) {
       req.session.set("authenticated", true);
       req.session.set("username", body.username);
       return { authenticated: true, username: body.username };
-    }
+    },
   );
 
   app.post("/api/auth/logout", async (req) => {

@@ -69,12 +69,21 @@ export default function Wishlist() {
         targetPrice: formData.targetPrice ? Number(formData.targetPrice) : undefined,
         paintId: selectedPaint?.id,
       },
-      { onSuccess: () => { resetForm(); setShowForm(false); } }
+      {
+        onSuccess: () => {
+          resetForm();
+          setShowForm(false);
+        },
+      },
     );
   };
 
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState message="Could not load the wishlist." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError) {
+    return <ErrorState message="Could not load the wishlist." />;
+  }
 
   const rows = data ?? [];
 
@@ -95,7 +104,9 @@ export default function Wishlist() {
                 <PaintPicker
                   onSelect={(p) => {
                     setSelectedPaint(p);
-                    if (!formData.description.trim()) setFormData({ ...formData, description: p.name });
+                    if (!formData.description.trim()) {
+                      setFormData({ ...formData, description: p.name });
+                    }
                   }}
                 />
               ) : (
@@ -105,7 +116,11 @@ export default function Wishlist() {
                     style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                   />
                   <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
-                  <button type="button" className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSelectedPaint(null)}>
+                  <button
+                    type="button"
+                    className="text-xs text-slate-500 hover:text-slate-300"
+                    onClick={() => setSelectedPaint(null)}
+                  >
                     unlink
                   </button>
                 </div>
@@ -150,7 +165,10 @@ export default function Wishlist() {
                 type="button"
                 variant="secondary"
                 className="flex-1"
-                onClick={() => { setShowForm(false); resetForm(); }}
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
               >
                 Cancel
               </Button>
@@ -173,15 +191,21 @@ export default function Wishlist() {
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-slate-100">{row.item.description}</div>
+                  <div className="truncate text-sm font-medium text-slate-100">
+                    {row.item.description}
+                  </div>
                   <div className="text-xs text-slate-400">
-                    {row.item.targetPrice != null ? `Target $${row.item.targetPrice.toFixed(2)}` : ""}
+                    {row.item.targetPrice != null
+                      ? `Target $${row.item.targetPrice.toFixed(2)}`
+                      : ""}
                     {row.paint ? ` · ${row.paint.name}` : ""}
                   </div>
                 </div>
               </div>
               <div className="flex flex-shrink-0 items-center gap-2">
-                <Badge tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}>
+                <Badge
+                  tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}
+                >
                   {row.item.priority}
                 </Badge>
                 <Button

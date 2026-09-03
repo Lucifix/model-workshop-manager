@@ -17,6 +17,7 @@ export function paintAvailability(ownedFlags: boolean[]): PaintAvailability {
   const totalRequired = ownedFlags.length;
   const ownedCount = ownedFlags.filter(Boolean).length;
   const missingCount = totalRequired - ownedCount;
-  const coveragePercent = totalRequired === 0 ? 100 : Math.round((ownedCount / totalRequired) * 100);
+  const coveragePercent =
+    totalRequired === 0 ? 100 : Math.round((ownedCount / totalRequired) * 100);
   return { totalRequired, ownedCount, missingCount, coveragePercent };
 }

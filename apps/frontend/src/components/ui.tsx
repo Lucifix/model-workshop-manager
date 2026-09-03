@@ -10,9 +10,16 @@ import type {
 import { forwardRef } from "react";
 import { BoxIcon } from "./icons";
 
-export function Card({ children, className = "", ...props }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
+export function Card({
+  children,
+  className = "",
+  ...props
+}: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
   return (
-    <div className={`rounded-2xl border border-workshop-border bg-workshop-panel p-4 shadow-panel ${className}`} {...props}>
+    <div
+      className={`rounded-2xl border border-workshop-border bg-workshop-panel p-4 shadow-panel ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -37,9 +44,17 @@ export function StatTile({
         : "bg-workshop-accent/15 text-workshop-accent";
   return (
     <Card className="flex items-center gap-3">
-      {icon && <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${iconTone}`}>{icon}</span>}
+      {icon && (
+        <span
+          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${iconTone}`}
+        >
+          {icon}
+        </span>
+      )}
       <div className="flex flex-col">
-        <span className="font-mono text-2xl font-medium leading-tight tabular-nums text-slate-50">{value}</span>
+        <span className="font-mono text-2xl font-medium leading-tight tabular-nums text-slate-50">
+          {value}
+        </span>
         <span className="text-xs font-medium text-slate-400">{label}</span>
       </div>
     </Card>
@@ -104,10 +119,11 @@ export function PageHeader({
 }
 
 const buttonVariants = {
-  primary: "bg-workshop-accent text-white hover:bg-workshop-accentmuted shadow-sm shadow-workshop-accent/20",
-  secondary:
-    "border border-workshop-border text-slate-200 hover:bg-slate-800/60 bg-transparent",
-  outlineAccent: "border border-workshop-accent text-workshop-accent hover:bg-workshop-accent/10 bg-transparent",
+  primary:
+    "bg-workshop-accent text-white hover:bg-workshop-accentmuted shadow-sm shadow-workshop-accent/20",
+  secondary: "border border-workshop-border text-slate-200 hover:bg-slate-800/60 bg-transparent",
+  outlineAccent:
+    "border border-workshop-accent text-workshop-accent hover:bg-workshop-accent/10 bg-transparent",
   ghost: "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 bg-transparent",
 };
 
@@ -135,25 +151,24 @@ export const Button = forwardRef<
 const fieldClass =
   "w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-workshop-accent";
 
-export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input(
-  { className = "", ...props },
-  ref
-) {
-  return <input ref={ref} className={`${fieldClass} ${className}`} {...props} />;
-});
-
-export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select(
-  { className = "", ...props },
-  ref
-) {
-  return <select ref={ref} className={`${fieldClass} ${className}`} {...props} />;
-});
-
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className = "", ...props }, ref) {
-    return <textarea ref={ref} className={`${fieldClass} ${className}`} {...props} />;
-  }
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function Input({ className = "", ...props }, ref) {
+    return <input ref={ref} className={`${fieldClass} ${className}`} {...props} />;
+  },
 );
+
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
+  function Select({ className = "", ...props }, ref) {
+    return <select ref={ref} className={`${fieldClass} ${className}`} {...props} />;
+  },
+);
+
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea({ className = "", ...props }, ref) {
+  return <textarea ref={ref} className={`${fieldClass} ${className}`} {...props} />;
+});
 
 export function FieldLabel({ children }: PropsWithChildren) {
   return <label className="mb-1.5 block text-sm font-medium text-slate-300">{children}</label>;
@@ -222,7 +237,9 @@ const avatarPalette = [
 
 function initials(name: string): string {
   const words = name.trim().split(/\s+/);
-  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
+  if (words.length === 1) {
+    return words[0]!.slice(0, 2).toUpperCase();
+  }
   return (words[0]![0]! + words[1]![0]!).toUpperCase();
 }
 
@@ -271,7 +288,12 @@ export function MediaCard({
   className = "",
   ...props
 }: PropsWithChildren<
-  HTMLAttributes<HTMLDivElement> & { image?: string | null; imageAlt?: string; aspect?: string; overlay?: ReactNode }
+  HTMLAttributes<HTMLDivElement> & {
+    image?: string | null;
+    imageAlt?: string;
+    aspect?: string;
+    overlay?: ReactNode;
+  }
 >) {
   return (
     <div
@@ -356,19 +378,33 @@ export function ListCardBody({ children }: PropsWithChildren) {
   return <div className="min-w-0 flex-1">{children}</div>;
 }
 
-export function ListCardTitle({ children, className = "" }: PropsWithChildren<{ className?: string }>) {
+export function ListCardTitle({
+  children,
+  className = "",
+}: PropsWithChildren<{ className?: string }>) {
   return <div className={`font-medium leading-snug text-slate-100 ${className}`}>{children}</div>;
 }
 
 export function ListCardMeta({ children }: PropsWithChildren) {
-  return <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">{children}</div>;
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+      {children}
+    </div>
+  );
 }
 
-export function ListCardActions({ children, className = "" }: PropsWithChildren<{ className?: string }>) {
+export function ListCardActions({
+  children,
+  className = "",
+}: PropsWithChildren<{ className?: string }>) {
   return <div className={`flex justify-end ${className}`}>{children}</div>;
 }
 
-export function SectionCard({ title, children, actions }: PropsWithChildren<{ title: string; actions?: ReactNode }>) {
+export function SectionCard({
+  title,
+  children,
+  actions,
+}: PropsWithChildren<{ title: string; actions?: ReactNode }>) {
   return (
     <Card>
       <div className="mb-3 flex items-center justify-between">

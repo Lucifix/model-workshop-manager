@@ -8,10 +8,30 @@ import {
   useDeletePaint,
   useManufacturers,
 } from "../api/client";
-import { Card, LoadingState, ErrorState, Badge, Button, Input, Select, Textarea, FieldLabel } from "../components/ui";
+import {
+  Card,
+  LoadingState,
+  ErrorState,
+  Badge,
+  Button,
+  Input,
+  Select,
+  Textarea,
+  FieldLabel,
+} from "../components/ui";
 import { useState } from "react";
 
-const PAINT_TYPES = ["Acrylic", "Enamel", "Lacquer", "Primer", "Wash", "Panel Liner", "Metallic", "Weathering", "Other"];
+const PAINT_TYPES = [
+  "Acrylic",
+  "Enamel",
+  "Lacquer",
+  "Primer",
+  "Wash",
+  "Panel Liner",
+  "Metallic",
+  "Weathering",
+  "Other",
+];
 
 export default function PaintDetail() {
   const { id } = useParams<{ id: string }>();
@@ -54,8 +74,12 @@ export default function PaintDetail() {
     return <ErrorState message="Invalid paint ID." />;
   }
 
-  if (isLoading) return <LoadingState />;
-  if (isError || !paint) return <ErrorState message="Could not load paint." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError || !paint) {
+    return <ErrorState message="Could not load paint." />;
+  }
 
   const handleAddToInventory = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +95,15 @@ export default function PaintDetail() {
       {
         onSuccess: () => {
           setShowAddForm(false);
-          setFormData({ quantity: 1, fillLevel: "Full", storageLocation: "", purchasePrice: "", notes: "" });
+          setFormData({
+            quantity: 1,
+            fillLevel: "Full",
+            storageLocation: "",
+            purchasePrice: "",
+            notes: "",
+          });
         },
-      }
+      },
     );
   };
 
@@ -94,7 +124,9 @@ export default function PaintDetail() {
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editForm) return;
+    if (!editForm) {
+      return;
+    }
     updatePaint.mutate(
       {
         id: paint.id,
@@ -110,13 +142,15 @@ export default function PaintDetail() {
           notes: editForm.notes || undefined,
         },
       },
-      { onSuccess: () => setIsEditing(false) }
+      { onSuccess: () => setIsEditing(false) },
     );
   };
 
   const handleDelete = () => {
     setDeleteError(null);
-    if (!confirm(`Delete "${paint.name}"? This can't be undone.`)) return;
+    if (!confirm(`Delete "${paint.name}"? This can't be undone.`)) {
+      return;
+    }
     deletePaint.mutate(paint.id, {
       onSuccess: () => goBackToPaints(),
       onError: (err) => setDeleteError(err.message),
@@ -161,15 +195,26 @@ export default function PaintDetail() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <FieldLabel>Product code</FieldLabel>
-                  <Input value={editForm.productCode} onChange={(e) => setEditForm({ ...editForm, productCode: e.target.value })} required />
+                  <Input
+                    value={editForm.productCode}
+                    onChange={(e) => setEditForm({ ...editForm, productCode: e.target.value })}
+                    required
+                  />
                 </div>
                 <div>
                   <FieldLabel>Name</FieldLabel>
-                  <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+                  <Input
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    required
+                  />
                 </div>
                 <div>
                   <FieldLabel>Type</FieldLabel>
-                  <Select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}>
+                  <Select
+                    value={editForm.type}
+                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                  >
                     {PAINT_TYPES.map((t) => (
                       <option key={t} value={t}>
                         {t}
@@ -179,7 +224,11 @@ export default function PaintDetail() {
                 </div>
                 <div>
                   <FieldLabel>Finish</FieldLabel>
-                  <Input value={editForm.finish} onChange={(e) => setEditForm({ ...editForm, finish: e.target.value })} placeholder="Matt, Gloss…" />
+                  <Input
+                    value={editForm.finish}
+                    onChange={(e) => setEditForm({ ...editForm, finish: e.target.value })}
+                    placeholder="Matt, Gloss…"
+                  />
                 </div>
                 <div>
                   <FieldLabel>Size (ml)</FieldLabel>
@@ -192,7 +241,11 @@ export default function PaintDetail() {
                 </div>
                 <div>
                   <FieldLabel>Color family</FieldLabel>
-                  <Input value={editForm.colorFamily} onChange={(e) => setEditForm({ ...editForm, colorFamily: e.target.value })} placeholder="Red, Grey…" />
+                  <Input
+                    value={editForm.colorFamily}
+                    onChange={(e) => setEditForm({ ...editForm, colorFamily: e.target.value })}
+                    placeholder="Red, Grey…"
+                  />
                 </div>
               </div>
               <div>
@@ -200,7 +253,9 @@ export default function PaintDetail() {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={/^#[0-9A-Fa-f]{6}$/.test(editForm.colorHex) ? editForm.colorHex : "#334155"}
+                    value={
+                      /^#[0-9A-Fa-f]{6}$/.test(editForm.colorHex) ? editForm.colorHex : "#334155"
+                    }
                     onChange={(e) => setEditForm({ ...editForm, colorHex: e.target.value })}
                     className="h-9 w-12 flex-shrink-0 cursor-pointer rounded border border-workshop-border bg-transparent"
                   />
@@ -214,13 +269,22 @@ export default function PaintDetail() {
               </div>
               <div>
                 <FieldLabel>Notes</FieldLabel>
-                <Textarea value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} rows={2} />
+                <Textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={2}
+                />
               </div>
               <div className="flex gap-2">
                 <Button type="submit" disabled={updatePaint.isPending} className="flex-1">
                   {updatePaint.isPending ? "Saving…" : "Save changes"}
                 </Button>
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsEditing(false)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setIsEditing(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -240,7 +304,12 @@ export default function PaintDetail() {
                   <Button variant="ghost" size="sm" onClick={handleStartEdit}>
                     Edit
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-400 hover:bg-red-950/40 hover:text-red-300">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDelete}
+                    className="text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                  >
                     Delete
                   </Button>
                 </div>
@@ -286,7 +355,9 @@ export default function PaintDetail() {
                           type="number"
                           min="1"
                           value={formData.quantity}
-                          onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, quantity: parseInt(e.target.value) })
+                          }
                           placeholder="Quantity"
                         />
                         <Select
@@ -302,7 +373,9 @@ export default function PaintDetail() {
                         <Input
                           type="text"
                           value={formData.storageLocation}
-                          onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, storageLocation: e.target.value })
+                          }
                           placeholder="Storage location"
                         />
                         <Input
@@ -310,7 +383,9 @@ export default function PaintDetail() {
                           min="0"
                           step="0.01"
                           value={formData.purchasePrice}
-                          onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, purchasePrice: e.target.value })
+                          }
                           placeholder="Price paid (optional)"
                         />
                         <Textarea
@@ -323,7 +398,12 @@ export default function PaintDetail() {
                           <Button type="submit" disabled={isPending} className="flex-1">
                             {isPending ? "Adding..." : "Add"}
                           </Button>
-                          <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddForm(false)}>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={() => setShowAddForm(false)}
+                          >
                             Cancel
                           </Button>
                         </div>
@@ -358,7 +438,9 @@ export default function PaintDetail() {
                     <div className="text-xs text-slate-500">Location: {inv.storageLocation}</div>
                   )}
                   {inv.purchasePrice != null && (
-                    <div className="text-xs text-slate-500">Paid: ${inv.purchasePrice.toFixed(2)}</div>
+                    <div className="text-xs text-slate-500">
+                      Paid: ${inv.purchasePrice.toFixed(2)}
+                    </div>
                   )}
                   {inv.notes && <div className="text-xs text-slate-500">Notes: {inv.notes}</div>}
                 </div>
@@ -376,7 +458,12 @@ export default function PaintDetail() {
                                 addToInventory({
                                   paintId: paint.id,
                                   quantity: inv.quantity,
-                                  fillLevel: inv.fillLevel as "Full" | "Mostly Full" | "Half" | "Low" | "Empty",
+                                  fillLevel: inv.fillLevel as
+                                    | "Full"
+                                    | "Mostly Full"
+                                    | "Half"
+                                    | "Low"
+                                    | "Empty",
                                   storageLocation: inv.storageLocation ?? undefined,
                                   purchasePrice: inv.purchasePrice ?? undefined,
                                   notes: inv.notes ?? undefined,
@@ -384,7 +471,7 @@ export default function PaintDetail() {
                             },
                           });
                         },
-                      }
+                      },
                     );
                   }}
                   className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"

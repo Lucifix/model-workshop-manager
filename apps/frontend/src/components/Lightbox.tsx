@@ -27,21 +27,32 @@ export function Lightbox({
 
   const goPrev = useCallback(
     () => onIndexChange((index - 1 + photos.length) % photos.length),
-    [index, photos.length, onIndexChange]
+    [index, photos.length, onIndexChange],
   );
-  const goNext = useCallback(() => onIndexChange((index + 1) % photos.length), [index, photos.length, onIndexChange]);
+  const goNext = useCallback(
+    () => onIndexChange((index + 1) % photos.length),
+    [index, photos.length, onIndexChange],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft" && photos.length > 1) goPrev();
-      if (e.key === "ArrowRight" && photos.length > 1) goNext();
+      if (e.key === "Escape") {
+        onClose();
+      }
+      if (e.key === "ArrowLeft" && photos.length > 1) {
+        goPrev();
+      }
+      if (e.key === "ArrowRight" && photos.length > 1) {
+        goNext();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, goPrev, goNext, photos.length]);
 
-  if (!photo) return null;
+  if (!photo) {
+    return null;
+  }
   const covered = isCover?.(photo) ?? false;
 
   return (
@@ -87,7 +98,10 @@ export function Lightbox({
         </>
       )}
 
-      <div className="flex max-h-full max-w-full flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="flex max-h-full max-w-full flex-col items-center gap-3"
+        onClick={(e) => e.stopPropagation()}
+      >
         <img
           src={photo.url}
           alt={photo.caption || "Build photo"}

@@ -10,7 +10,17 @@ function slugify(name: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-const PAINT_TYPES = ["Acrylic", "Enamel", "Lacquer", "Primer", "Wash", "Panel Liner", "Metallic", "Weathering", "Other"];
+const PAINT_TYPES = [
+  "Acrylic",
+  "Enamel",
+  "Lacquer",
+  "Primer",
+  "Wash",
+  "Panel Liner",
+  "Metallic",
+  "Weathering",
+  "Other",
+];
 
 interface CreatedPaint {
   id: number;
@@ -118,11 +128,21 @@ export function AddPaintForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <FieldLabel>Product code</FieldLabel>
-            <Input value={productCode} onChange={(e) => setProductCode(e.target.value)} placeholder="XF-1" required />
+            <Input
+              value={productCode}
+              onChange={(e) => setProductCode(e.target.value)}
+              placeholder="XF-1"
+              required
+            />
           </div>
           <div>
             <FieldLabel>Name</FieldLabel>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Flat Black" required />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Flat Black"
+              required
+            />
           </div>
           <div>
             <FieldLabel>Type</FieldLabel>
@@ -136,15 +156,29 @@ export function AddPaintForm({
           </div>
           <div>
             <FieldLabel>Finish</FieldLabel>
-            <Input value={finish} onChange={(e) => setFinish(e.target.value)} placeholder="Matt, Gloss…" />
+            <Input
+              value={finish}
+              onChange={(e) => setFinish(e.target.value)}
+              placeholder="Matt, Gloss…"
+            />
           </div>
           <div>
             <FieldLabel>Size (ml)</FieldLabel>
-            <Input type="number" min="0" value={sizeMl} onChange={(e) => setSizeMl(e.target.value)} placeholder="10" />
+            <Input
+              type="number"
+              min="0"
+              value={sizeMl}
+              onChange={(e) => setSizeMl(e.target.value)}
+              placeholder="10"
+            />
           </div>
           <div>
             <FieldLabel>Color family</FieldLabel>
-            <Input value={colorFamily} onChange={(e) => setColorFamily(e.target.value)} placeholder="Black, Red…" />
+            <Input
+              value={colorFamily}
+              onChange={(e) => setColorFamily(e.target.value)}
+              placeholder="Black, Red…"
+            />
           </div>
         </div>
 
@@ -157,7 +191,12 @@ export function AddPaintForm({
               onChange={(e) => setColorHex(e.target.value)}
               className="h-9 w-12 flex-shrink-0 cursor-pointer rounded border border-workshop-border bg-transparent"
             />
-            <Input value={colorHex} onChange={(e) => setColorHex(e.target.value)} placeholder="#RRGGBB" className="flex-1" />
+            <Input
+              value={colorHex}
+              onChange={(e) => setColorHex(e.target.value)}
+              placeholder="#RRGGBB"
+              className="flex-1"
+            />
           </div>
         </div>
 

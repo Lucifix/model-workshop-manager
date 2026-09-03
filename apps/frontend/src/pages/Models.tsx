@@ -74,14 +74,16 @@ function OwnershipControl({ row }: { row: ModelListRow }) {
                   },
                 });
               },
-            }
+            },
           );
         }}
         className="px-2.5 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
       >
         −
       </button>
-      <span className="flex-1 text-center text-xs font-semibold text-emerald-400">✓ Owned{totalQty > 1 ? ` (${totalQty})` : ""}</span>
+      <span className="flex-1 text-center text-xs font-semibold text-emerald-400">
+        ✓ Owned{totalQty > 1 ? ` (${totalQty})` : ""}
+      </span>
       <button
         type="button"
         title="Add another copy"
@@ -110,21 +112,31 @@ export default function Models() {
 
   const setStatus = (value: StatusFilter) => {
     const next = new URLSearchParams(searchParams);
-    if (value === "all") next.delete("filter");
-    else next.set("filter", value);
+    if (value === "all") {
+      next.delete("filter");
+    } else {
+      next.set("filter", value);
+    }
     setSearchParams(next, { replace: true });
   };
 
   const setTag = (value: string) => {
     const next = new URLSearchParams(searchParams);
-    if (value) next.set("tag", value);
-    else next.delete("tag");
+    if (value) {
+      next.set("tag", value);
+    } else {
+      next.delete("tag");
+    }
     setSearchParams(next, { replace: true });
   };
 
   const filtered = data?.filter((row) => {
-    if (status === "owned") return row.ownership.length > 0;
-    if (status === "not_owned") return row.ownership.length === 0;
+    if (status === "owned") {
+      return row.ownership.length > 0;
+    }
+    if (status === "not_owned") {
+      return row.ownership.length === 0;
+    }
     return true;
   });
 

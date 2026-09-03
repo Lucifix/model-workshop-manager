@@ -61,23 +61,27 @@ export function AddModelForm({
   const isSubmitting = createManufacturer.isPending || createModel.isPending;
 
   const handleLookup = async () => {
-    if (!barcodeQuery.trim()) return;
+    if (!barcodeQuery.trim()) {
+      return;
+    }
     setLookupMessage(null);
     try {
       const results = await catalogSearch.mutateAsync(barcodeQuery.trim());
       const hit = results[0] as CatalogSearchResult | undefined;
       if (!hit) {
         setLookupMessage(
-          "No match — this lookup is sourced from US retail listings, so European/import kits are often missing. Paste an image URL below, or upload your own photo after saving."
+          "No match — this lookup is sourced from US retail listings, so European/import kits are often missing. Paste an image URL below, or upload your own photo after saving.",
         );
         return;
       }
-      if (hit.name) setName(hit.name);
+      if (hit.name) {
+        setName(hit.name);
+      }
 
       let manufacturerNote = "";
       if (hit.manufacturerName && hit.manufacturerName !== "Unknown") {
         const match = manufacturers?.find(
-          (m) => m.name.toLowerCase() === hit.manufacturerName.toLowerCase()
+          (m) => m.name.toLowerCase() === hit.manufacturerName.toLowerCase(),
         );
         if (match) {
           setManufacturerId(String(match.id));
@@ -90,10 +94,12 @@ export function AddModelForm({
 
       if (hit.imageUrl) {
         setImageUrl(hit.imageUrl);
-        setLookupMessage(`Found: ${hit.name}. Review the fields below before saving.${manufacturerNote}`);
+        setLookupMessage(
+          `Found: ${hit.name}. Review the fields below before saving.${manufacturerNote}`,
+        );
       } else {
         setLookupMessage(
-          `Found: ${hit.name} — but no image for it. Paste one below, or upload your own photo after saving.${manufacturerNote}`
+          `Found: ${hit.name} — but no image for it. Paste one below, or upload your own photo after saving.${manufacturerNote}`,
         );
       }
     } catch {
@@ -139,7 +145,7 @@ export function AddModelForm({
         const dupe = existingRows.find(
           (r) =>
             r.model.manufacturerId === mfrId &&
-            r.model.kitNumber.toLowerCase() === kitNumber.trim().toLowerCase()
+            r.model.kitNumber.toLowerCase() === kitNumber.trim().toLowerCase(),
         );
         if (dupe) {
           setDuplicateHint(dupe.model);
@@ -181,7 +187,12 @@ export function AddModelForm({
                 placeholder="UPC / EAN on the box"
                 className="flex-1"
               />
-              <Button type="button" variant="secondary" onClick={handleLookup} disabled={catalogSearch.isPending}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleLookup}
+                disabled={catalogSearch.isPending}
+              >
                 {catalogSearch.isPending ? "Looking up…" : "Look up"}
               </Button>
             </div>
@@ -213,11 +224,21 @@ export function AddModelForm({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <FieldLabel>Kit number</FieldLabel>
-            <Input value={kitNumber} onChange={(e) => setKitNumber(e.target.value)} placeholder="05239" required />
+            <Input
+              value={kitNumber}
+              onChange={(e) => setKitNumber(e.target.value)}
+              placeholder="05239"
+              required
+            />
           </div>
           <div>
             <FieldLabel>Name</FieldLabel>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Smit Houston" required />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Smit Houston"
+              required
+            />
           </div>
           <div>
             <FieldLabel>Scale</FieldLabel>
@@ -225,11 +246,19 @@ export function AddModelForm({
           </div>
           <div>
             <FieldLabel>Category</FieldLabel>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ship" />
+            <Input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Ship"
+            />
           </div>
           <div>
             <FieldLabel>Difficulty</FieldLabel>
-            <Input value={difficulty} onChange={(e) => setDifficulty(e.target.value)} placeholder="Intermediate" />
+            <Input
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              placeholder="Intermediate"
+            />
           </div>
           <div>
             <FieldLabel>Part count</FieldLabel>
@@ -264,8 +293,8 @@ export function AddModelForm({
             placeholder="Paste the product image URL from the manufacturer's own page"
           />
           <p className="mt-1.5 text-xs text-slate-500">
-            Copy the image address from the kit's official product page — the app won't fetch it
-            for you. You can also upload your own photo after saving.
+            Copy the image address from the kit's official product page — the app won't fetch it for
+            you. You can also upload your own photo after saving.
           </p>
           {imageUrl && !imageBroken && (
             <img
@@ -275,7 +304,9 @@ export function AddModelForm({
               className="mt-2 h-24 w-24 rounded-lg border border-workshop-border object-cover"
             />
           )}
-          {imageBroken && <p className="mt-1.5 text-xs text-amber-400">Couldn't load that image URL.</p>}
+          {imageBroken && (
+            <p className="mt-1.5 text-xs text-amber-400">Couldn't load that image URL.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -294,18 +325,16 @@ export function AddModelForm({
               onChange={(e) => setInstructionUrl(e.target.value)}
               placeholder="Link to the manual, if you have one"
             />
-            <p className="mt-1.5 text-xs text-slate-500">You can also attach a PDF file after saving.</p>
+            <p className="mt-1.5 text-xs text-slate-500">
+              You can also attach a PDF file after saving.
+            </p>
           </div>
         </div>
 
         {duplicateHint && (
           <div className="rounded-lg border border-amber-900 bg-amber-950/30 px-3 py-2 text-sm text-amber-300">
             "{duplicateHint.name}" ({duplicateHint.kitNumber}) is already in your catalog.{" "}
-            <button
-              type="button"
-              className="underline"
-              onClick={() => onCreated(duplicateHint)}
-            >
+            <button type="button" className="underline" onClick={() => onCreated(duplicateHint)}>
               Use it instead
             </button>
           </div>

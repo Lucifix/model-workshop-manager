@@ -15,9 +15,13 @@ export function createUpcItemDbProvider(): CatalogProvider {
     label: "Barcode lookup (UPCitemdb)",
     enabled,
     async searchModels(query: string): Promise<ModelResult[]> {
-      if (!enabled) return [];
+      if (!enabled) {
+        return [];
+      }
       const item = await lookup(query);
-      if (!item) return [];
+      if (!item) {
+        return [];
+      }
       return [
         {
           externalId: item.upc,
@@ -29,9 +33,13 @@ export function createUpcItemDbProvider(): CatalogProvider {
       ];
     },
     async getModel(externalId: string): Promise<ModelDetails | null> {
-      if (!enabled) return null;
+      if (!enabled) {
+        return null;
+      }
       const item = await lookup(externalId);
-      if (!item) return null;
+      if (!item) {
+        return null;
+      }
       return {
         externalId: item.upc,
         manufacturerName: item.brand ?? "Unknown",
@@ -42,9 +50,13 @@ export function createUpcItemDbProvider(): CatalogProvider {
       };
     },
     async searchPaints(query: string): Promise<PaintResult[]> {
-      if (!enabled) return [];
+      if (!enabled) {
+        return [];
+      }
       const item = await lookup(query);
-      if (!item) return [];
+      if (!item) {
+        return [];
+      }
       return [
         {
           externalId: item.upc,
@@ -70,7 +82,9 @@ async function lookup(code: string): Promise<UpcItem | null> {
     const res = await fetch(
       `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(code)}`,
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      return null;
+    }
     const data = (await res.json()) as { items?: UpcItem[] };
     return data.items?.[0] ?? null;
   } catch {

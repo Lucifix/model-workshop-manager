@@ -2,7 +2,13 @@ import { useMemo, useState } from "react";
 import { useTags } from "../api/client";
 import { Badge, Input } from "./ui";
 
-export function TagInput({ value, onChange }: { value: string[]; onChange: (tags: string[]) => void }) {
+export function TagInput({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (tags: string[]) => void;
+}) {
   const { data: allTags } = useTags();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -10,13 +16,17 @@ export function TagInput({ value, onChange }: { value: string[]; onChange: (tags
   const suggestions = useMemo(() => {
     const q = query.trim().toLowerCase();
     const names = (allTags ?? []).map((t) => t.name).filter((n) => !value.includes(n));
-    if (!q) return names.slice(0, 8);
+    if (!q) {
+      return names.slice(0, 8);
+    }
     return names.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
   }, [allTags, query, value]);
 
   const addTag = (name: string) => {
     const trimmed = name.trim();
-    if (!trimmed || value.includes(trimmed)) return;
+    if (!trimmed || value.includes(trimmed)) {
+      return;
+    }
     onChange([...value, trimmed]);
     setQuery("");
     setOpen(false);

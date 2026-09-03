@@ -37,10 +37,16 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/models" element={<Models />} />
               <Route path="/models/:id" element={<ModelDetail />} />
-              <Route path="/owned-models" element={<Navigate to="/models?filter=owned" replace />} />
+              <Route
+                path="/owned-models"
+                element={<Navigate to="/models?filter=owned" replace />}
+              />
               <Route path="/paints" element={<Paints />} />
               <Route path="/paints/:id" element={<PaintDetail />} />
-              <Route path="/paint-inventory" element={<Navigate to="/paints?filter=owned" replace />} />
+              <Route
+                path="/paint-inventory"
+                element={<Navigate to="/paints?filter=owned" replace />}
+              />
               <Route path="/projects" element={<Projects />} />
               <Route path="/projects/new" element={<ProjectNew />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />

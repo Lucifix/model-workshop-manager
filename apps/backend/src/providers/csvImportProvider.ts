@@ -40,7 +40,9 @@ export interface CsvPaintRow {
 /** Minimal dependency-free CSV parser for the documented column set above. */
 export function parseCsv(text: string): Record<string, string>[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
+  if (lines.length === 0) {
+    return [];
+  }
   const header = splitCsvLine(lines[0]!);
   return lines.slice(1).map((line) => {
     const cells = splitCsvLine(line);

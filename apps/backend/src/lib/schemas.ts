@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { PAINT_TYPES, FILL_LEVELS, PROJECT_STATUSES, PAINT_PURPOSES, SUPPLY_CATEGORIES } from "../db/schema.js";
+import {
+  PAINT_TYPES,
+  FILL_LEVELS,
+  PROJECT_STATUSES,
+  PAINT_PURPOSES,
+  SUPPLY_CATEGORIES,
+} from "../db/schema.js";
 
 export const manufacturerCreateSchema = z.object({
   name: z.string().min(1),
@@ -15,7 +21,10 @@ export const paintCreateSchema = z.object({
   type: z.enum(PAINT_TYPES),
   finish: z.string().optional(),
   sizeMl: z.number().positive().optional(),
-  colorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  colorHex: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
   colorFamily: z.string().optional(),
   notes: z.string().optional(),
   source: z.string().optional(),

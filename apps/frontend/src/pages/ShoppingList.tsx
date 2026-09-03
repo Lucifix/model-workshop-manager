@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { useShoppingList, useMarkPurchased, useAddShoppingListItem, useAddPaintToInventory } from "../api/client";
+import {
+  useShoppingList,
+  useMarkPurchased,
+  useAddShoppingListItem,
+  useAddPaintToInventory,
+} from "../api/client";
 import {
   Card,
   LoadingState,
@@ -49,19 +54,23 @@ export default function ShoppingList() {
           resetForm();
           setShowForm(false);
         },
-      }
+      },
     );
   };
 
   const handleAddToInventory = (paintId: number, quantity: number) => {
     addToInventory.mutate(
       { paintId, quantity, fillLevel: "Full" },
-      { onSuccess: () => setAddedToInventory((prev) => new Set(prev).add(paintId)) }
+      { onSuccess: () => setAddedToInventory((prev) => new Set(prev).add(paintId)) },
     );
   };
 
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState message="Could not load the shopping list." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError) {
+    return <ErrorState message="Could not load the shopping list." />;
+  }
 
   const pending = data?.filter((r) => !r.item.purchased) ?? [];
   const purchased = data?.filter((r) => r.item.purchased) ?? [];
@@ -83,7 +92,9 @@ export default function ShoppingList() {
                 <PaintPicker
                   onSelect={(p) => {
                     setSelectedPaint(p);
-                    if (!formData.description.trim()) setFormData({ ...formData, description: p.name });
+                    if (!formData.description.trim()) {
+                      setFormData({ ...formData, description: p.name });
+                    }
                   }}
                 />
               ) : (
@@ -93,13 +104,18 @@ export default function ShoppingList() {
                     style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                   />
                   <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
-                  <button type="button" className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSelectedPaint(null)}>
+                  <button
+                    type="button"
+                    className="text-xs text-slate-500 hover:text-slate-300"
+                    onClick={() => setSelectedPaint(null)}
+                  >
                     unlink
                   </button>
                 </div>
               )}
               <p className="mt-1.5 text-xs text-slate-500">
-                Linking lets "purchased" go straight into your paint inventory. Skip it for generic supplies.
+                Linking lets "purchased" go straight into your paint inventory. Skip it for generic
+                supplies.
               </p>
             </div>
 
@@ -167,7 +183,9 @@ export default function ShoppingList() {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-slate-100 truncate">{row.item.description}</div>
+                    <div className="text-sm font-medium text-slate-100 truncate">
+                      {row.item.description}
+                    </div>
                     <div className="text-xs text-slate-400">
                       Qty {row.item.quantity}
                       {row.paint ? ` · ${row.paint.name}` : ""}
@@ -175,7 +193,9 @@ export default function ShoppingList() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Badge tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}>
+                  <Badge
+                    tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}
+                  >
                     {row.item.priority}
                   </Badge>
                   <Button size="sm" onClick={() => markPurchased.mutate(row.item.id)}>
@@ -190,10 +210,15 @@ export default function ShoppingList() {
 
       {purchased.length > 0 && (
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-slate-300">Purchased ({purchased.length})</h2>
+          <h2 className="mb-2 text-sm font-semibold text-slate-300">
+            Purchased ({purchased.length})
+          </h2>
           <div className="flex flex-col gap-2">
             {purchased.map((row) => (
-              <Card key={row.item.id} className="flex items-center justify-between gap-2 opacity-70">
+              <Card
+                key={row.item.id}
+                className="flex items-center justify-between gap-2 opacity-70"
+              >
                 <span className="truncate text-sm line-through">{row.item.description}</span>
                 {row.paint &&
                   (addedToInventory.has(row.paint.id) ? (

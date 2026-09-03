@@ -16,7 +16,9 @@ export async function wishlistRoutes(app: FastifyInstance) {
 
   app.post("/api/wishlist", async (req, reply) => {
     const body = parseBody(wishlistCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
     const [row] = await db.insert(wishlistItems).values(body).returning();
     reply.code(201).send(row);
   });
@@ -24,9 +26,17 @@ export async function wishlistRoutes(app: FastifyInstance) {
   app.patch("/api/wishlist/:id", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const body = parseBody(wishlistUpdateSchema, req.body, reply);
-    if (!body) return;
-    const [row] = await db.update(wishlistItems).set(body).where(eq(wishlistItems.id, id)).returning();
-    if (!row) return reply.code(404).send({ error: "not_found" });
+    if (!body) {
+      return;
+    }
+    const [row] = await db
+      .update(wishlistItems)
+      .set(body)
+      .where(eq(wishlistItems.id, id))
+      .returning();
+    if (!row) {
+      return reply.code(404).send({ error: "not_found" });
+    }
     return row;
   });
 
@@ -39,7 +49,9 @@ export async function wishlistRoutes(app: FastifyInstance) {
   app.post("/api/wishlist/:id/move-to-shopping-list", async (req, reply) => {
     const id = Number((req.params as { id: string }).id);
     const item = db.select().from(wishlistItems).where(eq(wishlistItems.id, id)).get();
-    if (!item) return reply.code(404).send({ error: "not_found" });
+    if (!item) {
+      return reply.code(404).send({ error: "not_found" });
+    }
 
     const [row] = await db
       .insert(shoppingListItems)

@@ -83,14 +83,16 @@ const InventoryQuickAction = memo(function InventoryQuickAction({ row }: { row: 
                   },
                 });
               },
-            }
+            },
           );
         }}
         className="px-2 py-1 text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-50"
       >
         −
       </button>
-      <span className="px-1 text-xs font-semibold text-emerald-400">✓ In stock{totalQty > 1 ? ` (${totalQty})` : ""}</span>
+      <span className="px-1 text-xs font-semibold text-emerald-400">
+        ✓ In stock{totalQty > 1 ? ` (${totalQty})` : ""}
+      </span>
       <button
         type="button"
         title="Add another"
@@ -155,14 +157,19 @@ export default function Paints() {
   const updateParams = (updates: Record<string, string>) => {
     const next = new URLSearchParams(searchParams);
     for (const [key, value] of Object.entries(updates)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
     }
     setSearchParams(next, { replace: true });
   };
 
   useEffect(() => {
-    if (searchDraft === search) return;
+    if (searchDraft === search) {
+      return;
+    }
     const handle = setTimeout(() => updateParams({ q: searchDraft }), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,7 +179,7 @@ export default function Paints() {
     search,
     manufacturerId ? Number(manufacturerId) : undefined,
     true,
-    status
+    status,
   );
 
   const hasFilter = !!search.trim() || !!manufacturerId || status !== "all";
@@ -281,7 +288,8 @@ export default function Paints() {
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {hasFilter && filtered?.map((row) => <PaintRow key={row.paint.id} row={row} onOpen={openPaint} />)}
+        {hasFilter &&
+          filtered?.map((row) => <PaintRow key={row.paint.id} row={row} onOpen={openPaint} />)}
       </div>
 
       {hasFilter && hasNextPage && (

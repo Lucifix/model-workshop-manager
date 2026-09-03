@@ -13,7 +13,16 @@ import {
   ProgressBar,
   Badge,
 } from "../components/ui";
-import { ArchiveIcon, BeakerIcon, BoxIcon, CartIcon, DollarIcon, DropletIcon, HammerIcon, WrenchIcon } from "../components/icons";
+import {
+  ArchiveIcon,
+  BeakerIcon,
+  BoxIcon,
+  CartIcon,
+  DollarIcon,
+  DropletIcon,
+  HammerIcon,
+  WrenchIcon,
+} from "../components/icons";
 
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
 
@@ -22,8 +31,12 @@ export default function Dashboard() {
   const { data, isLoading, isError } = useDashboard();
   const { data: projects } = useProjects();
 
-  if (isLoading) return <LoadingState />;
-  if (isError || !data) return <ErrorState message="Could not load dashboard data." />;
+  if (isLoading) {
+    return <LoadingState />;
+  }
+  if (isError || !data) {
+    return <ErrorState message="Could not load dashboard data." />;
+  }
 
   const inProgress = projects?.filter((r) => r.project.status === "In Progress") ?? [];
 
@@ -54,11 +67,32 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatTile label="Model kits" value={data.totalModelKits} icon={<BoxIcon className="h-5 w-5" />} />
-        <StatTile label="In progress" value={data.inProgressCount} icon={<HammerIcon className="h-5 w-5" />} />
-        <StatTile label="Completed" value={data.completedCount} icon={<ArchiveIcon className="h-5 w-5" />} tone="ok" />
-        <StatTile label="Planned" value={data.plannedCount} icon={<CartIcon className="h-5 w-5" />} />
-        <StatTile label="Paints" value={data.totalPaints} icon={<DropletIcon className="h-5 w-5" />} />
+        <StatTile
+          label="Model kits"
+          value={data.totalModelKits}
+          icon={<BoxIcon className="h-5 w-5" />}
+        />
+        <StatTile
+          label="In progress"
+          value={data.inProgressCount}
+          icon={<HammerIcon className="h-5 w-5" />}
+        />
+        <StatTile
+          label="Completed"
+          value={data.completedCount}
+          icon={<ArchiveIcon className="h-5 w-5" />}
+          tone="ok"
+        />
+        <StatTile
+          label="Planned"
+          value={data.plannedCount}
+          icon={<CartIcon className="h-5 w-5" />}
+        />
+        <StatTile
+          label="Paints"
+          value={data.totalPaints}
+          icon={<DropletIcon className="h-5 w-5" />}
+        />
         <StatTile
           label="Low stock"
           value={data.lowStockCount}
@@ -79,7 +113,10 @@ export default function Dashboard() {
         />
       </div>
 
-      <SectionCard title="Continue building" actions={<Badge variant="secondary">{inProgress.length} active</Badge>}>
+      <SectionCard
+        title="Continue building"
+        actions={<Badge variant="secondary">{inProgress.length} active</Badge>}
+      >
         {inProgress.length === 0 ? (
           <EmptyState message="Nothing in progress — start a build to see it here." />
         ) : (
@@ -97,8 +134,13 @@ export default function Dashboard() {
                     {row.model?.name} ({row.model?.kitNumber})
                   </div>
                   <div className="flex items-center gap-2">
-                    <ProgressBar percent={row.project.progressPercent} className="max-w-xs flex-1" />
-                    <span className="text-xs font-medium text-workshop-accent">{row.project.progressPercent}%</span>
+                    <ProgressBar
+                      percent={row.project.progressPercent}
+                      className="max-w-xs flex-1"
+                    />
+                    <span className="text-xs font-medium text-workshop-accent">
+                      {row.project.progressPercent}%
+                    </span>
                   </div>
                 </div>
               </button>
@@ -138,7 +180,11 @@ export default function Dashboard() {
                 onClick={() => navigate(`/models/${m.id}`)}
                 className="flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition-colors hover:bg-workshop-panelmuted"
               >
-                <ModelThumbnail imageUrl={m.imageUrl} size="lg" className="w-full aspect-square h-auto" />
+                <ModelThumbnail
+                  imageUrl={m.imageUrl}
+                  size="lg"
+                  className="w-full aspect-square h-auto"
+                />
                 <span className="line-clamp-2 text-xs font-medium text-slate-300">{m.name}</span>
               </button>
             ))}

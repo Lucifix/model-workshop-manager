@@ -17,7 +17,9 @@ import { Card, Button, Select, PageHeader, LoadingState, EmptyState } from "../c
 type ImportType = "manufacturers" | "paints" | "models";
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
   const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unitIndex = 0;
@@ -64,7 +66,9 @@ export default function ImportExport() {
       // Blob + synthetic click (same pattern as the JSON export below)
       // sidesteps that entirely.
       const res = await fetch(`/api/backup/${encodeURIComponent(filename)}/download`);
-      if (!res.ok) throw new Error("Failed to download backup");
+      if (!res.ok) {
+        throw new Error("Failed to download backup");
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -81,7 +85,9 @@ export default function ImportExport() {
 
   const handleDeleteBackup = (filename: string) => {
     setBackupError(null);
-    if (!confirm(`Delete backup "${filename}"? This can't be undone.`)) return;
+    if (!confirm(`Delete backup "${filename}"? This can't be undone.`)) {
+      return;
+    }
     deleteBackup.mutate(filename, {
       onError: (err) => setBackupError(err.message),
     });
@@ -91,8 +97,11 @@ export default function ImportExport() {
     const check = () => {
       fetch("/api/health")
         .then((res) => {
-          if (res.ok) window.location.reload();
-          else setTimeout(check, 2000);
+          if (res.ok) {
+            window.location.reload();
+          } else {
+            setTimeout(check, 2000);
+          }
         })
         .catch(() => setTimeout(check, 2000));
     };
@@ -103,10 +112,11 @@ export default function ImportExport() {
     setBackupError(null);
     if (
       !confirm(
-        `Restore from "${filename}"?\n\nThis replaces ALL current data — catalog, inventory, builds, and photos — with what's in this backup, and briefly restarts the server. This can't be undone.`
+        `Restore from "${filename}"?\n\nThis replaces ALL current data — catalog, inventory, builds, and photos — with what's in this backup, and briefly restarts the server. This can't be undone.`,
       )
-    )
+    ) {
       return;
+    }
     setRestoringFilename(filename);
     restoreBackup.mutate(filename, {
       onSuccess: () => pollUntilHealthy(),
@@ -126,7 +136,9 @@ export default function ImportExport() {
 
   const handleImport = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      return;
+    }
 
     const mutationMap = {
       manufacturers: importMfrs,
@@ -188,7 +200,10 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Import & Export" description="Bring catalog data in, or take it out as a backup." />
+      <PageHeader
+        title="Import & Export"
+        description="Bring catalog data in, or take it out as a backup."
+      />
 
       <div className="border-b border-workshop-border">
         <div className="flex gap-1">
@@ -225,8 +240,14 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               — manufacturers, paint names, and colors for most major brands. Safe to run more than
               once; already-imported paints are skipped.
             </p>
-            <Button onClick={handleSeedCommunityPaints} disabled={seedCommunityPaints.isPending} className="self-start">
-              {seedCommunityPaints.isPending ? "Importing… this can take a minute" : "Import starter catalog"}
+            <Button
+              onClick={handleSeedCommunityPaints}
+              disabled={seedCommunityPaints.isPending}
+              className="self-start"
+            >
+              {seedCommunityPaints.isPending
+                ? "Importing… this can take a minute"
+                : "Import starter catalog"}
             </Button>
 
             {seedResult && (
@@ -234,19 +255,27 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                 <h3 className="font-semibold text-slate-100">Import Results</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg bg-emerald-500/15 p-3">
-                    <div className="text-2xl font-bold text-emerald-400">{seedResult.paintsImported}</div>
+                    <div className="text-2xl font-bold text-emerald-400">
+                      {seedResult.paintsImported}
+                    </div>
                     <div className="text-xs text-emerald-300">Paints imported</div>
                   </div>
                   <div className="rounded-lg bg-amber-500/15 p-3">
-                    <div className="text-2xl font-bold text-amber-400">{seedResult.paintsSkipped}</div>
+                    <div className="text-2xl font-bold text-amber-400">
+                      {seedResult.paintsSkipped}
+                    </div>
                     <div className="text-xs text-amber-300">Skipped</div>
                   </div>
                   <div className="rounded-lg bg-red-500/15 p-3">
-                    <div className="text-2xl font-bold text-red-400">{seedResult.errors.length}</div>
+                    <div className="text-2xl font-bold text-red-400">
+                      {seedResult.errors.length}
+                    </div>
                     <div className="text-xs text-red-300">Errors</div>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500">{seedResult.manufacturersCreated} new manufacturer(s) added.</p>
+                <p className="text-xs text-slate-500">
+                  {seedResult.manufacturersCreated} new manufacturer(s) added.
+                </p>
               </div>
             )}
           </Card>
@@ -270,7 +299,9 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Select file (CSV or JSON)</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Select file (CSV or JSON)
+                </label>
                 <input
                   type="file"
                   accept=".csv,.json"
@@ -297,7 +328,9 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                 <h3 className="font-semibold text-slate-100">Import Results</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg bg-emerald-500/15 p-3">
-                    <div className="text-2xl font-bold text-emerald-400">{importResult.imported}</div>
+                    <div className="text-2xl font-bold text-emerald-400">
+                      {importResult.imported}
+                    </div>
                     <div className="text-xs text-emerald-300">Imported</div>
                   </div>
                   <div className="rounded-lg bg-amber-500/15 p-3">
@@ -305,7 +338,9 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                     <div className="text-xs text-amber-300">Skipped</div>
                   </div>
                   <div className="rounded-lg bg-red-500/15 p-3">
-                    <div className="text-2xl font-bold text-red-400">{importResult.errors.length}</div>
+                    <div className="text-2xl font-bold text-red-400">
+                      {importResult.errors.length}
+                    </div>
                     <div className="text-xs text-red-300">Errors</div>
                   </div>
                 </div>
@@ -330,7 +365,9 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
           </Card>
 
           <Card>
-            <h3 className="mb-3 font-semibold text-slate-100">Sample {importType.slice(0, -1)} CSV</h3>
+            <h3 className="mb-3 font-semibold text-slate-100">
+              Sample {importType.slice(0, -1)} CSV
+            </h3>
             <pre className="overflow-x-auto rounded-lg bg-workshop-panelmuted p-3 text-xs text-slate-300">
               {getSampleCSV()}
             </pre>
@@ -359,7 +396,8 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
           <Card>
             <h2 className="mb-4 text-lg font-semibold text-slate-100">Export Catalog Data</h2>
             <p className="mb-6 text-sm text-slate-400">
-              Export your catalog data as JSON for backup, sharing, or migration to another instance.
+              Export your catalog data as JSON for backup, sharing, or migration to another
+              instance.
             </p>
 
             <div className="space-y-3">
@@ -417,13 +455,16 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
             <h3 className="mb-3 font-semibold text-slate-100">About data formats</h3>
             <ul className="space-y-2 text-sm text-slate-400">
               <li>
-                <strong className="text-slate-300">CSV Format:</strong> Comma-separated values with headers. Easy to edit in spreadsheets.
+                <strong className="text-slate-300">CSV Format:</strong> Comma-separated values with
+                headers. Easy to edit in spreadsheets.
               </li>
               <li>
-                <strong className="text-slate-300">JSON Format:</strong> Structured data format. Ideal for backups and data transfer.
+                <strong className="text-slate-300">JSON Format:</strong> Structured data format.
+                Ideal for backups and data transfer.
               </li>
               <li>
-                <strong className="text-slate-300">Duplicates:</strong> The import system skips records that already exist (based on unique keys).
+                <strong className="text-slate-300">Duplicates:</strong> The import system skips
+                records that already exist (based on unique keys).
               </li>
             </ul>
           </Card>
@@ -437,8 +478,8 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <div className="flex items-center gap-3">
                 <span className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-workshop-accent/40 border-t-workshop-accent" />
                 <p className="text-sm text-slate-200">
-                  Restoring from <strong>{restoringFilename}</strong> — the server is restarting and will
-                  reconnect automatically. This page will reload once it's back.
+                  Restoring from <strong>{restoringFilename}</strong> — the server is restarting and
+                  will reconnect automatically. This page will reload once it's back.
                 </p>
               </div>
             </Card>
@@ -455,11 +496,14 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <div>
                 <h2 className="text-lg font-semibold text-slate-100">Backups</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Full snapshots of everything — catalog, inventory, builds, and photos. Includes both
-                  nightly automatic backups and any you create here.
+                  Full snapshots of everything — catalog, inventory, builds, and photos. Includes
+                  both nightly automatic backups and any you create here.
                 </p>
               </div>
-              <Button onClick={handleCreateBackup} disabled={createBackup.isPending || !!restoringFilename}>
+              <Button
+                onClick={handleCreateBackup}
+                disabled={createBackup.isPending || !!restoringFilename}
+              >
                 {createBackup.isPending ? "Creating…" : "Create backup now"}
               </Button>
             </div>
@@ -472,11 +516,15 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
             {backups.data && backups.data.length > 0 && (
               <ul className="divide-y divide-workshop-border">
                 {backups.data.map((backup) => (
-                  <li key={backup.filename} className="flex items-center justify-between gap-4 py-3">
+                  <li
+                    key={backup.filename}
+                    className="flex items-center justify-between gap-4 py-3"
+                  >
                     <div className="min-w-0">
                       <div className="truncate font-medium text-slate-100">{backup.filename}</div>
                       <div className="text-xs text-slate-400">
-                        {new Date(backup.createdAt).toLocaleString()} · {formatBytes(backup.sizeBytes)}
+                        {new Date(backup.createdAt).toLocaleString()} ·{" "}
+                        {formatBytes(backup.sizeBytes)}
                       </div>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-1">

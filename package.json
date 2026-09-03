@@ -1,0 +1,16 @@
+{
+  "name": "model-workshop-manager",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repo-level tooling only — apps/backend and apps/frontend remain independently installed, see AGENTS.md",
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.9.0",
+    "oxlint": "^1.81.0"
+  }
+}

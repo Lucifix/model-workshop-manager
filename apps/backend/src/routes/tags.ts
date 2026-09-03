@@ -12,10 +12,14 @@ export async function tagRoutes(app: FastifyInstance) {
 
   app.post("/api/tags", async (req, reply) => {
     const body = parseBody(tagCreateSchema, req.body, reply);
-    if (!body) return;
+    if (!body) {
+      return;
+    }
     const name = body.name.trim();
     const existing = db.select().from(tags).where(eq(tags.name, name)).get();
-    if (existing) return existing;
+    if (existing) {
+      return existing;
+    }
     const [row] = await db.insert(tags).values({ name }).returning();
     reply.code(201).send(row);
   });

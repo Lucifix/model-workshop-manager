@@ -11,7 +11,9 @@ async function apiFetch<T>(path: string): Promise<T> {
     window.location.href = "/login";
     throw new Error("Session expired");
   }
-  if (!res.ok) throw new Error(`API error ${res.status} on ${path}`);
+  if (!res.ok) {
+    throw new Error(`API error ${res.status} on ${path}`);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -40,7 +42,9 @@ export function useLogin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(res.status === 401 ? "Invalid username or password." : "Login failed.");
+      if (!res.ok) {
+        throw new Error(res.status === 401 ? "Invalid username or password." : "Login failed.");
+      }
       return res.json() as Promise<AuthStatus>;
     },
     onSuccess: (data) => queryClient.setQueryData(["auth", "me"], data),
@@ -76,7 +80,10 @@ export interface DashboardData {
 }
 
 export function useDashboard() {
-  return useQuery({ queryKey: ["dashboard"], queryFn: () => apiFetch<DashboardData>("/dashboard") });
+  return useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => apiFetch<DashboardData>("/dashboard"),
+  });
 }
 
 export interface Tag {
@@ -94,7 +101,13 @@ export interface ModelListRow {
     imageUrl?: string;
   };
   manufacturer: { id: number; name: string } | null;
-  ownership: { id: number; modelId: number; quantity: number; condition?: string; storageLocation?: string }[];
+  ownership: {
+    id: number;
+    modelId: number;
+    quantity: number;
+    condition?: string;
+    storageLocation?: string;
+  }[];
   tags: Tag[];
 }
 
@@ -127,7 +140,9 @@ export function useCreateManufacturer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create manufacturer");
+      if (!res.ok) {
+        throw new Error("Failed to create manufacturer");
+      }
       return res.json() as Promise<Manufacturer>;
     },
     onSuccess: (data) => {
@@ -143,8 +158,12 @@ export function useModels(search?: string, tag?: string) {
     queryKey: ["models", search, tag],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (search) params.set("q", search);
-      if (tag) params.set("tag", tag);
+      if (search) {
+        params.set("q", search);
+      }
+      if (tag) {
+        params.set("tag", tag);
+      }
       const qs = params.toString();
       return apiFetch<ModelListRow[]>(`/models${qs ? `?${qs}` : ""}`);
     },
@@ -161,7 +180,14 @@ export interface PaintListRow {
     colorHex?: string;
   };
   manufacturer: { id: number; name: string } | null;
-  inventory: { id: number; paintId: number; quantity: number; fillLevel: string; status: string; storageLocation?: string }[];
+  inventory: {
+    id: number;
+    paintId: number;
+    quantity: number;
+    fillLevel: string;
+    status: string;
+    storageLocation?: string;
+  }[];
 }
 
 interface PaintListPage {
@@ -187,15 +213,22 @@ export function usePaints(
     queryKey: ["paints", search, manufacturerId, status],
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
-      if (search) params.set("q", search);
-      if (manufacturerId) params.set("manufacturerId", String(manufacturerId));
-      if (status !== "all") params.set("status", status);
+      if (search) {
+        params.set("q", search);
+      }
+      if (manufacturerId) {
+        params.set("manufacturerId", String(manufacturerId));
+      }
+      if (status !== "all") {
+        params.set("status", status);
+      }
       params.set("limit", String(PAINTS_PAGE_SIZE));
       params.set("offset", String(pageParam));
       return apiFetch<PaintListPage>(`/paints?${params.toString()}`);
     },
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length * PAINTS_PAGE_SIZE : undefined),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length * PAINTS_PAGE_SIZE : undefined,
     enabled: !requireFilter || !!search?.trim() || !!manufacturerId || status !== "all",
   });
 }
@@ -213,7 +246,10 @@ export interface ProjectListRow {
 }
 
 export function useProjects() {
-  return useQuery({ queryKey: ["projects"], queryFn: () => apiFetch<ProjectListRow[]>("/projects") });
+  return useQuery({
+    queryKey: ["projects"],
+    queryFn: () => apiFetch<ProjectListRow[]>("/projects"),
+  });
 }
 
 export interface ShoppingListRow {
@@ -239,7 +275,9 @@ export function useMarkPurchased() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/shopping-list/${id}/purchased`, { method: "PATCH" });
-      if (!res.ok) throw new Error("Failed to update item");
+      if (!res.ok) {
+        throw new Error("Failed to update item");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -281,9 +319,29 @@ export interface ModelDetail {
   manufacturer: Manufacturer | null;
   tags: Tag[];
   requiredPaints: ModelDetailPaint[];
-  availability: { totalRequired: number; ownedCount: number; missingCount: number; coveragePercent: number };
-  ownership: { id: number; modelId: number; owned: boolean; quantity: number; condition?: string; storageLocation?: string; notes?: string }[];
-  projects: { id: number; modelId: number; name: string; status: string; progressPercent: number; coverPhotoUrl?: string }[];
+  availability: {
+    totalRequired: number;
+    ownedCount: number;
+    missingCount: number;
+    coveragePercent: number;
+  };
+  ownership: {
+    id: number;
+    modelId: number;
+    owned: boolean;
+    quantity: number;
+    condition?: string;
+    storageLocation?: string;
+    notes?: string;
+  }[];
+  projects: {
+    id: number;
+    modelId: number;
+    name: string;
+    status: string;
+    progressPercent: number;
+    coverPhotoUrl?: string;
+  }[];
 }
 
 export function useModelDetail(id: number) {
@@ -308,7 +366,15 @@ export interface PaintDetail {
   source: string;
   sourceUrl?: string;
   manufacturer: Manufacturer | null;
-  inventory: { id: number; paintId: number; quantity: number; fillLevel: string; storageLocation?: string; purchasePrice?: number; notes?: string }[];
+  inventory: {
+    id: number;
+    paintId: number;
+    quantity: number;
+    fillLevel: string;
+    storageLocation?: string;
+    purchasePrice?: number;
+    notes?: string;
+  }[];
 }
 
 export function usePaintDetail(id: number) {
@@ -339,7 +405,9 @@ export function useCreatePaint() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create paint");
+      if (!res.ok) {
+        throw new Error("Failed to create paint");
+      }
       return res.json() as Promise<{ id: number; name: string; productCode: string }>;
     },
     onSuccess: (data) => {
@@ -372,7 +440,9 @@ export function useUpdatePaint() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update paint");
+      if (!res.ok) {
+        throw new Error("Failed to update paint");
+      }
       return res.json();
     },
     onSuccess: (_, { id }) => {
@@ -429,7 +499,9 @@ export function useCreateModel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create model");
+      if (!res.ok) {
+        throw new Error("Failed to create model");
+      }
       return res.json() as Promise<{ id: number; name: string; kitNumber: string }>;
     },
     onSuccess: (data) => {
@@ -451,7 +523,9 @@ export function useUpdateModel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update model");
+      if (!res.ok) {
+        throw new Error("Failed to update model");
+      }
       return res.json();
     },
     onSuccess: (_, { id }) => {
@@ -474,7 +548,9 @@ export function useUploadModelImage() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to upload model image");
+      if (!res.ok) {
+        throw new Error("Failed to upload model image");
+      }
       return res.json();
     },
     onSuccess: (_, { modelId }) => {
@@ -496,7 +572,9 @@ export function useUploadModelInstructions() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to upload instructions");
+      if (!res.ok) {
+        throw new Error("Failed to upload instructions");
+      }
       return res.json();
     },
     onSuccess: (_, { modelId }) => {
@@ -530,7 +608,9 @@ export function useAddModelPaint() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add required paint");
+      if (!res.ok) {
+        throw new Error("Failed to add required paint");
+      }
       return res.json() as Promise<ModelPaint>;
     },
     onSuccess: (_, { modelId }) => {
@@ -546,7 +626,9 @@ export function useRemoveModelPaint() {
   return useMutation({
     mutationFn: async ({ modelId, paintId }: { modelId: number; paintId: number }) => {
       const res = await fetch(`/api/models/${modelId}/paints/${paintId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove required paint");
+      if (!res.ok) {
+        throw new Error("Failed to remove required paint");
+      }
     },
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
@@ -583,8 +665,12 @@ export function useCatalogProviders() {
 export function useCatalogSearch() {
   return useMutation({
     mutationFn: async (query: string) => {
-      const res = await fetch(`/api/catalog/search?provider=upcitemdb&q=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error("Lookup failed");
+      const res = await fetch(
+        `/api/catalog/search?provider=upcitemdb&q=${encodeURIComponent(query)}`,
+      );
+      if (!res.ok) {
+        throw new Error("Lookup failed");
+      }
       const data = (await res.json()) as { results: CatalogSearchResult[] };
       return data.results;
     },
@@ -595,13 +681,21 @@ export function useCatalogSearch() {
 export function useAddModelToInventory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { modelId: number; quantity?: number; condition?: string; storageLocation?: string; notes?: string }) => {
+    mutationFn: async (data: {
+      modelId: number;
+      quantity?: number;
+      condition?: string;
+      storageLocation?: string;
+      notes?: string;
+    }) => {
       const res = await fetch("/api/inventory/models", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add model to inventory");
+      if (!res.ok) {
+        throw new Error("Failed to add model to inventory");
+      }
       return res.json();
     },
     onSuccess: (_, { modelId }) => {
@@ -620,7 +714,9 @@ export function useRemoveModelFromInventory() {
   return useMutation({
     mutationFn: async ({ id }: { id: number; modelId: number }) => {
       const res = await fetch(`/api/inventory/models/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove model from inventory");
+      if (!res.ok) {
+        throw new Error("Failed to remove model from inventory");
+      }
     },
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
@@ -635,13 +731,22 @@ export function useRemoveModelFromInventory() {
 export function useAddPaintToInventory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { paintId: number; quantity?: number; fillLevel?: string; storageLocation?: string; purchasePrice?: number; notes?: string }) => {
+    mutationFn: async (data: {
+      paintId: number;
+      quantity?: number;
+      fillLevel?: string;
+      storageLocation?: string;
+      purchasePrice?: number;
+      notes?: string;
+    }) => {
       const res = await fetch("/api/inventory/paints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add paint to inventory");
+      if (!res.ok) {
+        throw new Error("Failed to add paint to inventory");
+      }
       return res.json();
     },
     onSuccess: (_, { paintId }) => {
@@ -660,7 +765,9 @@ export function useRemovePaintFromInventory() {
   return useMutation({
     mutationFn: async ({ id }: { id: number; paintId: number }) => {
       const res = await fetch(`/api/inventory/paints/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove paint from inventory");
+      if (!res.ok) {
+        throw new Error("Failed to remove paint from inventory");
+      }
     },
     onSuccess: (_, { paintId }) => {
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
@@ -697,7 +804,10 @@ export interface ProjectDetail {
   model: { id: number; name: string; kitNumber: string; imageUrl?: string } | null;
   log: { id: number; projectId: number; title: string; description?: string; createdAt: string }[];
   photos: ProjectPhoto[];
-  usedPaints: { projectPaint: { projectId: number; paintId: number; purpose: string; notes?: string }; paint: any }[];
+  usedPaints: {
+    projectPaint: { projectId: number; paintId: number; purpose: string; notes?: string };
+    paint: any;
+  }[];
 }
 
 export function useProjectDetail(id: number) {
@@ -705,7 +815,9 @@ export function useProjectDetail(id: number) {
     queryKey: ["project", id],
     queryFn: async () => {
       const res = await fetch(`/api/projects/${id}`);
-      if (!res.ok) throw new Error("Failed to fetch project");
+      if (!res.ok) {
+        throw new Error("Failed to fetch project");
+      }
       return res.json() as Promise<ProjectDetail>;
     },
   });
@@ -714,13 +826,20 @@ export function useProjectDetail(id: number) {
 export function useCreateProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { modelId: number; name: string; status?: string; notes?: string }) => {
+    mutationFn: async (data: {
+      modelId: number;
+      name: string;
+      status?: string;
+      notes?: string;
+    }) => {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create project");
+      if (!res.ok) {
+        throw new Error("Failed to create project");
+      }
       return res.json() as Promise<{ id: number }>;
     },
     onSuccess: (_, variables) => {
@@ -740,14 +859,21 @@ export function useUpdateProject() {
       data,
     }: {
       id: number;
-      data: { progressPercent?: number; status?: string; notes?: string; coverPhotoId?: number | null };
+      data: {
+        progressPercent?: number;
+        status?: string;
+        notes?: string;
+        coverPhotoId?: number | null;
+      };
     }) => {
       const res = await fetch(`/api/projects/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update project");
+      if (!res.ok) {
+        throw new Error("Failed to update project");
+      }
       return res.json();
     },
     onSuccess: (_, { id }) => {
@@ -763,13 +889,21 @@ export function useUpdateProject() {
 export function useAddBuildLogEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ projectId, data }: { projectId: number; data: { title: string; description?: string } }) => {
+    mutationFn: async ({
+      projectId,
+      data,
+    }: {
+      projectId: number;
+      data: { title: string; description?: string };
+    }) => {
       const res = await fetch(`/api/projects/${projectId}/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add build log entry");
+      if (!res.ok) {
+        throw new Error("Failed to add build log entry");
+      }
       return res.json();
     },
     onSuccess: (_, { projectId, data }) => {
@@ -790,7 +924,9 @@ export function useUploadProjectPhoto() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to upload photo");
+      if (!res.ok) {
+        throw new Error("Failed to upload photo");
+      }
       return res.json();
     },
     onSuccess: (_, { projectId }) => {
@@ -806,7 +942,9 @@ export function useDeleteProjectPhoto() {
   return useMutation({
     mutationFn: async ({ projectId, photoId }: { projectId: number; photoId: number }) => {
       const res = await fetch(`/api/projects/${projectId}/photos/${photoId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete photo");
+      if (!res.ok) {
+        throw new Error("Failed to delete photo");
+      }
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
@@ -824,14 +962,20 @@ export function useAddProjectPaint() {
       data,
     }: {
       projectId: number;
-      data: { paintId: number; purpose?: "required" | "optional" | "weathering" | "already_substituted"; notes?: string };
+      data: {
+        paintId: number;
+        purpose?: "required" | "optional" | "weathering" | "already_substituted";
+        notes?: string;
+      };
     }) => {
       const res = await fetch(`/api/projects/${projectId}/paints`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add paint to build");
+      if (!res.ok) {
+        throw new Error("Failed to add paint to build");
+      }
       return res.json();
     },
     onSuccess: (_, { projectId }) => {
@@ -847,7 +991,9 @@ export function useRemoveProjectPaint() {
   return useMutation({
     mutationFn: async ({ projectId, paintId }: { projectId: number; paintId: number }) => {
       const res = await fetch(`/api/projects/${projectId}/paints/${paintId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove paint from build");
+      if (!res.ok) {
+        throw new Error("Failed to remove paint from build");
+      }
     },
     onSuccess: (_, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
@@ -861,13 +1007,20 @@ export function useRemoveProjectPaint() {
 export function useAddShoppingListItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { paintId?: number; description: string; quantity?: number; priority?: "low" | "normal" | "high" }) => {
+    mutationFn: async (data: {
+      paintId?: number;
+      description: string;
+      quantity?: number;
+      priority?: "low" | "normal" | "high";
+    }) => {
       const res = await fetch("/api/shopping-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add shopping list item");
+      if (!res.ok) {
+        throw new Error("Failed to add shopping list item");
+      }
       return res.json();
     },
     onSuccess: (_, variables) => {
@@ -901,13 +1054,20 @@ export function useWishlist() {
 export function useAddWishlistItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { paintId?: number; description: string; priority?: "low" | "normal" | "high"; targetPrice?: number }) => {
+    mutationFn: async (data: {
+      paintId?: number;
+      description: string;
+      priority?: "low" | "normal" | "high";
+      targetPrice?: number;
+    }) => {
       const res = await fetch("/api/wishlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to add wishlist item");
+      if (!res.ok) {
+        throw new Error("Failed to add wishlist item");
+      }
       return res.json();
     },
     onSuccess: (_, variables) => {
@@ -923,7 +1083,9 @@ export function useDeleteWishlistItem() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/wishlist/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove wishlist item");
+      if (!res.ok) {
+        throw new Error("Failed to remove wishlist item");
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
     onError: toastError,
@@ -935,7 +1097,9 @@ export function useMoveWishlistItemToShoppingList() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/wishlist/${id}/move-to-shopping-list`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to move item to shopping list");
+      if (!res.ok) {
+        throw new Error("Failed to move item to shopping list");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -975,8 +1139,12 @@ export function useSupplies(search?: string, category?: string) {
     queryKey: ["supplies", search, category],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (search) params.set("q", search);
-      if (category) params.set("category", category);
+      if (search) {
+        params.set("q", search);
+      }
+      if (category) {
+        params.set("category", category);
+      }
       const qs = params.toString();
       return apiFetch<Supply[]>(`/supplies${qs ? `?${qs}` : ""}`);
     },
@@ -1000,7 +1168,9 @@ export function useCreateSupply() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create supply");
+      if (!res.ok) {
+        throw new Error("Failed to create supply");
+      }
       return res.json() as Promise<Supply>;
     },
     onSuccess: (data) => {
@@ -1021,7 +1191,9 @@ export function useUpdateSupply() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update supply");
+      if (!res.ok) {
+        throw new Error("Failed to update supply");
+      }
       return res.json() as Promise<Supply>;
     },
     onSuccess: (_, { id }) => {
@@ -1040,7 +1212,9 @@ export function useDeleteSupply() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/supplies/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete supply");
+      if (!res.ok) {
+        throw new Error("Failed to delete supply");
+      }
     },
     onError: toastError,
     onSuccess: () => {
@@ -1068,7 +1242,9 @@ export function useImportManufacturers() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to import manufacturers");
+      if (!res.ok) {
+        throw new Error("Failed to import manufacturers");
+      }
       return res.json() as Promise<ImportResult>;
     },
     onSuccess: () => {
@@ -1087,7 +1263,9 @@ export function useImportPaints() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to import paints");
+      if (!res.ok) {
+        throw new Error("Failed to import paints");
+      }
       return res.json() as Promise<ImportResult>;
     },
     onSuccess: () => {
@@ -1109,7 +1287,9 @@ export function useSeedCommunityPaints() {
   return useMutation({
     mutationFn: async () => {
       const res = await fetch("/api/catalog/seed-community-paints", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to import starter catalog");
+      if (!res.ok) {
+        throw new Error("Failed to import starter catalog");
+      }
       return res.json() as Promise<SeedCommunityPaintsResult>;
     },
     onSuccess: () => {
@@ -1131,7 +1311,9 @@ export function useImportModels() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to import models");
+      if (!res.ok) {
+        throw new Error("Failed to import models");
+      }
       return res.json() as Promise<ImportResult>;
     },
     onSuccess: () => {
@@ -1145,7 +1327,9 @@ export function useExportData() {
   return useMutation({
     mutationFn: async (dataType: "paints" | "models" | "manufacturers" | "all") => {
       const res = await fetch(`/api/export/${dataType}`);
-      if (!res.ok) throw new Error("Failed to export data");
+      if (!res.ok) {
+        throw new Error("Failed to export data");
+      }
       return res.json();
     },
   });
@@ -1168,7 +1352,9 @@ export function useCreateBackup() {
   return useMutation({
     mutationFn: async () => {
       const res = await fetch("/api/backup", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to create backup");
+      if (!res.ok) {
+        throw new Error("Failed to create backup");
+      }
       return res.json() as Promise<BackupFile>;
     },
     onSuccess: () => {
@@ -1182,7 +1368,9 @@ export function useDeleteBackup() {
   return useMutation({
     mutationFn: async (filename: string) => {
       const res = await fetch(`/api/backup/${encodeURIComponent(filename)}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete backup");
+      if (!res.ok) {
+        throw new Error("Failed to delete backup");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["backups"] });
@@ -1193,7 +1381,9 @@ export function useDeleteBackup() {
 export function useRestoreBackup() {
   return useMutation({
     mutationFn: async (filename: string) => {
-      const res = await fetch(`/api/backup/${encodeURIComponent(filename)}/restore`, { method: "POST" });
+      const res = await fetch(`/api/backup/${encodeURIComponent(filename)}/restore`, {
+        method: "POST",
+      });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { message?: string } | null;
         throw new Error(body?.message ?? "Failed to restore backup");
