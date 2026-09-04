@@ -103,6 +103,9 @@ export async function importRoutes(app: FastifyInstance) {
           continue;
         }
 
+        // Sequential on purpose: check-then-insert must run one row at a time to
+        // avoid duplicate rows within a batch (better-sqlite3 is synchronous anyway).
+        // oxlint-disable-next-line no-await-in-loop
         await db.insert(manufacturers).values({
           name: row.name,
           slug: row.slug,
@@ -172,6 +175,9 @@ export async function importRoutes(app: FastifyInstance) {
           continue;
         }
 
+        // Sequential on purpose: check-then-insert must run one row at a time to
+        // avoid duplicate rows within a batch (better-sqlite3 is synchronous anyway).
+        // oxlint-disable-next-line no-await-in-loop
         await db.insert(paints).values({
           manufacturerId: mfrId,
           productCode: row.productCode,
@@ -250,6 +256,9 @@ export async function importRoutes(app: FastifyInstance) {
           continue;
         }
 
+        // Sequential on purpose: check-then-insert must run one row at a time to
+        // avoid duplicate rows within a batch (better-sqlite3 is synchronous anyway).
+        // oxlint-disable-next-line no-await-in-loop
         await db.insert(models).values({
           manufacturerId: mfrId,
           kitNumber: row.kitNumber,

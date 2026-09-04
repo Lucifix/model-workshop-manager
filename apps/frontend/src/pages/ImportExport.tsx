@@ -30,6 +30,22 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
 
+function checkHealthUntilReady(): void {
+  fetch("/api/health")
+    .then((res) => {
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        setTimeout(checkHealthUntilReady, 2000);
+      }
+    })
+    .catch(() => setTimeout(checkHealthUntilReady, 2000));
+}
+
+function pollUntilHealthy(): void {
+  setTimeout(checkHealthUntilReady, 2000);
+}
+
 export default function ImportExport() {
   const [activeTab, setActiveTab] = useState<"import" | "export" | "backups">("import");
   const [importType, setImportType] = useState<ImportType>("paints");
@@ -91,21 +107,6 @@ export default function ImportExport() {
     deleteBackup.mutate(filename, {
       onError: (err) => setBackupError(err.message),
     });
-  };
-
-  const pollUntilHealthy = () => {
-    const check = () => {
-      fetch("/api/health")
-        .then((res) => {
-          if (res.ok) {
-            window.location.reload();
-          } else {
-            setTimeout(check, 2000);
-          }
-        })
-        .catch(() => setTimeout(check, 2000));
-    };
-    setTimeout(check, 2000);
   };
 
   const handleRestore = (filename: string) => {

@@ -40,15 +40,15 @@ export async function dashboardRoutes(app: FastifyInstance) {
       .from(buildLogEntries)
       .leftJoin(projects, eq(buildLogEntries.projectId, projects.id))
       .all()
-      .sort((a, b) => b.log.createdAt.localeCompare(a.log.createdAt))
+      .toSorted((a, b) => b.log.createdAt.localeCompare(a.log.createdAt))
       .slice(0, 10);
 
-    const recentModels = [...allModels]
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    const recentModels = allModels
+      .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, 5);
 
-    const recentlyCompleted = [...completed]
-      .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
+    const recentlyCompleted = completed
+      .toSorted((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
       .slice(0, 5);
 
     return {

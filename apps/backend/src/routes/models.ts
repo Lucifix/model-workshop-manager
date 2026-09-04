@@ -32,9 +32,14 @@ async function attachTags(modelId: number, names: string[]) {
     }
     let tag = db.select().from(tags).where(eq(tags.name, name)).get();
     if (!tag) {
+      // Sequential on purpose: find-or-create must run one name at a time to avoid
+      // creating duplicate tag rows for repeated names in the same batch
+      // (better-sqlite3 is synchronous anyway).
+      // oxlint-disable-next-line no-await-in-loop
       const [created] = await db.insert(tags).values({ name }).returning();
       tag = created;
     }
+    // oxlint-disable-next-line no-await-in-loop
     await db.insert(modelTags).values({ modelId, tagId: tag!.id }).returning();
   }
 }

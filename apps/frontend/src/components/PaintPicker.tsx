@@ -40,8 +40,7 @@ export function PaintPicker({
             <div className="px-3 py-2 text-xs text-slate-500">No matches.</div>
           )}
           {results
-            ?.slice()
-            .sort((a, b) => Number(b.inventory.length > 0) - Number(a.inventory.length > 0))
+            ?.toSorted((a, b) => Number(b.inventory.length > 0) - Number(a.inventory.length > 0))
             .slice(0, 20)
             .map((row) => (
               <button
