@@ -182,7 +182,10 @@ export default function Wishlist() {
       ) : (
         <div className="flex flex-col gap-2">
           {rows.map((row) => (
-            <Card key={row.item.id} className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <Card
+              key={row.item.id}
+              className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+            >
               <div className="flex min-w-0 items-center gap-2.5">
                 {row.paint && (
                   <span
