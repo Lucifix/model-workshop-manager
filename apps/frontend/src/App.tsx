@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Sidebar } from "./components/Sidebar";
+import { BottomNav } from "./components/BottomNav";
 import { useAuthStatus } from "./api/client";
 import { LoadingState } from "./components/ui";
 import Login from "./pages/Login";
@@ -32,7 +33,7 @@ export default function App() {
       ) : (
         <div className="min-h-screen lg:flex">
           <Sidebar />
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 lg:px-8">
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 lg:px-8 lg:py-6">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/models" element={<Models />} />
@@ -56,6 +57,7 @@ export default function App() {
               <Route path="/import-export" element={<ImportExport />} />
             </Routes>
           </main>
+          <BottomNav />
         </div>
       )}
     </>
