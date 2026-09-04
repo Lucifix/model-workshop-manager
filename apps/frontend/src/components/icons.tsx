@@ -9,6 +9,7 @@ import {
   Heart,
   Home,
   Menu,
+  MoreHorizontal,
   ShoppingCart,
   Wrench,
   X,
@@ -81,4 +82,8 @@ export function DollarIcon(props: IconProps) {
 
 export function WrenchIcon(props: IconProps) {
   return <Wrench {...defaults} {...props} />;
+}
+
+export function MoreIcon(props: IconProps) {
+  return <MoreHorizontal {...defaults} {...props} />;
 }
