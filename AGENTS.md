@@ -48,7 +48,9 @@ build, and older Node versions fail *silently* rather than erroring.
   from the repo root (there's a tooling-only root `package.json` for this —
   it holds no app dependencies and isn't a workspace):
   `npm run lint` / `npm run lint:fix` / `npm run fmt` / `npm run fmt:check`.
-  **There is no CI in this repo** — these aren't enforced automatically.
+  A pre-commit hook (husky + lint-staged) runs `oxfmt` and `oxlint` on staged
+  files automatically. GitHub Actions CI (`.github/workflows/ci.yml`) also
+  runs lint, format check, typecheck, build, and tests on every PR.
 
 ## Conventions
 
