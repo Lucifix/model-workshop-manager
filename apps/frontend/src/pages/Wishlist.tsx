@@ -182,8 +182,8 @@ export default function Wishlist() {
       ) : (
         <div className="flex flex-col gap-2">
           {rows.map((row) => (
-            <Card key={row.item.id} className="flex items-center justify-between gap-2 sm:gap-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Card key={row.item.id} className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
                 {row.paint && (
                   <span
                     className="h-6 w-6 flex-shrink-0 rounded-full border border-workshop-border"
@@ -191,7 +191,7 @@ export default function Wishlist() {
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-slate-100">
+                  <div className="break-words text-sm font-medium text-slate-100">
                     {row.item.description}
                   </div>
                   <div className="text-xs text-slate-400">
@@ -202,7 +202,7 @@ export default function Wishlist() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0 sm:flex-nowrap">
                 <Badge
                   tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}
                 >
