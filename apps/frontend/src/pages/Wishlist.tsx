@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
+import { useFormatCurrency } from "../lib/currency";
 
 const priorityTone = { high: "warn", normal: "neutral", low: "neutral" } as const;
 
@@ -28,6 +29,7 @@ export default function Wishlist() {
   const addItem = useAddWishlistItem();
   const deleteItem = useDeleteWishlistItem();
   const moveToShoppingList = useMoveWishlistItemToShoppingList();
+  const formatCurrency = useFormatCurrency();
   const [showForm, setShowForm] = useState(false);
   const [selectedPaint, setSelectedPaint] = useState<PickedPaint | null>(null);
   const [formData, setFormData] = useState({
@@ -199,7 +201,7 @@ export default function Wishlist() {
                   </div>
                   <div className="text-xs text-slate-400">
                     {row.item.targetPrice != null
-                      ? `Target $${row.item.targetPrice.toFixed(2)}`
+                      ? `Target ${formatCurrency(row.item.targetPrice)}`
                       : ""}
                     {row.paint ? ` · ${row.paint.name}` : ""}
                   </div>

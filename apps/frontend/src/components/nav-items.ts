@@ -7,6 +7,7 @@ import {
   HammerIcon,
   HeartIcon,
   HomeIcon,
+  SettingsIcon,
   WrenchIcon,
 } from "./icons";
 import type { IconProps } from "./icons";
@@ -26,6 +27,7 @@ export const navItems: NavItem[] = [
   { to: "/wishlist", label: "Wishlist", icon: HeartIcon },
   { to: "/supplies", label: "Supplies", icon: WrenchIcon },
   { to: "/import-export", label: "Import & Export", icon: DatabaseIcon },
+  { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 /** The four most-used sections, shown as tabs in the mobile bottom nav. */

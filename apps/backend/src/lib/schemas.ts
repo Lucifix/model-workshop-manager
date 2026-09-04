@@ -5,6 +5,7 @@ import {
   PROJECT_STATUSES,
   PAINT_PURPOSES,
   SUPPLY_CATEGORIES,
+  CURRENCIES,
 } from "../db/schema.js";
 
 export const manufacturerCreateSchema = z.object({
@@ -132,3 +133,7 @@ export const wishlistCreateSchema = z.object({
   notes: z.string().optional(),
 });
 export const wishlistUpdateSchema = wishlistCreateSchema.partial();
+
+export const settingsUpdateSchema = z.object({
+  currency: z.enum(CURRENCIES),
+});

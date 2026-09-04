@@ -301,3 +301,36 @@ export const shoppingListItems = sqliteTable("shopping_list_items", {
   createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
   purchasedAt: text("purchased_at"),
 });
+
+/** ISO 4217 codes offered in the currency picker — display formatting only,
+ * see appSettings below. Not exhaustive, just the commonly-needed set. */
+export const CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "CAD",
+  "AUD",
+  "CHF",
+  "CNY",
+  "SEK",
+  "NOK",
+  "DKK",
+  "NZD",
+  "PLN",
+  "BRL",
+  "MXN",
+  "INR",
+  "KRW",
+  "SGD",
+  "HKD",
+  "ZAR",
+] as const;
+
+/** Single-row app-wide config (this is a single-user app — no per-user
+ * settings table). Row id is always 1; see routes/settings.ts. */
+export const appSettings = sqliteTable("app_settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  currency: text("currency").notNull().default("USD"), // one of CURRENCIES
+  ...timestamps,
+});

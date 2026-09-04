@@ -10,6 +10,7 @@ import {
   Home,
   Menu,
   MoreHorizontal,
+  Settings,
   ShoppingCart,
   Wrench,
   X,
@@ -86,4 +87,8 @@ export function WrenchIcon(props: IconProps) {
 
 export function MoreIcon(props: IconProps) {
   return <MoreHorizontal {...defaults} {...props} />;
+}
+
+export function SettingsIcon(props: IconProps) {
+  return <Settings {...defaults} {...props} />;
 }

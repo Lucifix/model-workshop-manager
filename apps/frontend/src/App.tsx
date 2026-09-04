@@ -18,6 +18,7 @@ import ShoppingList from "./pages/ShoppingList";
 import Wishlist from "./pages/Wishlist";
 import Supplies from "./pages/Supplies";
 import ImportExport from "./pages/ImportExport";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const { data: auth, isLoading } = useAuthStatus();
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/supplies" element={<Supplies />} />
               <Route path="/import-export" element={<ImportExport />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
           <BottomNav />
