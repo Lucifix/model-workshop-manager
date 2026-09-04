@@ -64,6 +64,13 @@
       "when": 1788206155216,
       "tag": "0008_dapper_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1788549575575,
+      "tag": "0009_smooth_thena",
+      "breakpoints": true
     }
   ]
 }

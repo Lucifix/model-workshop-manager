@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from "../components/ui";
 import { useState } from "react";
+import { useFormatCurrency } from "../lib/currency";
 
 const PAINT_TYPES = [
   "Acrylic",
@@ -69,6 +70,7 @@ export default function PaintDetail() {
   const removeFromInventory = useRemovePaintFromInventory();
   const updatePaint = useUpdatePaint();
   const deletePaint = useDeletePaint();
+  const formatCurrency = useFormatCurrency();
 
   if (!id || isNaN(Number(id))) {
     return <ErrorState message="Invalid paint ID." />;
@@ -439,7 +441,7 @@ export default function PaintDetail() {
                   )}
                   {inv.purchasePrice != null && (
                     <div className="text-xs text-slate-500">
-                      Paid: ${inv.purchasePrice.toFixed(2)}
+                      Paid: {formatCurrency(inv.purchasePrice)}
                     </div>
                   )}
                   {inv.notes && <div className="text-xs text-slate-500">Notes: {inv.notes}</div>}

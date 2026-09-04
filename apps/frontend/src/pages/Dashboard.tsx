@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useDashboard, useProjects } from "../api/client";
+import { useFormatCurrency } from "../lib/currency";
 import {
   StatTile,
   LoadingState,
@@ -24,12 +25,11 @@ import {
   WrenchIcon,
 } from "../components/icons";
 
-const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useDashboard();
   const { data: projects } = useProjects();
+  const formatCurrency = useFormatCurrency();
 
   if (isLoading) {
     return <LoadingState />;
@@ -107,7 +107,7 @@ export default function Dashboard() {
         />
         <StatTile
           label="Stash value"
-          value={currencyFormatter.format(data.totalStashValue)}
+          value={formatCurrency(data.totalStashValue)}
           icon={<DollarIcon className="h-5 w-5" />}
           tone="ok"
         />
