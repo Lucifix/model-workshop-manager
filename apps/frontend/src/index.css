@@ -6,6 +6,10 @@ html, body, #root {
   height: 100%;
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   background-image:
     radial-gradient(ellipse 900px 500px at 15% -10%, rgba(249, 115, 22, 0.09), transparent 60%),

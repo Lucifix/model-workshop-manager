@@ -212,10 +212,10 @@ export default function ProjectDetail() {
             {project.model && (
               <button
                 onClick={() => navigate(`/models/${project.model!.id}`)}
-                className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200"
+                className="flex w-full min-w-0 items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200"
               >
                 <ModelThumbnail imageUrl={project.model.imageUrl} size="sm" />
-                <span className="truncate">
+                <span className="min-w-0 truncate">
                   Based on {project.model.name} ({project.model.kitNumber})
                 </span>
               </button>
