@@ -40,7 +40,7 @@ function listBackups() {
         createdAt: stat.mtime.toISOString(),
       };
     })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 /**

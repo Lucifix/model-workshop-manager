@@ -60,7 +60,7 @@ export async function projectRoutes(app: FastifyInstance) {
       .from(buildLogEntries)
       .where(eq(buildLogEntries.projectId, id))
       .all()
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
     const photos = db.select().from(projectPhotos).where(eq(projectPhotos.projectId, id)).all();
     const usedPaints = db
       .select({ projectPaint: projectPaints, paint: paints })

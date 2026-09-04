@@ -170,9 +170,13 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
     const sourceUrl = `https://github.com/${REPO}/blob/main/paints/${file}`;
 
     try {
+      // Sequential on purpose: one file at a time is polite to GitHub's raw CDN
+      // and keeps the per-file success/failure log output in order.
+      // oxlint-disable-next-line no-await-in-loop
       const markdown = await fetchText(`${RAW_BASE}/paints/${file}`);
       const rows = parsePaintTable(markdown);
 
+      // oxlint-disable-next-line no-await-in-loop
       const { id: mfrId, created } = await upsertManufacturer(displayName, slug);
       if (created) {
         manufacturersCreated++;
@@ -216,6 +220,9 @@ export async function importMiniaturePaints(): Promise<ImportMiniaturePaintsResu
       for (let i = 0; i < toInsert.length; i += CHUNK_SIZE) {
         const chunk = toInsert.slice(i, i + CHUNK_SIZE);
         try {
+          // better-sqlite3 is synchronous, so chunks run one at a time regardless;
+          // keeps per-chunk error handling simple.
+          // oxlint-disable-next-line no-await-in-loop
           await db.insert(paints).values(chunk);
           paintsImported += chunk.length;
         } catch (e: any) {

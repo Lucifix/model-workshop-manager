@@ -135,7 +135,7 @@ export default function ProjectDetail() {
   const photos = project.photos ?? [];
   const mostRecentPhoto =
     photos.length > 0
-      ? [...photos].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+      ? photos.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
       : undefined;
   const coverPhoto =
     (project.coverPhotoId ? photos.find((p) => p.id === project.coverPhotoId) : undefined) ??
