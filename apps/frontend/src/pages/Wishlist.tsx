@@ -210,7 +210,7 @@ export default function Wishlist() {
                 </Badge>
                 <Button
                   size="sm"
-                  variant="secondary"
+                  variant="outlineAccent"
                   onClick={() => moveToShoppingList.mutate(row.item.id)}
                   disabled={moveToShoppingList.isPending}
                 >
@@ -221,6 +221,7 @@ export default function Wishlist() {
                   variant="ghost"
                   onClick={() => handleDelete(row)}
                   disabled={deleteItem.isPending}
+                  className="text-red-400 hover:bg-red-950/40 hover:text-red-300"
                 >
                   Remove
                 </Button>
