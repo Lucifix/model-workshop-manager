@@ -24,6 +24,7 @@ import {
 } from "../components/ui";
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 import { Lightbox, type LightboxPhoto } from "../components/Lightbox";
+import { PhotoPicker } from "../components/PhotoPicker";
 
 function photoUrl(photo: ProjectPhoto) {
   return `/uploads/${photo.filename}`;
@@ -123,13 +124,8 @@ export default function ProjectDetail() {
     );
   };
 
-  const handleHeroPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      return;
-    }
+  const handleHeroPhotoSelect = (file: File) => {
     uploadPhoto({ projectId: project.id, file });
-    e.target.value = "";
   };
 
   const photos = project.photos ?? [];
@@ -196,11 +192,18 @@ export default function ProjectDetail() {
           </span>
         </button>
       ) : (
-        <label className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-workshop-border text-sm text-slate-400 transition-colors hover:border-workshop-accent hover:text-slate-200 sm:h-48">
-          <input type="file" accept="image/*" onChange={handleHeroPhotoChange} className="hidden" />
-          <span className="text-2xl">📷</span>
-          <span>{isUploadingPhoto ? "Uploading…" : "Add your first build photo"}</span>
-        </label>
+        <PhotoPicker onSelect={handleHeroPhotoSelect} disabled={isUploadingPhoto}>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              className="flex h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-workshop-border text-sm text-slate-400 transition-colors hover:border-workshop-accent hover:text-slate-200 sm:h-48"
+            >
+              <span className="text-2xl">📷</span>
+              <span>{isUploadingPhoto ? "Uploading…" : "Add your first build photo"}</span>
+            </button>
+          )}
+        </PhotoPicker>
       )}
 
       <Card className="mb-2">
@@ -588,15 +591,17 @@ export default function ProjectDetail() {
           <div className="flex flex-col gap-4">
             {!photoFile ? (
               <div className="flex items-center justify-center rounded-xl border-2 border-dashed border-workshop-border p-8">
-                <label className="flex cursor-pointer flex-col items-center gap-2">
-                  <span className="text-sm font-medium text-slate-300">Upload a photo</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
-                    className="hidden"
-                  />
-                </label>
+                <PhotoPicker onSelect={(file) => setPhotoFile(file)}>
+                  {(open) => (
+                    <button
+                      type="button"
+                      onClick={open}
+                      className="flex cursor-pointer flex-col items-center gap-2"
+                    >
+                      <span className="text-sm font-medium text-slate-300">Upload a photo</span>
+                    </button>
+                  )}
+                </PhotoPicker>
               </div>
             ) : (
               <Card>
