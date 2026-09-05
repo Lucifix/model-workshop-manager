@@ -19,6 +19,7 @@ import {
   Textarea,
   FieldLabel,
 } from "../components/ui";
+import { PaintInventoryStepper } from "../components/PaintInventoryStepper";
 import { useState } from "react";
 import { useFormatCurrency } from "../lib/currency";
 
@@ -159,9 +160,6 @@ export default function PaintDetail() {
     });
   };
 
-  const isInInventory = paint.inventory && paint.inventory.length > 0;
-  const totalQuantity = paint.inventory?.reduce((sum, inv) => sum + inv.quantity, 0) ?? 0;
-
   return (
     <div className="flex flex-col gap-4">
       <Button variant="ghost" size="sm" onClick={goBackToPaints} className="self-start -ml-2.5">
@@ -293,15 +291,8 @@ export default function PaintDetail() {
             </form>
           ) : (
             <>
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <h1 className="mb-2 text-2xl font-bold text-slate-100">{paint.name}</h1>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{paint.type}</Badge>
-                    {paint.finish && <Badge variant="secondary">{paint.finish}</Badge>}
-                    {paint.colorFamily && <Badge variant="secondary">{paint.colorFamily}</Badge>}
-                  </div>
-                </div>
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h1 className="text-2xl font-bold text-slate-100">{paint.name}</h1>
                 <div className="flex flex-shrink-0 gap-1">
                   <Button variant="ghost" size="sm" onClick={handleStartEdit}>
                     Edit
@@ -317,13 +308,27 @@ export default function PaintDetail() {
                 </div>
               </div>
 
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">{paint.type}</Badge>
+                  {paint.finish && <Badge variant="secondary">{paint.finish}</Badge>}
+                  {paint.colorFamily && <Badge variant="secondary">{paint.colorFamily}</Badge>}
+                </div>
+                <PaintInventoryStepper
+                  paintId={paint.id}
+                  paintName={paint.name}
+                  inventory={paint.inventory}
+                  size="md"
+                />
+              </div>
+
               {deleteError && (
                 <div className="mb-4 rounded-lg border border-amber-900 bg-amber-950/30 px-3 py-2 text-sm text-amber-300">
                   {deleteError}
                 </div>
               )}
 
-              <div className="mb-4 space-y-2 text-sm">
+              <div className="space-y-2 text-sm">
                 <p>
                   <span className="font-medium text-slate-300">Manufacturer:</span>{" "}
                   <span className="text-slate-400">{paint.manufacturer?.name ?? "Unknown"}</span>
@@ -345,109 +350,110 @@ export default function PaintDetail() {
                   </p>
                 )}
               </div>
-
-              <div className="flex gap-3">
-                {!isInInventory ? (
-                  <>
-                    {!showAddForm ? (
-                      <Button onClick={() => setShowAddForm(true)}>Add to my paints</Button>
-                    ) : (
-                      <form onSubmit={handleAddToInventory} className="flex w-full flex-col gap-3">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={formData.quantity}
-                          onChange={(e) =>
-                            setFormData({ ...formData, quantity: parseInt(e.target.value) })
-                          }
-                          placeholder="Quantity"
-                        />
-                        <Select
-                          value={formData.fillLevel}
-                          onChange={(e) => setFormData({ ...formData, fillLevel: e.target.value })}
-                        >
-                          <option value="Full">Full</option>
-                          <option value="Mostly Full">Mostly Full</option>
-                          <option value="Half">Half</option>
-                          <option value="Low">Low</option>
-                          <option value="Empty">Empty</option>
-                        </Select>
-                        <Input
-                          type="text"
-                          value={formData.storageLocation}
-                          onChange={(e) =>
-                            setFormData({ ...formData, storageLocation: e.target.value })
-                          }
-                          placeholder="Storage location"
-                        />
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.purchasePrice}
-                          onChange={(e) =>
-                            setFormData({ ...formData, purchasePrice: e.target.value })
-                          }
-                          placeholder="Price paid (optional)"
-                        />
-                        <Textarea
-                          value={formData.notes}
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                          placeholder="Notes"
-                          rows={2}
-                        />
-                        <div className="flex gap-2">
-                          <Button type="submit" disabled={isPending} className="flex-1">
-                            {isPending ? "Adding..." : "Add"}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className="flex-1"
-                            onClick={() => setShowAddForm(false)}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </form>
-                    )}
-                  </>
-                ) : (
-                  <div className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-400">
-                    ✓ In your inventory ({totalQuantity} bottles)
-                  </div>
-                )}
-              </div>
             </>
           )}
         </div>
       </Card>
 
-      {isInInventory && (
-        <Card>
-          <h2 className="mb-4 text-sm font-semibold text-slate-300">Your inventory</h2>
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-300">Your inventory</h2>
+          {!showAddForm && (
+            <Button variant="ghost" size="sm" onClick={() => setShowAddForm(true)}>
+              + Add bottle
+            </Button>
+          )}
+        </div>
+
+        {showAddForm && (
+          <form
+            onSubmit={handleAddToInventory}
+            className="mb-4 flex flex-col gap-3 rounded-lg border border-workshop-border p-3"
+          >
+            <Input
+              type="number"
+              min="1"
+              value={formData.quantity}
+              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+              placeholder="Quantity"
+            />
+            <Select
+              value={formData.fillLevel}
+              onChange={(e) => setFormData({ ...formData, fillLevel: e.target.value })}
+            >
+              <option value="Full">Full</option>
+              <option value="Mostly Full">Mostly Full</option>
+              <option value="Half">Half</option>
+              <option value="Low">Low</option>
+              <option value="Empty">Empty</option>
+            </Select>
+            <Input
+              type="text"
+              value={formData.storageLocation}
+              onChange={(e) => setFormData({ ...formData, storageLocation: e.target.value })}
+              placeholder="Storage location"
+            />
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.purchasePrice}
+              onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+              placeholder="Price paid (optional)"
+            />
+            <Textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Notes"
+              rows={2}
+            />
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isPending} className="flex-1">
+                {isPending ? "Adding..." : "Add"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowAddForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {paint.inventory.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            Not in your inventory yet — use the stepper above or "+ Add bottle" for one with
+            details.
+          </p>
+        ) : (
           <ul className="space-y-2">
             {paint.inventory.map((inv) => (
               <li
                 key={inv.id}
-                className="group flex items-center justify-between rounded-lg border border-workshop-border p-2 text-sm"
+                className="flex items-start justify-between gap-3 rounded-lg border border-workshop-border p-2.5 text-sm"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="font-medium text-slate-100">
-                    {inv.quantity} bottle{inv.quantity !== 1 ? "s" : ""} - {inv.fillLevel}
+                    {inv.quantity} bottle{inv.quantity !== 1 ? "s" : ""} · {inv.fillLevel}
                   </div>
-                  {inv.storageLocation && (
-                    <div className="text-xs text-slate-500">Location: {inv.storageLocation}</div>
-                  )}
-                  {inv.purchasePrice != null && (
-                    <div className="text-xs text-slate-500">
-                      Paid: {formatCurrency(inv.purchasePrice)}
+                  {(inv.storageLocation || inv.purchasePrice != null || inv.notes) && (
+                    <div className="mt-0.5 text-xs text-slate-500">
+                      {[
+                        inv.storageLocation,
+                        inv.purchasePrice != null ? formatCurrency(inv.purchasePrice) : null,
+                        inv.notes,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </div>
                   )}
-                  {inv.notes && <div className="text-xs text-slate-500">Notes: {inv.notes}</div>}
                 </div>
                 <button
                   type="button"
+                  title="Remove this entry"
                   onClick={() => {
                     removeFromInventory.mutate(
                       { id: inv.id, paintId: paint.id },
@@ -476,15 +482,15 @@ export default function PaintDetail() {
                       },
                     );
                   }}
-                  className="text-xs text-slate-600 opacity-0 hover:text-red-400 group-hover:opacity-100"
+                  className="shrink-0 rounded px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-red-950/40 hover:text-red-400"
                 >
-                  Remove
+                  ✕
                 </button>
               </li>
             ))}
           </ul>
-        </Card>
-      )}
+        )}
+      </Card>
     </div>
   );
 }

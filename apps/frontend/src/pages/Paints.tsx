@@ -1,11 +1,8 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 import {
   usePaints,
   useManufacturers,
-  useAddPaintToInventory,
-  useRemovePaintFromInventory,
   type PaintListRow,
   type PaintStatusFilter,
 } from "../api/client";
@@ -28,77 +25,11 @@ import {
   ListCardMeta,
 } from "../components/ui";
 import { AddPaintForm } from "../components/AddPaintForm";
+import { PaintInventoryStepper } from "../components/PaintInventoryStepper";
 
 type StatusFilter = PaintStatusFilter;
 
 const SEARCH_DEBOUNCE_MS = 300;
-
-const InventoryStepper = memo(function InventoryStepper({ row }: { row: PaintListRow }) {
-  const addToInventory = useAddPaintToInventory();
-  const removeFromInventory = useRemovePaintFromInventory();
-  const busy = addToInventory.isPending || removeFromInventory.isPending;
-  const totalQty = row.inventory.reduce((sum, i) => sum + i.quantity, 0);
-  const inStock = totalQty > 0;
-
-  return (
-    <div
-      className={`flex shrink-0 items-center gap-0.5 self-center rounded-lg border py-0.5 pl-0.5 pr-1 ${
-        inStock ? "border-emerald-800/60 bg-emerald-950/20" : "border-workshop-border"
-      }`}
-    >
-      <button
-        type="button"
-        title="Remove one (undo)"
-        disabled={busy || !inStock}
-        onClick={(e) => {
-          e.stopPropagation();
-          const last = row.inventory[row.inventory.length - 1]!;
-          removeFromInventory.mutate(
-            { id: last.id, paintId: row.paint.id },
-            {
-              onSuccess: () => {
-                toast(`Removed "${row.paint.name}" from inventory`, {
-                  action: {
-                    label: "Undo",
-                    onClick: () =>
-                      addToInventory.mutate({
-                        paintId: row.paint.id,
-                        quantity: last.quantity,
-                        fillLevel: last.fillLevel,
-                        storageLocation: last.storageLocation ?? undefined,
-                      }),
-                  },
-                });
-              },
-            },
-          );
-        }}
-        className="flex h-6 w-6 items-center justify-center rounded text-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-30"
-      >
-        −
-      </button>
-      <span
-        className={`w-4 text-center text-xs font-semibold tabular-nums ${
-          inStock ? "text-emerald-400" : "text-slate-500"
-        }`}
-      >
-        {totalQty}
-      </span>
-      <button
-        type="button"
-        title="Add one"
-        disabled={busy}
-        onClick={(e) => {
-          e.stopPropagation();
-          addToInventory.mutate({ paintId: row.paint.id, quantity: 1 });
-        }}
-        className="flex h-6 w-6 items-center justify-center rounded text-sm font-medium text-slate-400 transition-colors hover:text-emerald-400 disabled:opacity-50"
-      >
-        +
-      </button>
-    </div>
-  );
-});
 
 const PaintRow = memo(function PaintRow({
   row,
@@ -125,7 +56,12 @@ const PaintRow = memo(function PaintRow({
             </span>
           </ListCardMeta>
         </ListCardBody>
-        <InventoryStepper row={row} />
+        <PaintInventoryStepper
+          paintId={row.paint.id}
+          paintName={row.paint.name}
+          inventory={row.inventory}
+          className="self-center"
+        />
       </ListCardRow>
     </ListCard>
   );
