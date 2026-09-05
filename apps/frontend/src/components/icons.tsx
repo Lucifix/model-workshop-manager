@@ -2,12 +2,14 @@ import {
   Archive,
   Beaker,
   Box,
+  Camera,
   DollarSign,
   Database,
   Droplet,
   Hammer,
   Heart,
   Home,
+  Images,
   Menu,
   MoreHorizontal,
   Settings,
@@ -91,4 +93,12 @@ export function MoreIcon(props: IconProps) {
 
 export function SettingsIcon(props: IconProps) {
   return <Settings {...defaults} {...props} />;
+}
+
+export function CameraIcon(props: IconProps) {
+  return <Camera {...defaults} {...props} />;
+}
+
+export function GalleryIcon(props: IconProps) {
+  return <Images {...defaults} {...props} />;
 }

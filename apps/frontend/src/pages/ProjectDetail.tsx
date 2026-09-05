@@ -25,6 +25,7 @@ import {
 import { PaintPicker, type PickedPaint } from "../components/PaintPicker";
 import { Lightbox, type LightboxPhoto } from "../components/Lightbox";
 import { PhotoPicker } from "../components/PhotoPicker";
+import { CameraIcon } from "../components/icons";
 
 function photoUrl(photo: ProjectPhoto) {
   return `/uploads/${photo.filename}`;
@@ -199,7 +200,7 @@ export default function ProjectDetail() {
               onClick={open}
               className="flex h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-workshop-border text-sm text-slate-400 transition-colors hover:border-workshop-accent hover:text-slate-200 sm:h-48"
             >
-              <span className="text-2xl">📷</span>
+              <CameraIcon className="h-6 w-6" />
               <span>{isUploadingPhoto ? "Uploading…" : "Add your first build photo"}</span>
             </button>
           )}
