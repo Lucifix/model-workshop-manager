@@ -125,6 +125,14 @@ produce the same tarball format, so a backup from any one can be restored via an
 
 </details>
 
+## Contributing
+
+Bug reports, feature requests, and PRs are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md) for dev setup, conventions, and the sign-off
+requirement on commits. Please also read the
+[Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See
+[SECURITY.md](SECURITY.md) instead of opening a public issue.
+
 ## License
 
 [MIT](LICENSE)
