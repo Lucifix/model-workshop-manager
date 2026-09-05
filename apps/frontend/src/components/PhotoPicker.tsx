@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { CameraIcon, GalleryIcon } from "./icons";
 
 function isTouchDevice() {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
@@ -66,14 +67,14 @@ export function PhotoPicker({ onSelect, disabled, children }: PhotoPickerProps) 
                 className="flex items-center gap-3 rounded-xl border border-workshop-border px-4 py-3 text-left text-sm font-medium text-slate-100 transition-colors hover:border-workshop-accent"
                 onClick={() => cameraInputRef.current?.click()}
               >
-                <span className="text-lg">📷</span> Take Photo
+                <CameraIcon className="h-5 w-5" /> Take Photo
               </button>
               <button
                 type="button"
                 className="flex items-center gap-3 rounded-xl border border-workshop-border px-4 py-3 text-left text-sm font-medium text-slate-100 transition-colors hover:border-workshop-accent"
                 onClick={() => galleryInputRef.current?.click()}
               >
-                <span className="text-lg">🖼️</span> Choose from Gallery
+                <GalleryIcon className="h-5 w-5" /> Choose from Gallery
               </button>
               <button
                 type="button"
