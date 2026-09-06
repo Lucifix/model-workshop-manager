@@ -28,5 +28,18 @@ export default defineConfig({
     // without this exclude, vitest's default *.spec.ts glob also picks up
     // those files and fails trying to run @playwright/test's `test()`.
     exclude: [...configDefaults.exclude, "e2e/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "html"],
+      reportsDirectory: "coverage",
+      include: ["app/**/*.{ts,tsx}", "server/**/*.ts"],
+      exclude: [
+        "app/db/migrations/**",
+        "app/**/*.test.{ts,tsx}",
+        "app/routes.ts",
+        "app/entry.*.tsx",
+        "app/root.tsx",
+      ],
+    },
   },
 });
