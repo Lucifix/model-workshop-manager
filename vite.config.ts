@@ -1,6 +1,6 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 // NOTE: vite-plugin-pwa is deliberately NOT wired in here yet. It conflicts
 // with @react-router/dev's SSR build environment (its own build pass
@@ -24,6 +24,10 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    // The e2e/ suite runs under Playwright (npm run test:e2e), not vitest —
+    // without this exclude, vitest's default *.spec.ts glob also picks up
+    // those files and fails trying to run @playwright/test's `test()`.
+    exclude: [...configDefaults.exclude, "e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "html"],

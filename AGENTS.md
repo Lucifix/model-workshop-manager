@@ -48,6 +48,11 @@ build, and older Node versions fail _silently_ rather than erroring.
   `@vitest/coverage-v8` provider; writes an HTML report + `coverage-summary.json`
   to `coverage/`, gitignored). CI posts the coverage totals to the workflow
   run's Job Summary and uploads the HTML report as a build artifact.
+  End-to-end smoke tests live under `e2e/` and run with `npm run test:e2e`
+  (Playwright, against `npm run dev` with a disposable sqlite DB — see
+  [playwright.config.ts](playwright.config.ts)). They need browsers
+  installed once via `npx playwright install chromium`; CI
+  (`.github/workflows/e2e.yml`) handles that itself.
 - Build: `npm run build` (`react-router build` — emits `build/client` and
   `build/server`). Typecheck: `npm run typecheck` (`react-router typegen`
   then `tsc -b`).
