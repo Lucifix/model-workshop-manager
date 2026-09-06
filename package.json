@@ -17,7 +17,7 @@
     "oxlint": "^1.81.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json}": [
+    "*.{js,jsx,ts,tsx}": [
       "oxfmt",
       "oxlint"
     ]
