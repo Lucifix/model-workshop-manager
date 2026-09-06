@@ -19,8 +19,10 @@ phone or desktop, running entirely on your own server.
   longer-term wants live separately in the wishlist.
 - **Supplies** — track tools and consumables (brushes, cement, masking tape, etc.) too.
 - **Import & export** — bring in an existing collection via CSV/JSON, back it up from the UI.
-- **PWA** — installable on your phone, works offline as an app shell.
 - **Login-protected** — single-user auth, nothing exposed without a password.
+
+> PWA/offline installability is temporarily unavailable after a recent migration (see
+> [Tech stack](#tech-stack)) — tracked as follow-up work.
 
 ## Quick start (Docker)
 
@@ -28,8 +30,7 @@ phone or desktop, running entirely on your own server.
 git clone <this-repo-url> && cd model-workshop-manager
 cp .env.example .env          # set AUTH_USERNAME, AUTH_PASSWORD, SESSION_SECRET
 docker compose up -d --build
-docker compose exec backend npm run db:migrate
-docker compose exec backend npm run db:seed   # optional: sample data
+docker compose exec app npm run db:seed   # optional: sample data (migrations run automatically on boot)
 ```
 
 Open `http://localhost:8080` (or whatever `HOST_PORT` you set) and log in.
@@ -58,8 +59,9 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 
 ## Tech stack
 
-React + TypeScript PWA &rarr; Fastify REST API &rarr; Drizzle ORM &rarr; SQLite, all behind Docker
-Compose. Photos live on disk, never as DB blobs.
+A single React Router v8 (framework mode) app &rarr; Express &rarr; Drizzle ORM &rarr; SQLite, one
+Node process behind Docker Compose. React + TypeScript UI and API resource routes live in the same
+app; photos live on disk, never as DB blobs.
 
 ## Local development
 
@@ -67,17 +69,12 @@ Requires Node.js 22+ (see `.nvmrc` — `better-sqlite3` needs a matching native 
 versions fail silently instead of erroring).
 
 ```bash
-# Backend
-cd apps/backend && npm install
+npm install
 npm run db:migrate && npm run db:seed   # first time only
-npm run dev                              # Fastify on :3001
-
-# Frontend (separate terminal)
-cd apps/frontend && npm install
-npm run dev                              # Vite on :5173, proxying /api to :3001
+npm run dev                              # :3000 — one process, UI + API
 ```
 
-Open `http://localhost:5173`. Run backend tests with `npm test` inside `apps/backend`.
+Open `http://localhost:3000`. Run tests with `npm test`.
 
 ## Security
 
@@ -92,8 +89,8 @@ reverse proxy, LAN-only or on a VPN.
   `/api/health`, `/api/auth/login`, `/api/auth/me`) — new routes are guarded automatically.
 - Credentials are a single username/password pair from `AUTH_USERNAME`/`AUTH_PASSWORD` env vars
   (no user table — deliberately single-user), compared in constant time.
-- Sessions are a signed, `httpOnly` cookie (`@fastify/secure-session`) — no server-side session
-  store to run or lose.
+- Sessions are a signed, `httpOnly` cookie (React Router's cookie session storage) — no
+  server-side session store to run or lose.
 - The login endpoint is rate-limited (5 attempts/minute).
 - The app **refuses to start** if `AUTH_USERNAME`, `AUTH_PASSWORD`, or `SESSION_SECRET` aren't
   set — see `.env.example`.

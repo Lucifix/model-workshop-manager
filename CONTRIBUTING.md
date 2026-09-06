@@ -23,12 +23,11 @@ conventions — that's the canonical reference, not duplicated here.
   easier.
 - Run `npm run lint:fix` and `npm run fmt` (repo root) before pushing — CI
   runs both and will fail the build otherwise.
-- Add/update backend tests for behavior changes (`cd apps/backend && npm test`).
-  The frontend has no test setup yet.
+- Add/update tests for behavior changes (`npm test`).
 - Follow the existing conventions: Zod validation via `parseBody()`, the
   `CatalogProvider` interface for any new external/optional data source (see
-  [apps/backend/src/providers/types.ts](apps/backend/src/providers/types.ts)),
-  comments that explain _why_ not _what_.
+  [app/providers/types.ts](app/providers/types.ts)), comments that explain
+  _why_ not _what_.
 
 ### Sign off your commits (DCO)
 
@@ -48,10 +47,10 @@ works). A CI check will block PRs with unsigned commits.
 
 There's no shared community catalog file in this repo yet — today, catalog
 data comes from the CSV import path (documented in
-[apps/backend/src/providers/csvImportProvider.ts](apps/backend/src/providers/csvImportProvider.ts))
+[app/providers/csvImportProvider.ts](app/providers/csvImportProvider.ts))
 or hand entry, per-user. If you're interested in building out a shared,
 community-maintained seed dataset (a real paint/kit catalog beyond the
-handful of illustrative rows in `apps/backend/src/db/seed.ts`), open an issue
+handful of illustrative rows in `app/db/seed.server.ts`), open an issue
 to discuss the shape first — this is a place where design input is
 especially welcome before code gets written.
 

@@ -1,25 +1,82 @@
 {
   "name": "model-workshop-manager",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Repo-level tooling only — apps/backend and apps/frontend remain independently installed, see AGENTS.md",
+  "description": "Model Workshop Manager — a single React Router v8 (framework mode) app for both the UI and the API.",
+  "type": "module",
   "scripts": {
+    "dev": "cross-env NODE_ENV=development node --env-file-if-exists=.env --conditions development server.js",
+    "build": "react-router build",
+    "start": "cross-env NODE_ENV=production node --env-file-if-exists=.env server.js",
+    "typecheck": "react-router typegen && tsc -b",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx app/db/migrate.server.ts",
+    "db:seed": "tsx app/db/seed.server.ts",
+    "import:miniature-paints": "tsx app/scripts/importMiniaturePaints.server.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "prepare": "husky"
   },
+  "dependencies": {
+    "@react-router/express": "^8.3.1",
+    "@tanstack/react-query": "^5.59.20",
+    "better-sqlite3": "^13.0.3",
+    "compression": "^1.8.1",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "isbot": "^5",
+    "lucide-react": "^1.41.0",
+    "morgan": "^1.12.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.1",
+    "sonner": "^2.0.8",
+    "tar": "^7.5.22",
+    "zod": "^4.5.4"
+  },
   "devDependencies": {
+    "@react-router/dev": "^8.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/compression": "^1.8.1",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@types/tar": "^6.1.13",
+    "cross-env": "^10.0.0",
+    "drizzle-kit": "^0.31.10",
     "husky": "^9.1.7",
     "lint-staged": "^17.4.1",
     "oxfmt": "^0.65.0",
-    "oxlint": "^1.81.0"
+    "oxlint": "^1.81.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.0"
+  },
+  "overrides": {
+    "esbuild": "^0.25.4"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "oxfmt",
       "oxlint"
     ]
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "esbuild@0.25.12": true,
+    "fsevents@2.3.3": true
   }
 }
