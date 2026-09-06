@@ -10,6 +10,7 @@
     "start": "cross-env NODE_ENV=production node --env-file-if-exists=.env server.js",
     "typecheck": "react-router typegen && tsc -b",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx app/db/migrate.server.ts",
     "db:seed": "tsx app/db/seed.server.ts",
@@ -39,6 +40,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@react-router/dev": "^8.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/better-sqlite3": "^9.6.0",

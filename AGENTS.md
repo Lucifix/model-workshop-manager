@@ -44,7 +44,11 @@ build, and older Node versions fail _silently_ rather than erroring.
 
 ## Commands
 
-- Tests: `npm test` (vitest).
+- Tests: `npm test` (vitest). End-to-end smoke tests live under `e2e/` and
+  run with `npm run test:e2e` (Playwright, against `npm run dev` with a
+  disposable sqlite DB — see [playwright.config.ts](playwright.config.ts)).
+  They need browsers installed once via `npx playwright install chromium`;
+  CI (`.github/workflows/e2e.yml`) handles that itself.
 - Build: `npm run build` (`react-router build` — emits `build/client` and
   `build/server`). Typecheck: `npm run typecheck` (`react-router typegen`
   then `tsc -b`).
