@@ -210,7 +210,7 @@ export default function ProjectDetail() {
       <Card className="mb-2">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 sm:flex-1">
-            <h1 className="mb-1 break-words text-2xl font-bold text-slate-100 sm:text-3xl">
+            <h1 className="mb-1 wrap-break-word text-2xl font-bold text-slate-100 sm:text-3xl">
               {project.name}
             </h1>
             {project.model && (
@@ -225,7 +225,7 @@ export default function ProjectDetail() {
               </button>
             )}
           </div>
-          <div className="w-full flex-shrink-0 sm:w-44">
+          <div className="w-full shrink-0 sm:w-44">
             <Select value={project.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
               <option value="Planned">Planned</option>
               <option value="In Progress">In Progress</option>
@@ -468,7 +468,7 @@ export default function ProjectDetail() {
                       className="group flex items-center gap-3 rounded-lg border border-workshop-border p-2 text-sm"
                     >
                       <span
-                        className="h-5 w-5 rounded-full border border-slate-600 flex-shrink-0"
+                        className="h-5 w-5 rounded-full border border-slate-600 shrink-0"
                         style={{ backgroundColor: row.paint?.colorHex ?? "#334155" }}
                       />
                       <div className="flex-1">
@@ -573,7 +573,7 @@ export default function ProjectDetail() {
                           <p className="mb-2 text-xs text-slate-400">{entry.description}</p>
                         )}
                       </div>
-                      <span className="flex-shrink-0 text-xs text-slate-500">
+                      <span className="shrink-0 text-xs text-slate-500">
                         {new Date(entry.createdAt).toLocaleDateString()}
                       </span>
                     </div>

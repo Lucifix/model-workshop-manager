@@ -104,7 +104,7 @@ export default function ProjectNew() {
                         })
                       }
                     >
-                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent">
                         <BoxIcon className="h-5 w-5" />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -188,7 +188,7 @@ export default function ProjectNew() {
                 type="checkbox"
                 checked={ownIt}
                 onChange={(e) => setOwnIt(e.target.checked)}
-                className="h-4 w-4 rounded border-workshop-border accent-workshop-accent"
+                className="h-4 w-4 rounded-sm border-workshop-border accent-workshop-accent"
               />
               I already own this kit — add it to My Collection too
             </label>

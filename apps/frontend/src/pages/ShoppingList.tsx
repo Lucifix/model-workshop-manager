@@ -100,7 +100,7 @@ export default function ShoppingList() {
               ) : (
                 <div className="flex items-center gap-2 rounded-lg border border-workshop-border p-2 text-sm">
                   <span
-                    className="h-4 w-4 flex-shrink-0 rounded-full border border-workshop-border"
+                    className="h-4 w-4 shrink-0 rounded-full border border-workshop-border"
                     style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                   />
                   <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
@@ -178,7 +178,7 @@ export default function ShoppingList() {
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
                   {row.paint && (
                     <span
-                      className="h-6 w-6 flex-shrink-0 rounded-full border border-workshop-border"
+                      className="h-6 w-6 shrink-0 rounded-full border border-workshop-border"
                       style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
                     />
                   )}
@@ -192,7 +192,7 @@ export default function ShoppingList() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Badge
                     tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}
                   >
@@ -222,12 +222,12 @@ export default function ShoppingList() {
                 <span className="truncate text-sm line-through">{row.item.description}</span>
                 {row.paint &&
                   (addedToInventory.has(row.paint.id) ? (
-                    <span className="flex-shrink-0 text-xs text-emerald-400">✓ In inventory</span>
+                    <span className="shrink-0 text-xs text-emerald-400">✓ In inventory</span>
                   ) : (
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="flex-shrink-0"
+                      className="shrink-0"
                       onClick={() => handleAddToInventory(row.paint!.id, row.item.quantity)}
                       disabled={addToInventory.isPending}
                     >

@@ -10,8 +10,12 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
-  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
-  updatedAt: text("updated_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 };
 
 // ---------------------------------------------------------------------------
@@ -257,7 +261,9 @@ export const buildLogEntries = sqliteTable("build_log_entries", {
   projectId: integer("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
   title: text("title").notNull(),
   description: text("description"),
 });
@@ -271,7 +277,9 @@ export const projectPhotos = sqliteTable("project_photos", {
   originalFilename: text("original_filename"),
   caption: text("caption"),
   takenAt: text("taken_at"),
-  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 });
 
 // ---------------------------------------------------------------------------
@@ -288,7 +296,9 @@ export const wishlistItems = sqliteTable("wishlist_items", {
   priority: text("priority").notNull().default("normal"), // low | normal | high
   targetPrice: real("target_price"),
   notes: text("notes"),
-  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
 });
 
 export const shoppingListItems = sqliteTable("shopping_list_items", {
@@ -298,7 +308,9 @@ export const shoppingListItems = sqliteTable("shopping_list_items", {
   quantity: integer("quantity").notNull().default(1),
   priority: text("priority").notNull().default("normal"), // low | normal | high
   purchased: integer("purchased", { mode: "boolean" }).notNull().default(false),
-  createdAt: text("created_at").notNull().default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
   purchasedAt: text("purchased_at"),
 });
 

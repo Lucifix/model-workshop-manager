@@ -54,7 +54,7 @@ export default function Dashboard() {
             <p className="text-sm text-slate-200">
               No paints in the catalog yet — import a starter catalog, or add your first paint.
             </p>
-            <div className="flex flex-shrink-0 gap-2">
+            <div className="flex shrink-0 gap-2">
               <Button size="sm" variant="secondary" onClick={() => navigate("/paints")}>
                 Add a paint
               </Button>

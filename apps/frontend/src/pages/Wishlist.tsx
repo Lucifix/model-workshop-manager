@@ -114,7 +114,7 @@ export default function Wishlist() {
               ) : (
                 <div className="flex items-center gap-2 rounded-lg border border-workshop-border p-2 text-sm">
                   <span
-                    className="h-4 w-4 flex-shrink-0 rounded-full border border-workshop-border"
+                    className="h-4 w-4 shrink-0 rounded-full border border-workshop-border"
                     style={{ backgroundColor: selectedPaint.colorHex ?? "#334155" }}
                   />
                   <span className="flex-1 truncate text-slate-200">{selectedPaint.name}</span>
@@ -191,12 +191,12 @@ export default function Wishlist() {
               <div className="flex min-w-0 items-center gap-2.5">
                 {row.paint && (
                   <span
-                    className="h-6 w-6 flex-shrink-0 rounded-full border border-workshop-border"
+                    className="h-6 w-6 shrink-0 rounded-full border border-workshop-border"
                     style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="break-words text-sm font-medium text-slate-100">
+                  <div className="wrap-break-word text-sm font-medium text-slate-100">
                     {row.item.description}
                   </div>
                   <div className="text-xs text-slate-400">
@@ -207,7 +207,7 @@ export default function Wishlist() {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0 sm:flex-nowrap">
+              <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:flex-nowrap">
                 <Badge
                   tone={priorityTone[row.item.priority as keyof typeof priorityTone] ?? "neutral"}
                 >

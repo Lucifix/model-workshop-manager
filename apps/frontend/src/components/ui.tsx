@@ -46,7 +46,7 @@ export function StatTile({
     <Card className="flex items-center gap-3">
       {icon && (
         <span
-          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${iconTone}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconTone}`}
         >
           {icon}
         </span>
@@ -113,14 +113,14 @@ export function PageHeader({
         <h1 className="font-display text-3xl font-bold tracking-tight text-slate-50">{title}</h1>
         {description && <p className="mt-0.5 text-sm text-slate-400">{description}</p>}
       </div>
-      {actions && <div className="flex flex-shrink-0 gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
     </div>
   );
 }
 
 const buttonVariants = {
   primary:
-    "bg-workshop-accent text-white hover:bg-workshop-accentmuted shadow-sm shadow-workshop-accent/20",
+    "bg-workshop-accent text-white hover:bg-workshop-accentmuted shadow-xs shadow-workshop-accent/20",
   secondary: "border border-workshop-border text-slate-200 hover:bg-slate-800/60 bg-transparent",
   outlineAccent:
     "border border-workshop-accent text-workshop-accent hover:bg-workshop-accent/10 bg-transparent",
@@ -149,7 +149,7 @@ export const Button = forwardRef<
 });
 
 const fieldClass =
-  "w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-workshop-accent";
+  "w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-hidden transition-colors focus:border-workshop-accent";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className = "", ...props }, ref) {
@@ -206,13 +206,13 @@ export function ModelThumbnail({
       <img
         src={imageUrl}
         alt=""
-        className={`${sizeClass} flex-shrink-0 rounded-xl border border-workshop-border object-cover ${className}`}
+        className={`${sizeClass} shrink-0 rounded-xl border border-workshop-border object-cover ${className}`}
       />
     );
   }
   return (
     <span
-      className={`flex ${sizeClass} flex-shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent ${className}`}
+      className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-xl bg-workshop-accent/15 text-workshop-accent ${className}`}
     >
       <BoxIcon className="h-5 w-5" />
     </span>
@@ -264,14 +264,14 @@ export function ManufacturerAvatar({
       <img
         src={manufacturer.logoUrl}
         alt={manufacturer.name}
-        className={`${sizeClass} flex-shrink-0 rounded-full border border-workshop-border object-contain bg-white p-1 ${className}`}
+        className={`${sizeClass} shrink-0 rounded-full border border-workshop-border object-contain bg-white p-1 ${className}`}
       />
     );
   }
   const colorClass = avatarPalette[manufacturer.id % avatarPalette.length];
   return (
     <span
-      className={`flex ${sizeClass} flex-shrink-0 items-center justify-center rounded-full font-bold ${colorClass} ${className}`}
+      className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full font-bold ${colorClass} ${className}`}
       aria-hidden
     >
       {initials(manufacturer.name)}
@@ -282,7 +282,7 @@ export function ManufacturerAvatar({
 export function MediaCard({
   image,
   imageAlt = "",
-  aspect = "aspect-[4/3]",
+  aspect = "aspect-4/3",
   overlay,
   children,
   className = "",
@@ -312,7 +312,7 @@ export function MediaCard({
             <BoxIcon className="h-10 w-10" />
           </div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-workshop-panel via-workshop-panel/10 to-transparent opacity-90" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-workshop-panel via-workshop-panel/10 to-transparent opacity-90" />
         {overlay && <div className="absolute inset-x-0 bottom-0 p-3">{overlay}</div>}
       </div>
       <div className="p-3.5">{children}</div>

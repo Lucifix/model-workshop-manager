@@ -50,12 +50,8 @@
           "name": "build_log_entries_project_id_projects_id_fk",
           "tableFrom": "build_log_entries",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -122,9 +118,7 @@
       "indexes": {
         "manufacturers_slug_unique": {
           "name": "manufacturers_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         }
       },
@@ -202,12 +196,8 @@
           "name": "model_paints_model_id_models_id_fk",
           "tableFrom": "model_paints",
           "tableTo": "models",
-          "columnsFrom": [
-            "model_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["model_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -215,22 +205,15 @@
           "name": "model_paints_paint_id_paints_id_fk",
           "tableFrom": "model_paints",
           "tableTo": "paints",
-          "columnsFrom": [
-            "paint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paint_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "model_paints_model_id_paint_id_pk": {
-          "columns": [
-            "model_id",
-            "paint_id"
-          ],
+          "columns": ["model_id", "paint_id"],
           "name": "model_paints_model_id_paint_id_pk"
         }
       },
@@ -369,12 +352,8 @@
           "name": "models_manufacturer_id_manufacturers_id_fk",
           "tableFrom": "models",
           "tableTo": "manufacturers",
-          "columnsFrom": [
-            "manufacturer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["manufacturer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -474,12 +453,8 @@
           "name": "owned_models_model_id_models_id_fk",
           "tableFrom": "owned_models",
           "tableTo": "models",
-          "columnsFrom": [
-            "model_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["model_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -570,9 +545,7 @@
       "indexes": {
         "paint_inventory_paint_id_idx": {
           "name": "paint_inventory_paint_id_idx",
-          "columns": [
-            "paint_id"
-          ],
+          "columns": ["paint_id"],
           "isUnique": false
         }
       },
@@ -581,12 +554,8 @@
           "name": "paint_inventory_paint_id_paints_id_fk",
           "tableFrom": "paint_inventory",
           "tableTo": "paints",
-          "columnsFrom": [
-            "paint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paint_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -717,9 +686,7 @@
       "indexes": {
         "paints_manufacturer_id_idx": {
           "name": "paints_manufacturer_id_idx",
-          "columns": [
-            "manufacturer_id"
-          ],
+          "columns": ["manufacturer_id"],
           "isUnique": false
         }
       },
@@ -728,12 +695,8 @@
           "name": "paints_manufacturer_id_manufacturers_id_fk",
           "tableFrom": "paints",
           "tableTo": "manufacturers",
-          "columnsFrom": [
-            "manufacturer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["manufacturer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -781,12 +744,8 @@
           "name": "project_paints_project_id_projects_id_fk",
           "tableFrom": "project_paints",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -794,22 +753,15 @@
           "name": "project_paints_paint_id_paints_id_fk",
           "tableFrom": "project_paints",
           "tableTo": "paints",
-          "columnsFrom": [
-            "paint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paint_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "project_paints_project_id_paint_id_pk": {
-          "columns": [
-            "project_id",
-            "paint_id"
-          ],
+          "columns": ["project_id", "paint_id"],
           "name": "project_paints_project_id_paint_id_pk"
         }
       },
@@ -876,12 +828,8 @@
           "name": "project_photos_project_id_projects_id_fk",
           "tableFrom": "project_photos",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -981,12 +929,8 @@
           "name": "projects_model_id_models_id_fk",
           "tableFrom": "projects",
           "tableTo": "models",
-          "columnsFrom": [
-            "model_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["model_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -994,12 +938,8 @@
           "name": "projects_cover_photo_id_project_photos_id_fk",
           "tableFrom": "projects",
           "tableTo": "project_photos",
-          "columnsFrom": [
-            "cover_photo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cover_photo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1078,12 +1018,8 @@
           "name": "shopping_list_items_paint_id_paints_id_fk",
           "tableFrom": "shopping_list_items",
           "tableTo": "paints",
-          "columnsFrom": [
-            "paint_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paint_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

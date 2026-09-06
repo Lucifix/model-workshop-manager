@@ -66,7 +66,7 @@ export const PaintInventoryStepper = memo(function PaintInventoryStepper({
             },
           );
         }}
-        className={`flex ${buttonSize} items-center justify-center rounded font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-30`}
+        className={`flex ${buttonSize} items-center justify-center rounded-sm font-medium text-slate-400 transition-colors hover:text-red-400 disabled:opacity-30`}
       >
         −
       </button>
@@ -85,7 +85,7 @@ export const PaintInventoryStepper = memo(function PaintInventoryStepper({
           e.stopPropagation();
           addToInventory.mutate({ paintId, quantity: 1 });
         }}
-        className={`flex ${buttonSize} items-center justify-center rounded font-medium text-slate-400 transition-colors hover:text-emerald-400 disabled:opacity-50`}
+        className={`flex ${buttonSize} items-center justify-center rounded-sm font-medium text-slate-400 transition-colors hover:text-emerald-400 disabled:opacity-50`}
       >
         +
       </button>

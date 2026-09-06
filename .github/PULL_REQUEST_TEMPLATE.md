@@ -13,7 +13,7 @@
 - [ ] `npm run typecheck` and `npm run build` pass in the affected app(s)
 - [ ] Commits are signed off (`git commit -s`) — see [CONTRIBUTING.md](../CONTRIBUTING.md#sign-off-your-commits-dco)
 - [ ] Followed existing conventions (Zod validation, `CatalogProvider` pattern
-      for new data sources, comments explain *why* not *what*)
+      for new data sources, comments explain _why_ not _what_)
 
 ## Screenshots
 
