@@ -44,7 +44,10 @@ build, and older Node versions fail _silently_ rather than erroring.
 
 ## Commands
 
-- Tests: `npm test` (vitest).
+- Tests: `npm test` (vitest). Coverage: `npm run test:coverage` (adds the
+  `@vitest/coverage-v8` provider; writes an HTML report + `coverage-summary.json`
+  to `coverage/`, gitignored). CI posts the coverage totals to the workflow
+  run's Job Summary and uploads the HTML report as a build artifact.
 - Build: `npm run build` (`react-router build` — emits `build/client` and
   `build/server`). Typecheck: `npm run typecheck` (`react-router typegen`
   then `tsc -b`).

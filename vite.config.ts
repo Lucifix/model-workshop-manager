@@ -1,6 +1,6 @@
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 // NOTE: vite-plugin-pwa is deliberately NOT wired in here yet. It conflicts
 // with @react-router/dev's SSR build environment (its own build pass
@@ -22,5 +22,20 @@ export default defineConfig({
   plugins: [tailwindcss(), reactRouter()],
   resolve: {
     tsconfigPaths: true,
+  },
+  test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "html"],
+      reportsDirectory: "coverage",
+      include: ["app/**/*.{ts,tsx}", "server/**/*.ts"],
+      exclude: [
+        "app/db/migrations/**",
+        "app/**/*.test.{ts,tsx}",
+        "app/routes.ts",
+        "app/entry.*.tsx",
+        "app/root.tsx",
+      ],
+    },
   },
 });
