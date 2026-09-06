@@ -21,7 +21,7 @@ export function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?:
             }`
           }
         >
-          <item.icon className="h-[18px] w-[18px] flex-shrink-0" />
+          <item.icon className="h-[18px] w-[18px] shrink-0" />
           {item.label}
         </NavLink>
       ))}
@@ -54,7 +54,7 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
       onClick={onNavigate}
       className="flex items-center gap-2 rounded-lg px-4 py-4 transition-opacity hover:opacity-80"
     >
-      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-workshop-accent text-white">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-workshop-accent text-white">
         <ShipIcon className="h-[18px] w-[18px]" />
       </span>
       <span className="text-sm font-bold tracking-tight text-slate-50">Workshop Manager</span>
@@ -64,7 +64,7 @@ function Brand({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col border-r border-workshop-border bg-workshop-sidebar lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-workshop-border bg-workshop-sidebar lg:flex">
       <Brand />
       <NavLinks items={navItems} />
       <UserFooter />

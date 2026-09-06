@@ -28,7 +28,7 @@ conventions — that's the canonical reference, not duplicated here.
 - Follow the existing conventions: Zod validation via `parseBody()`, the
   `CatalogProvider` interface for any new external/optional data source (see
   [apps/backend/src/providers/types.ts](apps/backend/src/providers/types.ts)),
-  comments that explain *why* not *what*.
+  comments that explain _why_ not _what_.
 
 ### Sign off your commits (DCO)
 

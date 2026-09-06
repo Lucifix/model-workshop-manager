@@ -30,7 +30,7 @@ Backend refuses to boot without `AUTH_USERNAME`, `AUTH_PASSWORD`, and
 root). `npm run dev` uses `tsx --env-file=.env`.
 
 **Node 22+ is required** (`.nvmrc`) — `better-sqlite3` needs a matching native
-build, and older Node versions fail *silently* rather than erroring.
+build, and older Node versions fail _silently_ rather than erroring.
 
 ## Commands
 
@@ -71,7 +71,7 @@ build, and older Node versions fail *silently* rather than erroring.
   guards the whole API except an explicit `PUBLIC_PATHS` allow-list — new
   routes are protected automatically. Only add to that set deliberately, and
   only for routes that genuinely must be reachable pre-login.
-- **Comments explain *why*, not *what*.** The existing code has no docstrings
+- **Comments explain _why_, not _what_.** The existing code has no docstrings
   and few comments; the ones present exist to record a non-obvious constraint
   or reason (e.g. why a value is clamped, why an approach was rejected).
   Match that — don't add comments describing what a line of code visibly

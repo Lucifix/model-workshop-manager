@@ -55,7 +55,7 @@ export function PaintPicker({
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-workshop-panelmuted"
               >
                 <span
-                  className="h-4 w-4 flex-shrink-0 rounded-full border border-workshop-border"
+                  className="h-4 w-4 shrink-0 rounded-full border border-workshop-border"
                   style={{ backgroundColor: row.paint.colorHex ?? "#334155" }}
                 />
                 <span className="flex-1 truncate">

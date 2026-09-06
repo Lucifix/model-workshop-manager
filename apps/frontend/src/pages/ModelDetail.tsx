@@ -186,7 +186,7 @@ export default function ModelDetail() {
       </Button>
 
       <Card className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-        <div className="flex flex-shrink-0 flex-col gap-2 lg:w-64">
+        <div className="flex shrink-0 flex-col gap-2 lg:w-64">
           {model.imageUrl ? (
             <img
               src={model.imageUrl}
@@ -313,15 +313,12 @@ export default function ModelDetail() {
                     {model.scale && <Badge variant="secondary">{model.scale}</Badge>}
                     {model.category && <Badge variant="secondary">{model.category}</Badge>}
                     {model.difficulty && <Badge variant="secondary">{model.difficulty}</Badge>}
-                    {model.tags?.map((t) => <Badge key={t.id}>{t.name}</Badge>)}
+                    {model.tags?.map((t) => (
+                      <Badge key={t.id}>{t.name}</Badge>
+                    ))}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleStartEdit}
-                  className="flex-shrink-0"
-                >
+                <Button variant="ghost" size="sm" onClick={handleStartEdit} className="shrink-0">
                   Edit
                 </Button>
               </div>
@@ -594,7 +591,7 @@ export default function ModelDetail() {
                   {paint.owned && <span className="text-emerald-400">✓</span>}
                   {!paint.owned && <span className="text-slate-600">○</span>}
                   <span
-                    className="h-5 w-5 rounded-full border border-slate-600 flex-shrink-0"
+                    className="h-5 w-5 rounded-full border border-slate-600 shrink-0"
                     style={{ backgroundColor: paint.colorHex ?? "#334155" }}
                   />
                   <div className="flex-1">
@@ -661,7 +658,7 @@ export default function ModelDetail() {
                     <div className="truncate font-medium text-slate-100">{project.name}</div>
                     <div className="text-xs text-slate-500">{project.status}</div>
                   </div>
-                  <div className="flex-shrink-0 text-right">
+                  <div className="shrink-0 text-right">
                     <div className="text-xs font-medium text-slate-300">
                       {project.progressPercent}%
                     </div>

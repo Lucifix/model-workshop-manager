@@ -9,6 +9,7 @@ labels: bug
 A clear, concise description of what's wrong.
 
 **Steps to reproduce**
+
 1. Go to '...'
 2. Click on '...'
 3. See error
@@ -20,9 +21,10 @@ What you expected to happen instead.
 If applicable, add screenshots to help explain the problem.
 
 **Environment**
-- App version/commit: 
+
+- App version/commit:
 - Deployment: Docker Compose / local dev
-- Browser (if frontend issue): 
+- Browser (if frontend issue):
 - OS:
 
 **Backend logs**

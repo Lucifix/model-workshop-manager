@@ -1,12 +1,63 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-html, body, #root {
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: IBM Plex Sans, ui-sans-serif, system-ui, sans-serif;
+  --font-display: Big Shoulders Display, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: IBM Plex Mono, ui-monospace, SFMono-Regular, monospace;
+
+  --color-workshop-bg: #0b1220;
+  --color-workshop-panel: #141b2d;
+  --color-workshop-panelmuted: #0f1626;
+  --color-workshop-sidebar: #0a0f1c;
+  --color-workshop-border: #232c42;
+  --color-workshop-accent: #f97316;
+  --color-workshop-accentmuted: #fb923c;
+
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --shadow-lift: 0 12px 24px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(249, 115, 22, 0.15);
+
+  --animate-fade-up: fade-up 0.25s ease-out;
+
+  @keyframes fade-up {
+    0% {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+html,
+body,
+#root {
   height: 100%;
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
 }
 
@@ -16,7 +67,11 @@ body {
     radial-gradient(ellipse 700px 500px at 100% 0%, rgba(56, 189, 248, 0.05), transparent 55%),
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: auto, auto, 32px 32px, 32px 32px;
+  background-size:
+    auto,
+    auto,
+    32px 32px,
+    32px 32px;
   background-attachment: fixed;
 }
 

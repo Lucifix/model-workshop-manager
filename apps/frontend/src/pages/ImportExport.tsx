@@ -310,7 +310,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                     setSelectedFile(e.target.files?.[0] ?? null);
                     setImportResult(null);
                   }}
-                  className="w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-none file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
+                  className="w-full rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-hidden file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
                 />
                 {selectedFile && (
                   <p className="mt-2 text-xs text-slate-400">
@@ -477,7 +477,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
           {restoringFilename && (
             <Card className="border-workshop-accent/50 bg-workshop-accent/10">
               <div className="flex items-center gap-3">
-                <span className="h-3.5 w-3.5 flex-shrink-0 animate-spin rounded-full border-2 border-workshop-accent/40 border-t-workshop-accent" />
+                <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-workshop-accent/40 border-t-workshop-accent" />
                 <p className="text-sm text-slate-200">
                   Restoring from <strong>{restoringFilename}</strong> — the server is restarting and
                   will reconnect automatically. This page will reload once it's back.
@@ -528,7 +528,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                         {formatBytes(backup.sizeBytes)}
                       </div>
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-1">
+                    <div className="flex shrink-0 items-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"

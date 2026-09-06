@@ -189,7 +189,7 @@ export function AddPaintForm({
               type="color"
               value={/^#[0-9A-Fa-f]{6}$/.test(colorHex) ? colorHex : "#334155"}
               onChange={(e) => setColorHex(e.target.value)}
-              className="h-9 w-12 flex-shrink-0 cursor-pointer rounded border border-workshop-border bg-transparent"
+              className="h-9 w-12 shrink-0 cursor-pointer rounded-sm border border-workshop-border bg-transparent"
             />
             <Input
               value={colorHex}

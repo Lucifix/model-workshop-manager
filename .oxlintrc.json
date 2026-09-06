@@ -8,10 +8,7 @@
   },
   "rules": {
     "curly": ["error", "all"],
-    "import/no-unassigned-import": [
-      "warn",
-      { "allow": ["**/*.css", "@fastify/secure-session"] }
-    ]
+    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css", "@fastify/secure-session"] }]
   },
   "settings": {
     "react": { "version": "18" }

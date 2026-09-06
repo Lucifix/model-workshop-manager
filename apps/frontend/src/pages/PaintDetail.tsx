@@ -168,7 +168,7 @@ export default function PaintDetail() {
 
       <Card className="flex flex-col gap-6 lg:flex-row">
         {!isEditing && (
-          <div className="flex h-32 w-32 flex-shrink-0 items-center justify-center rounded-xl border border-workshop-border bg-workshop-panelmuted lg:h-40 lg:w-40">
+          <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-xl border border-workshop-border bg-workshop-panelmuted lg:h-40 lg:w-40">
             <div
               className="h-24 w-24 rounded-xl border border-slate-600 shadow-lg"
               style={{ backgroundColor: paint.colorHex ?? "#334155" }}
@@ -257,7 +257,7 @@ export default function PaintDetail() {
                       /^#[0-9A-Fa-f]{6}$/.test(editForm.colorHex) ? editForm.colorHex : "#334155"
                     }
                     onChange={(e) => setEditForm({ ...editForm, colorHex: e.target.value })}
-                    className="h-9 w-12 flex-shrink-0 cursor-pointer rounded border border-workshop-border bg-transparent"
+                    className="h-9 w-12 shrink-0 cursor-pointer rounded-sm border border-workshop-border bg-transparent"
                   />
                   <Input
                     value={editForm.colorHex}
@@ -293,7 +293,7 @@ export default function PaintDetail() {
             <>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <h1 className="text-2xl font-bold text-slate-100">{paint.name}</h1>
-                <div className="flex flex-shrink-0 gap-1">
+                <div className="flex shrink-0 gap-1">
                   <Button variant="ghost" size="sm" onClick={handleStartEdit}>
                     Edit
                   </Button>
@@ -482,7 +482,7 @@ export default function PaintDetail() {
                       },
                     );
                   }}
-                  className="shrink-0 rounded px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-red-950/40 hover:text-red-400"
+                  className="shrink-0 rounded-sm px-1.5 py-0.5 text-slate-500 transition-colors hover:bg-red-950/40 hover:text-red-400"
                 >
                   ✕
                 </button>
