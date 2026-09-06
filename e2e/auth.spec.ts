@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { E2E_PASSWORD, E2E_USERNAME } from "../playwright.config";
 
+// Override the project's logged-in storageState — these tests exercise the
+// login flow itself and need to start unauthenticated.
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("shows an error for invalid credentials", async ({ page }) => {
   await page.goto("/");
   await page.locator('input[autocomplete="username"]').fill(E2E_USERNAME);

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./login";
 
 const sections = [
   "Models",
@@ -13,7 +12,7 @@ const sections = [
 ];
 
 test.beforeEach(async ({ page }) => {
-  await login(page);
+  await page.goto("/");
 });
 
 for (const label of sections) {

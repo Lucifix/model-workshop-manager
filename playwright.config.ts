@@ -22,7 +22,15 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/user.json" },
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+    },
+  ],
 
   // Runs against the dev server (Vite middleware + Express), same as `npm
   // run dev` — not a production build, to keep the suite fast. Migrates a

@@ -1,8 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./login";
 
 test.beforeEach(async ({ page }) => {
-  await login(page);
+  await page.goto("/");
 });
 
 test("can add a new model with a new manufacturer", async ({ page }) => {
@@ -20,5 +19,5 @@ test("can add a new model with a new manufacturer", async ({ page }) => {
   await expect(page.getByText("E2E-001")).toBeVisible();
 
   await page.getByRole("link", { name: "Models", exact: true }).click();
-  await expect(page.getByText("E2E Test Kit")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "E2E Test Kit" })).toBeVisible();
 });
