@@ -6,5 +6,7 @@ export async function login(page: Page) {
   await page.locator('input[autocomplete="username"]').fill(E2E_USERNAME);
   await page.locator('input[autocomplete="current-password"]').fill(E2E_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.getByRole("heading", { name: "Workshop" }).waitFor();
+  // exact: true — the login page itself has a "Workshop Manager" heading,
+  // which a substring match against "Workshop" would match prematurely.
+  await page.getByRole("heading", { name: "Workshop", exact: true }).waitFor();
 }

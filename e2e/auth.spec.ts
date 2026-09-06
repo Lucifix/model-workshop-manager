@@ -8,7 +8,7 @@ test("shows an error for invalid credentials", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page.getByText("Invalid username or password.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Workshop" })).not.toBeVisible();
+  await expect(page.getByRole("heading", { name: "Workshop", exact: true })).not.toBeVisible();
 });
 
 test("logs in with valid credentials and reaches the dashboard", async ({ page }) => {
@@ -17,6 +17,6 @@ test("logs in with valid credentials and reaches the dashboard", async ({ page }
   await page.locator('input[autocomplete="current-password"]').fill(E2E_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByRole("heading", { name: "Workshop" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Workshop", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Models" })).toBeVisible();
 });
