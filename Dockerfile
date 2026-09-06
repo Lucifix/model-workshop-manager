@@ -19,4 +19,4 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/app/db/migrations ./app/db/migrations
 COPY server.js ./server.js
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "--env-file-if-exists=.env", "server.js"]
