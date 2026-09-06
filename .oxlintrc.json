@@ -11,21 +11,33 @@
     "import/no-unassigned-import": ["warn", { "allow": ["**/*.css", "@fastify/secure-session"] }]
   },
   "settings": {
-    "react": { "version": "18" }
+    "react": { "version": "19" }
   },
   "ignorePatterns": [
-    "**/dist/**",
+    "**/build/**",
+    "**/.react-router/**",
     "**/data/**",
     "**/backups/**",
-    "apps/backend/src/db/migrations/**"
+    "app/db/migrations/**"
   ],
   "overrides": [
     {
-      "files": ["apps/backend/**"],
+      "files": [
+        "server/**",
+        "server.js",
+        "app/**/*.server.ts",
+        "app/db/**",
+        "app/providers/**",
+        "app/scripts/**",
+        "app/routes/api.*.ts",
+        "drizzle.config.ts",
+        "react-router.config.ts",
+        "vite.config.ts"
+      ],
       "env": { "node": true }
     },
     {
-      "files": ["apps/frontend/**"],
+      "files": ["app/pages/**", "app/components/**", "app/root.tsx", "app/routes/ui.*.tsx"],
       "plugins": ["typescript", "unicorn", "import", "react"],
       "env": { "browser": true }
     }

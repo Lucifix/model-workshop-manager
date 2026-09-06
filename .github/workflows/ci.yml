@@ -38,8 +38,8 @@ jobs:
       - run: npm run lint
       - run: npm run fmt:check
 
-  backend:
-    name: Backend (typecheck, build, test)
+  app:
+    name: App (typecheck, build, test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,29 +47,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: apps/backend/package-lock.json
       - run: npm ci
-        working-directory: apps/backend
       - run: npm run typecheck
-        working-directory: apps/backend
       - run: npm run build
-        working-directory: apps/backend
       - run: npm test
-        working-directory: apps/backend
-
-  frontend:
-    name: Frontend (typecheck, build)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: apps/frontend/package-lock.json
-      - run: npm ci
-        working-directory: apps/frontend
-      - run: npm run typecheck
-        working-directory: apps/frontend
-      - run: npm run build
-        working-directory: apps/frontend

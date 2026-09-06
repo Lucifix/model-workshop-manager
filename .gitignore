@@ -1,9 +1,10 @@
 node_modules/
+build/
+.react-router/
 dist/
 data/
 .env
 *.log
 .DS_Store
-apps/frontend/tsconfig.tsbuildinfo
-apps/backend/backups/
+*.tsbuildinfo
 backups/

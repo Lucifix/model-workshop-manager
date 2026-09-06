@@ -1,13 +1,13 @@
 services:
-  backend:
+  app:
     build:
-      context: ./apps/backend
+      context: .
     restart: unless-stopped
     labels:
       - docker-volume-backup.stop-during-backup=workshop
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3000
       DATABASE_URL: /data/database/workshop.db
       DATA_DIR: /data
       UPLOAD_DIR: /data/uploads
@@ -20,17 +20,8 @@ services:
     volumes:
       - ${WORKSHOP_DATA_DIR:-workshop-data}:/data
       - ${BACKUP_DIR:-./backups}:/backups
-    expose:
-      - "3001"
-
-  frontend:
-    build:
-      context: ./apps/frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
     ports:
-      - "${HOST_PORT:-8080}:80"
+      - "${HOST_PORT:-8080}:3000"
 
   backup:
     image: offen/docker-volume-backup:v2
