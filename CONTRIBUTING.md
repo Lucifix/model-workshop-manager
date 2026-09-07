@@ -29,20 +29,6 @@ conventions — that's the canonical reference, not duplicated here.
   [app/providers/types.ts](app/providers/types.ts)), comments that explain
   _why_ not _what_.
 
-### Sign off your commits (DCO)
-
-Every commit must include a `Signed-off-by` line certifying you wrote it or
-otherwise have the right to submit it under the project's license (see
-[DCO](DCO) for the exact text). Add it with `git commit -s`, or add the line
-manually:
-
-```
-Signed-off-by: Your Name <your.email@example.com>
-```
-
-Any name and email consistently associated with you is fine (a GitHub handle
-works). A CI check will block PRs with unsigned commits.
-
 ## Contributing catalog data (paints, kits, manufacturers)
 
 There's no shared community catalog file in this repo yet — today, catalog
