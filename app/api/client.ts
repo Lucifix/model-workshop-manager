@@ -8,7 +8,11 @@ function toastError(err: unknown) {
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`/api${path}`);
   if (res.status === 401 && path !== "/auth/me") {
-    window.location.href = "/login";
+    // Reload rather than redirect: there is no /login route — AuthGate in
+    // root.tsx swaps the whole shell for <Login /> once /auth/me reports no
+    // session, so re-running the app is what shows the login form. /auth/me
+    // is excluded from this branch above, so this can't loop.
+    window.location.reload();
     throw new Error("Session expired");
   }
   if (!res.ok) {

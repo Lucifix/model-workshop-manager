@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { checkCredentials } from "../lib/auth.server";
-import { getSession, sessionStorage } from "../lib/session.server";
+import { SESSION_MAX_AGE_MS, getSession, sessionStorage } from "../lib/session.server";
 import { parseBody } from "../lib/validate.server";
 
 const loginSchema = z.object({
@@ -18,6 +18,9 @@ export async function action({ request }: { request: Request }) {
   const session = await getSession(request.headers.get("Cookie"));
   session.set("authenticated", true);
   session.set("username", body.username);
+  // Enforced server-side on every request — the cookie's own maxAge is only a
+  // hint to the browser. See session.server.ts.
+  session.set("expiresAt", Date.now() + SESSION_MAX_AGE_MS);
 
   return Response.json(
     { authenticated: true, username: body.username },

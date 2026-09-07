@@ -90,7 +90,12 @@ reverse proxy, LAN-only or on a VPN.
 - Credentials are a single username/password pair from `AUTH_USERNAME`/`AUTH_PASSWORD` env vars
   (no user table — deliberately single-user), compared in constant time.
 - Sessions are a signed, `httpOnly` cookie (React Router's cookie session storage) — no
-  server-side session store to run or lose.
+  server-side session store to run or lose. The 30-day expiry is stored _inside_ the signed
+  payload and checked on every request, not left to the browser's cookie lifetime.
+- With no session store there is nothing to delete, so logging out can only clear the browser's
+  copy of the cookie. **To invalidate every existing session at once — a lost device, a cookie
+  you think was captured — change `SESSION_SECRET` and restart.** Every signed cookie stops
+  verifying immediately (and everyone, including you, signs in again).
 - The login endpoint is rate-limited (5 attempts/minute).
 - The app **refuses to start** if `AUTH_USERNAME`, `AUTH_PASSWORD`, or `SESSION_SECRET` aren't
   set — see `.env.example`.
