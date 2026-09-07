@@ -21,6 +21,11 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
+    // Playwright's bundled Chromium build won't run on macOS 13 (Ventura).
+    // Set PLAYWRIGHT_CHROME_CHANNEL=chrome in your local shell to fall
+    // back to the system Chrome install instead — CI and other machines
+    // keep using the bundled build by default.
+    channel: process.env.PLAYWRIGHT_CHROME_CHANNEL,
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
