@@ -27,6 +27,7 @@ export const links: Route.LinksFunction = () => [
   },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+  { rel: "manifest", href: "/manifest.webmanifest" },
 ];
 
 export function meta() {
@@ -69,17 +70,14 @@ export default function App() {
       }),
   );
 
-  // Nudges any service worker left over from the pre-merge PWA build (see
-  // public/sw.js) to check for an update right away, rather than waiting on
-  // the browser's own ~24h background schedule — an explicit call bypasses
-  // that throttle. No-ops for clients that never had one registered.
+  // Registering the same /sw.js URL also replaces any leftover pre-merge
+  // (or PR #31 kill-switch) worker on clients that had one — the browser
+  // diffs the new byte content on this call and installs it in its place.
   useEffect(() => {
     if (!("serviceWorker" in navigator)) {
       return;
     }
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => registration.update());
-    });
+    navigator.serviceWorker.register("/sw.js");
   }, []);
 
   return (

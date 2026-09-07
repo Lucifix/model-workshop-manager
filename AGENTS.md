@@ -106,7 +106,7 @@ build, and older Node versions fail _silently_ rather than erroring.
   `upcItemDbProvider.ts`.
 - Photos are stored on disk (`data/uploads/`), never as DB blobs — keep it
   that way.
-- **PWA support is temporarily disabled** (`vite-plugin-pwa` conflicts with
-  the React Router SSR build — see the comment in `vite.config.ts`). This is
-  a known gap, not something to silently work around; re-enabling it is
-  tracked as follow-up work, not a bug to fix inline.
+- **PWA support (manifest + service worker) is hand-rolled** in `public/`
+  instead of via `vite-plugin-pwa`, which conflicts with the React Router SSR
+  build — see the comment in `vite.config.ts`. Don't reach for the plugin as
+  a "fix"; it doesn't build under this setup.
