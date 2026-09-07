@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/client.server";
 import { models } from "../db/schema";
 import { notFound, badRequest, idParam } from "../lib/api.server";
-import { saveUploadedFile } from "../lib/upload.server";
+import { IMAGE_UPLOAD_TYPES, saveUploadedFile } from "../lib/upload.server";
 
 // Upload a personal photo of the box/kit.
 // Local file storage only; never a fetch of a manufacturer's own product image.
@@ -19,7 +19,7 @@ export async function action({ request, params }: { request: Request; params: { 
     return badRequest("no_file");
   }
 
-  const { url: imageUrl } = await saveUploadedFile(file, "models", String(id));
+  const { url: imageUrl } = await saveUploadedFile(file, IMAGE_UPLOAD_TYPES, "models", String(id));
   const [row] = await db
     .update(models)
     .set({ imageUrl, updatedAt: new Date().toISOString() })

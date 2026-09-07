@@ -70,7 +70,18 @@ app.get("/favicon.ico", (_req, res) => res.status(204).end());
 // directory (a Docker volume in production) — served here, ahead of the
 // React Router catch-all, exactly like @fastify/static was registered
 // alongside the old Fastify app.
-app.use("/uploads", express.static(UPLOAD_DIR));
+// Defense in depth behind upload.server.ts's content-type allow-list: even if
+// a file with an executable extension reaches the disk, these headers stop the
+// browser sniffing it into script running on this origin.
+app.use(
+  "/uploads",
+  express.static(UPLOAD_DIR, {
+    setHeaders: (res) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+    },
+  }),
+);
 
 app.use(
   createRequestHandler({
