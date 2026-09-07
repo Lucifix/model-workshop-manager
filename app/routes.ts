@@ -80,6 +80,7 @@ export default [
   route("api/catalog/seed-community-paints", "routes/api.catalog.seed-community-paints.ts"),
 
   route("api/backup", "routes/api.backup.ts"),
+  route("api/backup/upload", "routes/api.backup.upload.ts"),
   route("api/backup/:filename/download", "routes/api.backup.$filename.download.ts"),
   route("api/backup/:filename/restore", "routes/api.backup.$filename.restore.ts"),
   route("api/backup/:filename", "routes/api.backup.$filename.ts"),

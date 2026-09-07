@@ -8,6 +8,7 @@ import {
   useCreateBackup,
   useDeleteBackup,
   useRestoreBackup,
+  useUploadBackup,
   useSeedCommunityPaints,
   ImportResult,
   SeedCommunityPaintsResult,
@@ -55,6 +56,7 @@ export default function ImportExport() {
   const [restoringFilename, setRestoringFilename] = useState<string | null>(null);
   const [downloadingFilename, setDownloadingFilename] = useState<string | null>(null);
   const [backupError, setBackupError] = useState<string | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   const importMfrs = useImportManufacturers();
   const importPaints = useImportPaints();
@@ -65,6 +67,7 @@ export default function ImportExport() {
   const createBackup = useCreateBackup();
   const deleteBackup = useDeleteBackup();
   const restoreBackup = useRestoreBackup();
+  const uploadBackup = useUploadBackup();
 
   const handleCreateBackup = () => {
     setBackupError(null);
@@ -125,6 +128,17 @@ export default function ImportExport() {
         setRestoringFilename(null);
         setBackupError(err.message);
       },
+    });
+  };
+
+  const handleUploadBackup = () => {
+    if (!uploadFile) {
+      return;
+    }
+    setBackupError(null);
+    uploadBackup.mutate(uploadFile, {
+      onSuccess: () => setUploadFile(null),
+      onError: (err) => setBackupError(err.message),
     });
   };
 
@@ -491,6 +505,29 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <p className="text-sm text-red-300">{backupError}</p>
             </Card>
           )}
+
+          <Card>
+            <h2 className="mb-2 text-lg font-semibold text-slate-100">Upload a backup file</h2>
+            <p className="mb-4 text-sm text-slate-400">
+              Restoring on a new server, or bringing back a backup you downloaded earlier? Upload
+              its <code className="text-slate-300">.tar.gz</code> file here — it's validated and
+              added to the list below, where you can then restore it.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                type="file"
+                accept=".tar.gz,application/gzip"
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+                className="rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-hidden file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
+              />
+              <Button
+                onClick={handleUploadBackup}
+                disabled={!uploadFile || uploadBackup.isPending || !!restoringFilename}
+              >
+                {uploadBackup.isPending ? "Uploading…" : "Upload"}
+              </Button>
+            </div>
+          </Card>
 
           <Card>
             <div className="mb-4 flex items-center justify-between">

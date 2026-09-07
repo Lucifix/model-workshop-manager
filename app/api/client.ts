@@ -1428,3 +1428,22 @@ export function useRestoreBackup() {
     },
   });
 }
+
+export function useUploadBackup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/backup/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "Failed to upload backup");
+      }
+      return res.json() as Promise<BackupFile>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["backups"] });
+    },
+  });
+}
