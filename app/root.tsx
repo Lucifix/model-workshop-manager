@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -68,6 +68,19 @@ export default function App() {
         },
       }),
   );
+
+  // Nudges any service worker left over from the pre-merge PWA build (see
+  // public/sw.js) to check for an update right away, rather than waiting on
+  // the browser's own ~24h background schedule — an explicit call bypasses
+  // that throttle. No-ops for clients that never had one registered.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => registration.update());
+    });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
