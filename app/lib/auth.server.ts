@@ -30,29 +30,19 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(aPadded, bPadded) && aBuf.length === bBuf.length;
 }
 
-/** Paths reachable without a session — keep this list minimal and explicit. */
-export const PUBLIC_PATHS = new Set(["/api/health", "/api/auth/login", "/api/auth/me"]);
-
 /**
- * Only /api/* and /uploads/* are guarded server-side — that's the entire
- * surface the old standalone Fastify API ever served. The React Router
- * document/assets (root.tsx and everything under /assets/*) are served
- * unguarded here, exactly as nginx served the old SPA shell unguarded — the
- * client-side auth gate in app/root.tsx (mirroring the old App.tsx) decides
- * whether to render the app or the login screen. New API/upload routes are
- * protected automatically; new UI routes are not server-gated by design.
+ * /uploads/* is served by express.static in server/app.ts, entirely outside
+ * React Router, so it can't be gated by route-tree middleware the way
+ * /api/* is (see app/routes/api.protected.ts) — it needs this standalone
+ * check instead. Every uploaded file requires a session; there is no public
+ * exception here the way there is for a handful of /api/* routes.
  *
- * Matched case-insensitively because React Router matches routes that way:
- * compilePath() builds its matcher with the `i` flag unless a route opts into
- * `caseSensitive`, so /API/models dispatches to the same loader as
- * /api/models. A case-sensitive guard here would let that spelling skip the
- * check entirely and reach every API route unauthenticated.
+ * Matched case-insensitively even though express.static's filesystem lookup
+ * is case-sensitive: Express's own mount-path matching (the "/uploads"
+ * prefix server/app.ts registers express.static under) is not case-sensitive
+ * by default, so a case-sensitive check here could still let a
+ * case-differing request through to a static lookup that succeeds anyway.
  */
-export function isGuardedPath(path: string): boolean {
-  const normalized = path.toLowerCase();
-  return normalized.startsWith("/api/") || normalized.startsWith("/uploads/");
-}
-
-export function isPublicPath(path: string): boolean {
-  return PUBLIC_PATHS.has(path.toLowerCase());
+export function isUploadPath(path: string): boolean {
+  return path.toLowerCase().startsWith("/uploads/");
 }

@@ -1,7 +1,7 @@
 import { createRequestHandler } from "@react-router/express";
 import express from "express";
 import { rateLimit } from "express-rate-limit";
-import { isGuardedPath, isPublicPath } from "../app/lib/auth.server";
+import { isUploadPath } from "../app/lib/auth.server";
 import { isSessionAuthenticated } from "../app/lib/session.server";
 import { UPLOAD_DIR } from "../app/lib/upload.server";
 import { runMigrations } from "../app/db/migrate.server";
@@ -37,14 +37,21 @@ app.use((req, res, next) => {
   return next();
 });
 
-// Global auth guard — mirrors the old Fastify onRequest hook, but scoped to
-// only the two prefixes the old standalone API ever served (/api/*,
-// /uploads/*). The React Router document/assets are served unguarded here,
-// exactly as nginx served the old SPA shell unguarded — app/root.tsx's
-// client-side auth gate decides whether to render the app or the login
-// screen. New /api or /uploads routes are protected automatically.
+// /uploads guard — /api/* auth now lives in the route tree (see
+// app/routes/api.protected.ts), because React Router can enforce it as part
+// of matching the request to a route instead of a separate system trying to
+// recognize the same path a second time. /uploads/* can't join that: it's
+// served by express.static below, entirely outside React Router, so it still
+// needs its own check here, ahead of the static handler.
+//
+// Matched case-insensitively even though express.static's underlying
+// filesystem lookup is case-sensitive — Express's own path-to-regexp mount
+// matching (the "/uploads" prefix on app.use below) is NOT case-sensitive by
+// default, so a case-sensitive guard here could still hand an unauthenticated
+// request through to a case-differing request that express.static goes on to
+// resolve successfully against an on-disk file.
 app.use(async (req, res, next) => {
-  if (!isGuardedPath(req.path) || isPublicPath(req.path)) {
+  if (!isUploadPath(req.path)) {
     return next();
   }
   const authenticated = await isSessionAuthenticated(req.headers.cookie);
