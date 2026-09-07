@@ -9,9 +9,19 @@ export async function loader({ request }: { request: Request }) {
     return badRequest("missing_query");
   }
 
-  const selected = providers[provider ?? "manual"];
-  if (!selected) {
+  // Object.hasOwn, not a truthiness check: `providers` is a plain object, so
+  // providers["constructor"] resolves up the prototype chain to a truthy
+  // value and would sail past a `!selected` guard into a 500 on
+  // selected.searchModels.
+  const name = provider ?? "manual";
+  if (!Object.hasOwn(providers, name)) {
     return badRequest("unknown_provider");
+  }
+  const selected = providers[name]!;
+  // `enabled !== false`, matching api.catalog.providers.ts: `enabled` is
+  // opt-out, and manualProvider (the default here) never sets it at all.
+  if (selected.enabled === false) {
+    return badRequest("provider_disabled", { provider: selected.id });
   }
 
   const results = await selected.searchModels(q);
