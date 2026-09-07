@@ -41,11 +41,18 @@ export const PUBLIC_PATHS = new Set(["/api/health", "/api/auth/login", "/api/aut
  * client-side auth gate in app/root.tsx (mirroring the old App.tsx) decides
  * whether to render the app or the login screen. New API/upload routes are
  * protected automatically; new UI routes are not server-gated by design.
+ *
+ * Matched case-insensitively because React Router matches routes that way:
+ * compilePath() builds its matcher with the `i` flag unless a route opts into
+ * `caseSensitive`, so /API/models dispatches to the same loader as
+ * /api/models. A case-sensitive guard here would let that spelling skip the
+ * check entirely and reach every API route unauthenticated.
  */
 export function isGuardedPath(path: string): boolean {
-  return path.startsWith("/api/") || path.startsWith("/uploads/");
+  const normalized = path.toLowerCase();
+  return normalized.startsWith("/api/") || normalized.startsWith("/uploads/");
 }
 
 export function isPublicPath(path: string): boolean {
-  return PUBLIC_PATHS.has(path);
+  return PUBLIC_PATHS.has(path.toLowerCase());
 }

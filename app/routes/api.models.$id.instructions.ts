@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/client.server";
 import { models } from "../db/schema";
 import { notFound, badRequest, idParam } from "../lib/api.server";
-import { saveUploadedFile } from "../lib/upload.server";
+import { PDF_UPLOAD_TYPES, saveUploadedFile } from "../lib/upload.server";
 
 // Attach an instruction manual (PDF) — same "your own file, locally stored"
 // pattern as the box-photo upload. An instructionUrl link is also settable
@@ -20,7 +20,12 @@ export async function action({ request, params }: { request: Request; params: { 
     return badRequest("no_file");
   }
 
-  const { url: instructionUrl } = await saveUploadedFile(file, "models", String(id));
+  const { url: instructionUrl } = await saveUploadedFile(
+    file,
+    PDF_UPLOAD_TYPES,
+    "models",
+    String(id),
+  );
   const [row] = await db
     .update(models)
     .set({ instructionUrl, updatedAt: new Date().toISOString() })

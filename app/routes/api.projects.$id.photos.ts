@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { db } from "../db/client.server";
 import { projectPhotos } from "../db/schema";
 import { badRequest, idParam } from "../lib/api.server";
-import { saveUploadedFile } from "../lib/upload.server";
+import { IMAGE_UPLOAD_TYPES, saveUploadedFile } from "../lib/upload.server";
 
 export async function loader({ params }: { params: { id: string } }) {
   const id = idParam(params);
@@ -20,7 +20,7 @@ export async function action({ request, params }: { request: Request; params: { 
     return badRequest("no_file");
   }
 
-  const { filename } = await saveUploadedFile(file, "projects", String(id));
+  const { filename } = await saveUploadedFile(file, IMAGE_UPLOAD_TYPES, "projects", String(id));
   const [row] = await db
     .insert(projectPhotos)
     .values({
