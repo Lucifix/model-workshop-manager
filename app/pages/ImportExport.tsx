@@ -13,7 +13,20 @@ import {
   ImportResult,
   SeedCommunityPaintsResult,
 } from "../api/client";
-import { Card, Button, Select, PageHeader, LoadingState, EmptyState } from "../components/ui";
+import {
+  Card,
+  Button,
+  Select,
+  PageHeader,
+  LoadingState,
+  EmptyState,
+  ListCard,
+  ListCardRow,
+  ListCardBody,
+  ListCardTitle,
+  ListCardMeta,
+  ListCardActions,
+} from "../components/ui";
 
 type ImportType = "manufacturers" | "paints" | "models";
 
@@ -513,16 +526,17 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               its <code className="text-slate-300">.tar.gz</code> file here — it's validated and
               added to the list below, where you can then restore it.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
                 type="file"
                 accept=".tar.gz,application/gzip"
                 onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-                className="rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-hidden file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
+                className="w-full min-w-0 rounded-lg border border-workshop-border bg-workshop-panelmuted px-3 py-2 text-sm text-slate-300 outline-hidden file:mr-3 file:rounded-md file:border-0 file:bg-workshop-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-workshop-accentmuted"
               />
               <Button
                 onClick={handleUploadBackup}
                 disabled={!uploadFile || uploadBackup.isPending || !!restoringFilename}
+                className="shrink-0"
               >
                 {uploadBackup.isPending ? "Uploading…" : "Upload"}
               </Button>
@@ -530,7 +544,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
           </Card>
 
           <Card>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-100">Backups</h2>
                 <p className="mt-1 text-sm text-slate-400">
@@ -541,6 +555,7 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <Button
                 onClick={handleCreateBackup}
                 disabled={createBackup.isPending || !!restoringFilename}
+                className="shrink-0 self-start sm:self-auto"
               >
                 {createBackup.isPending ? "Creating…" : "Create backup now"}
               </Button>
@@ -552,20 +567,19 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
               <EmptyState message="No backups yet — create one above, or wait for tonight's automatic backup." />
             )}
             {backups.data && backups.data.length > 0 && (
-              <ul className="divide-y divide-workshop-border">
+              <div className="flex flex-col gap-2">
                 {backups.data.map((backup) => (
-                  <li
-                    key={backup.filename}
-                    className="flex items-center justify-between gap-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate font-medium text-slate-100">{backup.filename}</div>
-                      <div className="text-xs text-slate-400">
-                        {new Date(backup.createdAt).toLocaleString()} ·{" "}
-                        {formatBytes(backup.sizeBytes)}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
+                  <ListCard key={backup.filename}>
+                    <ListCardRow>
+                      <ListCardBody>
+                        <ListCardTitle className="break-all">{backup.filename}</ListCardTitle>
+                        <ListCardMeta>
+                          <span>{new Date(backup.createdAt).toLocaleString()}</span>
+                          <span>{formatBytes(backup.sizeBytes)}</span>
+                        </ListCardMeta>
+                      </ListCardBody>
+                    </ListCardRow>
+                    <ListCardActions className="flex-wrap gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -591,10 +605,10 @@ AK Interactive,ak-interactive,https://ak-interactive.com`,
                       >
                         Delete
                       </Button>
-                    </div>
-                  </li>
+                    </ListCardActions>
+                  </ListCard>
                 ))}
-              </ul>
+              </div>
             )}
           </Card>
         </div>
