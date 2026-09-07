@@ -34,7 +34,18 @@ if (DEVELOPMENT) {
   console.log("Starting production server");
   app.use("/assets", express.static("build/client/assets", { immutable: true, maxAge: "1y" }));
   app.use(morgan("tiny"));
-  app.use(express.static("build/client", { maxAge: "1h" }));
+  app.use(
+    express.static("build/client", {
+      maxAge: "1h",
+      // The service worker must never be served stale — a cached /sw.js
+      // is exactly how the pre-merge worker got stuck forever (see #32).
+      setHeaders: (res, path) => {
+        if (path.endsWith("/sw.js")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      },
+    }),
+  );
   app.use(await import(BUILD_PATH).then((mod) => mod.app));
 }
 
