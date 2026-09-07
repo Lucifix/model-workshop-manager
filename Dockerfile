@@ -1,20 +1,18 @@
-FROM node:24-slim AS build
+FROM node:24-alpine AS build
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:24-slim
+FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
+RUN apk add --no-cache --virtual .build-deps python3 make g++ \
     && npm ci --omit=dev \
-    && apt-get purge -y --auto-remove python3 make g++ \
-    && rm -rf /var/lib/apt/lists/*
+    && apk del .build-deps
 COPY --from=build /app/build ./build
 COPY --from=build /app/app/db/migrations ./app/db/migrations
 COPY server.js ./server.js
