@@ -1,32 +1,14 @@
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import * as tar from "tar";
 import { sqlite } from "../db/client.server";
 import { UPLOAD_DIR } from "../lib/upload.server";
 import { badRequest, notFound } from "../lib/api.server";
 import { isValidFilename } from "../lib/backupFile.server";
+import { InvalidBackupArchiveError, extractBackupArchive } from "../lib/backupArchive.server";
 
 const BACKUP_DIR = process.env.BACKUP_DIR ?? "./backups";
 const DATA_DIR = process.env.DATA_DIR ?? "./data";
 const DATABASE_DIR = join(DATA_DIR, "database");
-
-/**
- * The sidecar's archives have a `workshop-data/` top-level prefix (from its
- * volume mount path); ones created here don't. Normalize to whichever
- * directory actually holds `database/`.
- */
-function findPayloadRoot(stagingDir: string): string {
-  if (existsSync(join(stagingDir, "database"))) {
-    return stagingDir;
-  }
-  const entries = readdirSync(stagingDir, { withFileTypes: true });
-  const dirs = entries.filter((e) => e.isDirectory());
-  if (dirs.length === 1 && existsSync(join(stagingDir, dirs[0]!.name, "database"))) {
-    return join(stagingDir, dirs[0]!.name);
-  }
-  return stagingDir;
-}
 
 // Restarts the whole process after a restore — in this merged deployment that
 // briefly drops the UI too, not just the API (the old standalone Fastify
@@ -44,19 +26,18 @@ export async function action({ params }: { params: { filename: string } }) {
     return notFound();
   }
 
-  const stagingDir = mkdtempSync(join(tmpdir(), "workshop-restore-"));
+  let extracted: { stagingDir: string; payloadRoot: string };
   try {
-    await tar.extract({ file: filePath, cwd: stagingDir });
-
-    const payloadRoot = findPayloadRoot(stagingDir);
-    const stagedDb = join(payloadRoot, "database", "workshop.db");
-    if (!existsSync(stagedDb)) {
-      rmSync(stagingDir, { recursive: true, force: true });
-      return badRequest("invalid_archive", {
-        message: "This file doesn't look like a workshop backup — no database found inside.",
-      });
+    extracted = await extractBackupArchive(filePath);
+  } catch (err) {
+    if (err instanceof InvalidBackupArchiveError) {
+      return badRequest("invalid_archive", { message: err.message });
     }
+    throw err;
+  }
 
+  const { stagingDir, payloadRoot } = extracted;
+  try {
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
     sqlite.close();
 
