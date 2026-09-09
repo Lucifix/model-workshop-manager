@@ -7,7 +7,11 @@ you have the right shade of Tamiya paint, or losing track of build progress. Mod
 Manager keeps your catalog, inventory, and builds in one place, installable as an app on your
 phone or desktop, running entirely on your own server.
 
-![Dashboard screenshot](screenshots/dashboard.png)
+<p align="center">
+  <img src="screenshots/mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
+  <img src="screenshots/mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
+  <img src="screenshots/mobile-models.png" width="240" alt="The model catalog, browsable on the go">
+</p>
 
 ## What it does
 
