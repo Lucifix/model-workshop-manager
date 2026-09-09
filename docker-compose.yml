@@ -3,11 +3,17 @@ services:
     build:
       context: .
     restart: unless-stopped
+    # Runs unprivileged. Defaults to the image's own `node` user (uid 1000),
+    # which owns /data and /backups inside the image — so a named volume just
+    # works. Override both when WORKSHOP_DATA_DIR or BACKUP_DIR is a bind
+    # mount, to whatever uid:gid owns that directory on the host
+    # (`stat -c '%u:%g' /your/path`).
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
     labels:
       - docker-volume-backup.stop-during-backup=workshop
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${APP_PORT:-3000}
       DATABASE_URL: /data/database/workshop.db
       DATA_DIR: /data
       UPLOAD_DIR: /data/uploads
@@ -21,7 +27,9 @@ services:
       - ${WORKSHOP_DATA_DIR:-workshop-data}:/data
       - ${BACKUP_DIR:-./backups}:/backups
     ports:
-      - "${HOST_PORT:-8080}:3000"
+      # Container side has to track PORT above — the app listens on exactly
+      # one port and publishing a different one just yields a dead mapping.
+      - "${HOST_PORT:-8080}:${APP_PORT:-3000}"
 
   backup:
     image: offen/docker-volume-backup:v2
