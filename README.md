@@ -125,6 +125,8 @@ produce the same tarball format, so a backup from any one can be restored via an
 <summary>Details</summary>
 
 - **In-app Backups tab** (Import & Export page) — the easiest path day to day.
+  Uploaded archives are capped at 2 GiB, and refused if they expand past 4 GiB
+  on extraction.
 - **Automated nightly backup** — the `backup` service in `docker-compose.yml`
   ([`offen/docker-volume-backup`](https://github.com/offen/docker-volume-backup)) snapshots the
   `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning by `BACKUP_RETENTION_DAYS`.

@@ -18,6 +18,18 @@ const SQLITE_MAGIC = Buffer.from("SQLite format 3\0", "utf8");
 // volume mount path (see findPayloadRoot). Anything else is dropped.
 const ALLOWED_ENTRY = /^(?:[^/]+\/)?(database|uploads)(\/|$)/;
 
+/**
+ * Ceiling on what a single archive may write into the staging directory.
+ *
+ * A backup's contents are mostly photos and a SQLite file, so a real one
+ * expands to roughly its compressed size — well under this, even at the 2 GiB
+ * upload cap. The gap is headroom for the database (which does compress) and
+ * nothing more: without a ceiling, a small archive of highly compressible
+ * entries can expand without bound and fill the tmpdir it stages into, which
+ * on most hosts is the same filesystem everything else needs.
+ */
+export const MAX_EXTRACTED_BYTES = 4 * 1024 * 1024 * 1024; // 4 GiB
+
 export class InvalidBackupArchiveError extends Error {}
 
 /**
@@ -28,9 +40,13 @@ export class InvalidBackupArchiveError extends Error {}
  * trusting the archive's own naming. Returns the staging dir and the root
  * within it that holds database/ + uploads/ — caller must rmSync stagingDir
  * once done with it, including on the happy path.
+ *
+ * maxExtractedBytes is a parameter only so the tests can drive the limit with
+ * an archive small enough to keep in a fixture; callers should leave it alone.
  */
 export async function extractBackupArchive(
   archivePath: string,
+  maxExtractedBytes: number = MAX_EXTRACTED_BYTES,
 ): Promise<{ stagingDir: string; payloadRoot: string }> {
   const stagingDir = mkdtempSync(join(tmpdir(), "workshop-restore-"));
   try {
@@ -41,6 +57,7 @@ export async function extractBackupArchive(
     // problem and reject entries by returning false instead; the recorded
     // reason is thrown below, back in normal control flow.
     let rejectionReason: string | null = null;
+    let extractedBytes = 0;
     await tar.extract({
       file: archivePath,
       cwd: stagingDir,
@@ -54,7 +71,22 @@ export async function extractBackupArchive(
             "Archive contains a symlink or hard link, which isn't allowed in a backup.";
           return false;
         }
-        return ALLOWED_ENTRY.test(path);
+        if (!ALLOWED_ENTRY.test(path)) {
+          return false;
+        }
+        // Counted from the tar header, which is what decides how many bytes
+        // get written for this entry — so the running total can be checked
+        // before the write rather than after the disk has already filled.
+        // Only entries that survived the allow-list above are counted; the
+        // dropped ones never reach the disk.
+        if ("size" in entry && typeof entry.size === "number") {
+          extractedBytes += entry.size;
+          if (extractedBytes > maxExtractedBytes) {
+            rejectionReason = "Archive expands to more than this app will extract from a backup.";
+            return false;
+          }
+        }
+        return true;
       },
     });
     if (rejectionReason) {
