@@ -2,13 +2,9 @@ import { mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { badRequest } from "../lib/api.server";
 import { InvalidBackupArchiveError, extractBackupArchive } from "../lib/backupArchive.server";
+import { MAX_BACKUP_UPLOAD_BYTES } from "../lib/backupFile.server";
 
 const BACKUP_DIR = process.env.BACKUP_DIR ?? "./backups";
-
-// Backups bundle the SQLite DB plus every uploaded photo, so they run much
-// larger than a single photo upload (25 MB cap in upload.server.ts) — still
-// bounded so a bad or malicious upload can't fill the disk.
-const MAX_BACKUP_UPLOAD_SIZE = 2 * 1024 * 1024 * 1024; // 2 GiB
 
 const GZIP_MAGIC = Buffer.from([0x1f, 0x8b]);
 
@@ -21,7 +17,7 @@ export async function action({ request }: { request: Request }) {
   if (!file.name.endsWith(".tar.gz")) {
     return badRequest("invalid_filename", { message: "Expected a .tar.gz backup file." });
   }
-  if (file.size > MAX_BACKUP_UPLOAD_SIZE) {
+  if (file.size > MAX_BACKUP_UPLOAD_BYTES) {
     return badRequest("file_too_large");
   }
 

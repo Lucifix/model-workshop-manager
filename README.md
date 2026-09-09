@@ -49,17 +49,19 @@ Open `http://localhost:8080` (or whatever `HOST_PORT` you set) and log in.
 
 All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 
-| Variable                | Required | Default          | What it does                                                                                                   |
-| ----------------------- | -------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| `AUTH_USERNAME`         | Yes      | —                | Login username. App refuses to start without it.                                                               |
-| `AUTH_PASSWORD`         | Yes      | —                | Login password.                                                                                                |
-| `SESSION_SECRET`        | Yes      | —                | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`.                      |
-| `SESSION_COOKIE_SECURE` | No       | `false`          | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails.      |
-| `HOST_PORT`             | No       | `8080`           | Host port the app is served on.                                                                                |
-| `WORKSHOP_DATA_DIR`     | No       | _(named volume)_ | Host path for the database + uploaded photos, instead of the `workshop-data` Docker volume — e.g. a NAS mount. |
-| `BACKUP_DIR`            | No       | `./backups`      | Host path where backups (in-app, manual script, and the nightly job) are written.                              |
-| `BACKUP_RETENTION_DAYS` | No       | `14`             | How many days of nightly backups to keep before pruning.                                                       |
-| `UPCITEMDB_ENABLED`     | No       | `false`          | Turns on the optional barcode-lookup convenience provider (see Data import below).                             |
+| Variable                | Required | Default          | What it does                                                                                                      |
+| ----------------------- | -------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `AUTH_USERNAME`         | Yes      | —                | Login username. App refuses to start without it.                                                                  |
+| `AUTH_PASSWORD`         | Yes      | —                | Login password.                                                                                                   |
+| `SESSION_SECRET`        | Yes      | —                | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`.                         |
+| `SESSION_COOKIE_SECURE` | No       | `false`          | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails.         |
+| `HOST_PORT`             | No       | `8080`           | Host port the app is served on.                                                                                   |
+| `APP_PORT`              | No       | `3000`           | Port the app listens on inside the container. Rarely needs changing.                                              |
+| `APP_UID` / `APP_GID`   | No       | `1000`           | uid:gid the container runs as. Set these to match the owner of `WORKSHOP_DATA_DIR`/`BACKUP_DIR` if bind-mounting. |
+| `WORKSHOP_DATA_DIR`     | No       | _(named volume)_ | Host path for the database + uploaded photos, instead of the `workshop-data` Docker volume — e.g. a NAS mount.    |
+| `BACKUP_DIR`            | No       | `./backups`      | Host path where backups (in-app, manual script, and the nightly job) are written.                                 |
+| `BACKUP_RETENTION_DAYS` | No       | `14`             | How many days of nightly backups to keep before pruning.                                                          |
+| `UPCITEMDB_ENABLED`     | No       | `false`          | Turns on the optional barcode-lookup convenience provider (see Data import below).                                |
 
 ## Tech stack
 
@@ -134,9 +136,8 @@ produce the same tarball format, so a backup from any one can be restored via an
 ## Contributing
 
 Bug reports, feature requests, and PRs are welcome — see
-[CONTRIBUTING.md](CONTRIBUTING.md) for dev setup, conventions, and the sign-off
-requirement on commits. Please also read the
-[Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See
+[CONTRIBUTING.md](CONTRIBUTING.md) for dev setup and conventions. Please also
+read the [Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See
 [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
 ## License

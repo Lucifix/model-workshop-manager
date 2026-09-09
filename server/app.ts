@@ -2,6 +2,7 @@ import { createRequestHandler } from "@react-router/express";
 import express from "express";
 import { rateLimit } from "express-rate-limit";
 import { isUploadPath } from "../app/lib/auth.server";
+import { BACKUP_UPLOAD_PATH, MAX_BACKUP_UPLOAD_BYTES } from "../app/lib/backupFile.server";
 import { isSessionAuthenticated } from "../app/lib/session.server";
 import { UPLOAD_DIR } from "../app/lib/upload.server";
 import { runMigrations } from "../app/db/migrate.server";
@@ -28,10 +29,18 @@ export const app = express();
 // JSON import or a decent-resolution box photo/instruction PDF upload exceeds
 // the 1m default) — reject oversized bodies up front rather than letting the
 // server buffer them into memory.
+//
+// Backup restore is the one route this cap can't speak for: an archive holds
+// the database *and* every photo, so 50 MB rejects most real backups. It
+// carries its own, larger limit (enforced in api.backup.upload.ts against the
+// parsed file rather than a client-supplied header), and both sides read that
+// limit from the same constant so they can't drift apart again.
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
 app.use((req, res, next) => {
+  const limit =
+    req.path.toLowerCase() === BACKUP_UPLOAD_PATH ? MAX_BACKUP_UPLOAD_BYTES : MAX_BODY_BYTES;
   const contentLength = Number(req.headers["content-length"]);
-  if (contentLength > MAX_BODY_BYTES) {
+  if (contentLength > limit) {
     return res.status(413).json({ error: "payload_too_large" });
   }
   return next();

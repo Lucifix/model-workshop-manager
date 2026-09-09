@@ -1,0 +1,34 @@
+# Build context hygiene. Without this, `COPY . .` in the build stage pulls in
+# node_modules, the local .env, and the live data/ + backups/ directories —
+# real credentials and real user data baked into an image layer, plus a build
+# context hundreds of MB larger than it needs to be.
+.git
+.github
+node_modules
+
+# Local secrets and live data — never belong in an image.
+.env
+data
+backups
+
+# Build output and caches — the image builds these itself.
+build
+.react-router
+dist
+coverage
+*.tsbuildinfo
+
+# Tests, docs and assets that the runtime image never reads.
+e2e
+playwright-report
+test-results
+blob-report
+docs
+screenshots
+*.md
+!README.md
+
+.DS_Store
+*.log
+.husky
+.claude
