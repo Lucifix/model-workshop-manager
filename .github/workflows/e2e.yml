@@ -3,6 +3,13 @@ name: E2E
 on:
   pull_request:
 
+# Read-only by default. Nothing here writes back to the repository — the
+# coverage and report uploads use the Actions runtime token, not this one —
+# and once the repo is public, workflow runs are reachable by anyone who can
+# open a pull request.
+permissions:
+  contents: read
+
 jobs:
   e2e:
     name: Playwright
