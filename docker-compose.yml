@@ -23,6 +23,7 @@ services:
       AUTH_PASSWORD: ${AUTH_PASSWORD:?Set AUTH_PASSWORD in your .env or stack environment — see .env.example}
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in your .env or stack environment — see .env.example}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-}
     volumes:
       - ${WORKSHOP_DATA_DIR:-workshop-data}:/data
       - ${BACKUP_DIR:-./backups}:/backups

@@ -4,6 +4,7 @@ import { rateLimit } from "express-rate-limit";
 import { isUploadPath } from "../app/lib/auth.server";
 import { BACKUP_UPLOAD_PATH, MAX_BACKUP_UPLOAD_BYTES } from "../app/lib/backupFile.server";
 import { isSessionAuthenticated } from "../app/lib/session.server";
+import { parseTrustProxy } from "../app/lib/trustProxy.server";
 import { UPLOAD_DIR } from "../app/lib/upload.server";
 import { runMigrations } from "../app/db/migrate.server";
 
@@ -24,6 +25,20 @@ runMigrations();
 console.log("Database migrations applied.");
 
 export const app = express();
+
+// Off unless TRUST_PROXY says otherwise — see trustProxy.server.ts for why the
+// safe default is the un-proxied one, and why `true` is refused. Set before
+// the rate limiter below, which reads req.ip to decide whose budget a login
+// attempt spends.
+try {
+  const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
+  if (trustProxy !== null) {
+    app.set("trust proxy", trustProxy);
+  }
+} catch (err) {
+  console.error((err as Error).message);
+  process.exit(1);
+}
 
 // The old nginx reverse proxy set client_max_body_size 50m (a full paint-catalog
 // JSON import or a decent-resolution box photo/instruction PDF upload exceeds
