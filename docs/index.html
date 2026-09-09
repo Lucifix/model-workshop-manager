@@ -1,603 +1,852 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Model Workshop Manager</title>
-<meta name="description" content="Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware." />
-<meta name="theme-color" content="#0b1220" />
-
-<meta property="og:title" content="Model Workshop Manager" />
-<meta property="og:description" content="Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware." />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="screenshots/mobile-dashboard.png" />
-
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23f97316'/%3E%3Cpath fill='white' d='M3 15c0 0 3 4 9 4s9-4 9-4l-3-3H6l-3 3Z'/%3E%3Crect x='11.3' y='2' width='1.4' height='11' rx='.7' fill='white'/%3E%3Cpath fill='white' d='M12.7 4v7h6.3L12.7 4Z'/%3E%3C/svg%3E" />
-
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-<style>
-  :root {
-    --bg: #0b1220;
-    --panel: #141b2d;
-    --panel-muted: #0f1626;
-    --sidebar: #0a0f1c;
-    --border: #232c42;
-    --accent: #f97316;
-    --accent-muted: #fb923c;
-    --text: #f1f5f9;
-    --text-dim: #94a3b8;
-    --text-faint: #64748b;
-  }
-
-  * { box-sizing: border-box; }
-
-  @media (prefers-reduced-motion: no-preference) {
-    html { scroll-behavior: smooth; }
-  }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(249, 115, 22, 0.09), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(56, 189, 248, 0.05), transparent 55%),
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-    background-size:
-      auto,
-      auto,
-      32px 32px,
-      32px 32px;
-    background-attachment: fixed;
-    color: var(--text);
-    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  img { max-width: 100%; display: block; }
-
-  ::selection { background: rgba(249, 115, 22, 0.35); color: #fff; }
-
-  ::-webkit-scrollbar { width: 11px; height: 11px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border: 3px solid var(--bg); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: #34405c; }
-  * { scrollbar-color: var(--border) var(--bg); scrollbar-width: thin; }
-
-  a { color: inherit; }
-
-  .wrap {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  code, pre {
-    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
-  }
-
-  h1, h2, h3 {
-    font-family: "Big Shoulders Display", ui-sans-serif, system-ui, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
-
-  /* ---------- header ---------- */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: rgba(11, 18, 32, 0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 0;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text);
-  }
-
-  .brand-mark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    background: var(--accent);
-    color: white;
-    flex-shrink: 0;
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 26px;
-    font-size: 14px;
-    color: var(--text-dim);
-  }
-
-  .nav-links a { text-decoration: none; }
-  .nav-links a:hover { color: var(--text); }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border-radius: 9px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid transparent;
-    transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-  }
-
-  .btn:active { transform: translateY(1px); }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 10px 24px -10px rgba(249, 115, 22, 0.7);
-  }
-
-  .btn-primary:hover { background: var(--accent-muted); }
-
-  .btn-ghost {
-    border-color: var(--border);
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* ---------- hero ---------- */
-  .hero {
-    padding: 88px 0 40px;
-    text-align: center;
-  }
-
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text-dim);
-    font-size: 12.5px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-  }
-
-  .eyebrow .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: #34d399;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
-  }
-
-  .hero h1 {
-    margin: 22px auto 0;
-    max-width: 780px;
-    font-size: clamp(34px, 5.5vw, 56px);
-    line-height: 1.05;
-  }
-
-  .hero h1 span { color: var(--accent); }
-
-  .hero p {
-    max-width: 600px;
-    margin: 20px auto 0;
-    color: var(--text-dim);
-    font-size: 17px;
-  }
-
-  .hero-ctas {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 30px;
-    flex-wrap: wrap;
-  }
-
-  /* ---------- phone showcase ---------- */
-  .showcase {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 22px;
-    margin: 64px 0 20px;
-    flex-wrap: wrap;
-  }
-
-  .phone {
-    width: 230px;
-    aspect-ratio: 9 / 19.5;
-    background: #000;
-    border: 6px solid #05070d;
-    border-radius: 38px;
-    padding: 8px;
-    box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
-    position: relative;
-  }
-
-  .phone:nth-child(1) { transform: rotate(-4deg) translateY(18px); }
-  .phone:nth-child(3) { transform: rotate(4deg) translateY(18px); }
-  .phone:nth-child(2) { z-index: 2; width: 250px; }
-
-  .phone-screen {
-    width: 100%;
-    height: 100%;
-    border-radius: 28px;
-    overflow: hidden;
-    background: var(--panel-muted);
-    position: relative;
-  }
-
-  .phone-screen img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-  }
-
-  .phone-screen .fallback {
-    display: none;
-    position: absolute;
-    inset: 0;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-    color: var(--text-faint);
-    font-size: 12px;
-    text-align: center;
-    padding: 20px;
-  }
-
-  .phone-screen img.is-broken { display: none; }
-  .phone-screen img.is-broken + .fallback { display: flex; }
-
-  .phone-notch {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 84px;
-    height: 22px;
-    border-radius: 999px;
-    background: #05070d;
-    z-index: 3;
-  }
-
-  .showcase-caption {
-    text-align: center;
-    color: var(--text-faint);
-    font-size: 13px;
-    margin-bottom: 0;
-  }
-
-  /* ---------- sections ---------- */
-  section { padding: 64px 0; }
-
-  #quickstart { padding-top: 24px; }
-
-  .section-head {
-    text-align: center;
-    max-width: 560px;
-    margin: 0 auto 48px;
-  }
-
-  .section-head .eyebrow { margin-bottom: 16px; }
-
-  .section-head h2 {
-    font-size: clamp(26px, 3.5vw, 34px);
-  }
-
-  .section-head p {
-    color: var(--text-dim);
-    margin: 14px 0 0;
-    font-size: 15.5px;
-  }
-
-  /* ---------- features ---------- */
-  .features {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-  }
-
-  .feature {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 26px;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-  }
-
-  .feature:hover {
-    transform: translateY(-3px);
-    border-color: rgba(249, 115, 22, 0.35);
-  }
-
-  .feature-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
-    background: rgba(249, 115, 22, 0.12);
-    border: 1px solid rgba(249, 115, 22, 0.18);
-    color: var(--accent);
-    margin-bottom: 18px;
-  }
-
-  .feature-icon svg { width: 20px; height: 20px; }
-
-  .feature h3 {
-    font-family: "IBM Plex Sans", sans-serif;
-    font-size: 15.5px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .feature p {
-    margin: 0;
-    color: var(--text-dim);
-    font-size: 13.8px;
-    line-height: 1.65;
-  }
-
-  /* ---------- quick start ---------- */
-  .quickstart {
-    display: grid;
-    grid-template-columns: 1fr 1.15fr;
-    gap: 48px;
-    align-items: center;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 44px;
-  }
-
-  .quickstart h2 { font-size: 26px; margin-bottom: 12px; }
-  .quickstart p { color: var(--text-dim); font-size: 14.5px; margin: 0 0 22px; line-height: 1.65; }
-
-  .terminal {
-    background: var(--sidebar);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .terminal-bar {
-    display: flex;
-    gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .terminal-bar span {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: #374151;
-  }
-
-  .terminal pre {
-    margin: 0;
-    padding: 22px;
-    font-size: 12.8px;
-    color: #cbd5e1;
-    line-height: 1.85;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .terminal .c1 { color: var(--accent-muted); }
-  .terminal .c2 { color: #64748b; }
-
-  .quickstart-list {
-    list-style: none;
-    margin: 22px 0 0;
-    padding: 20px 0 0;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    font-size: 13.8px;
-    color: var(--text-dim);
-  }
-
-  .quickstart-list li { display: flex; gap: 8px; line-height: 1.5; }
-  .quickstart-list li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
-
-  /* ---------- footer ---------- */
-  footer {
-    border-top: 1px solid var(--border);
-    margin-top: 40px;
-    padding: 32px 0 48px;
-  }
-
-  .footer-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .footer-links {
-    display: flex;
-    gap: 22px;
-    font-size: 13.5px;
-    color: var(--text-dim);
-  }
-
-  .footer-links a { text-decoration: none; }
-  .footer-links a:hover { color: var(--accent); }
-
-  .footer-note { color: var(--text-faint); font-size: 13px; }
-
-  @media (max-width: 760px) {
-    .nav-links { display: none; }
-    .features { grid-template-columns: repeat(2, 1fr); }
-    .quickstart { grid-template-columns: 1fr; padding: 26px; }
-    .showcase { gap: 12px; }
-    .phone { width: 150px; }
-    .phone:nth-child(2) { width: 168px; }
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="wrap nav">
-    <a class="brand" href="#top">
-      <span class="brand-mark">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 15c0 0 3 4 9 4s9-4 9-4l-3-3H6l-3 3Z" />
-          <rect x="11.3" y="2" width="1.4" height="11" rx="0.7" />
-          <path d="M12.7 4v7h6.3L12.7 4Z" />
-        </svg>
-      </span>
-      Workshop Manager
-    </a>
-    <nav class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#quickstart">Quick start</a>
-    </nav>
-    <a class="btn btn-ghost" href="https://github.com/Lucifix/model-workshop-manager">GitHub ↗</a>
-  </div>
-</header>
-
-<main id="top">
-  <section class="hero wrap">
-    <span class="eyebrow"><span class="dot"></span> Self-hosted &middot; Open source &middot; MIT</span>
-    <h1>Your model kit stash,<br />paint shelf, and builds — <span>in one place</span>.</h1>
-    <p>No more guessing whether you already own that Revell kit, digging through drawers for the right
-      shade of Tamiya paint, or losing track of build progress. Runs entirely on your own hardware.</p>
-    <div class="hero-ctas">
-      <a class="btn btn-primary" href="https://github.com/Lucifix/model-workshop-manager#quick-start-docker">Quick start →</a>
-      <a class="btn btn-ghost" href="https://github.com/Lucifix/model-workshop-manager">View source</a>
-    </div>
-
-    <div class="showcase">
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <img src="screenshots/mobile-dashboard.png" alt="Dashboard on mobile" onerror="this.classList.add('is-broken')" />
-          <div class="fallback">Dashboard<br />screenshot coming soon</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Model Workshop Manager</title>
+    <meta
+      name="description"
+      content="Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware."
+    />
+    <meta name="theme-color" content="#0b1220" />
+
+    <meta property="og:title" content="Model Workshop Manager" />
+    <meta
+      property="og:description"
+      content="Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="screenshots/mobile-dashboard.png" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23f97316'/%3E%3Cpath fill='white' d='M3 15c0 0 3 4 9 4s9-4 9-4l-3-3H6l-3 3Z'/%3E%3Crect x='11.3' y='2' width='1.4' height='11' rx='.7' fill='white'/%3E%3Cpath fill='white' d='M12.7 4v7h6.3L12.7 4Z'/%3E%3C/svg%3E"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #141b2d;
+        --panel-muted: #0f1626;
+        --sidebar: #0a0f1c;
+        --border: #232c42;
+        --accent: #f97316;
+        --accent-muted: #fb923c;
+        --text: #f1f5f9;
+        --text-dim: #94a3b8;
+        --text-faint: #64748b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        background-image:
+          radial-gradient(
+            ellipse 900px 500px at 15% -10%,
+            rgba(249, 115, 22, 0.09),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 700px 500px at 100% 0%,
+            rgba(56, 189, 248, 0.05),
+            transparent 55%
+          ),
+          linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size:
+          auto,
+          auto,
+          32px 32px,
+          32px 32px;
+        background-attachment: fixed;
+        color: var(--text);
+        font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      ::selection {
+        background: rgba(249, 115, 22, 0.35);
+        color: #fff;
+      }
+
+      ::-webkit-scrollbar {
+        width: 11px;
+        height: 11px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border: 3px solid var(--bg);
+        border-radius: 999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #34405c;
+      }
+      * {
+        scrollbar-color: var(--border) var(--bg);
+        scrollbar-width: thin;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      code,
+      pre {
+        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Big Shoulders Display", ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+
+      /* ---------- header ---------- */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(11, 18, 32, 0.85);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text);
+      }
+
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        font-size: 14px;
+        color: var(--text-dim);
+      }
+
+      .nav-links a {
+        text-decoration: none;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition:
+          transform 0.15s ease,
+          opacity 0.15s ease,
+          background 0.15s ease;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 10px 24px -10px rgba(249, 115, 22, 0.7);
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-muted);
+      }
+
+      .btn-ghost {
+        border-color: var(--border);
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ---------- hero ---------- */
+      .hero {
+        padding: 88px 0 40px;
+        text-align: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text-dim);
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
+      }
+
+      .hero h1 {
+        margin: 22px auto 0;
+        max-width: 780px;
+        font-size: clamp(34px, 5.5vw, 56px);
+        line-height: 1.05;
+      }
+
+      .hero h1 span {
+        color: var(--accent);
+      }
+
+      .hero p {
+        max-width: 600px;
+        margin: 20px auto 0;
+        color: var(--text-dim);
+        font-size: 17px;
+      }
+
+      .hero-ctas {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+
+      /* ---------- phone showcase ---------- */
+      .showcase {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 22px;
+        margin: 64px 0 20px;
+        flex-wrap: wrap;
+      }
+
+      .phone {
+        width: 230px;
+        aspect-ratio: 9 / 19.5;
+        background: #000;
+        border: 6px solid #05070d;
+        border-radius: 38px;
+        padding: 8px;
+        box-shadow:
+          0 30px 70px -20px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.04);
+        position: relative;
+      }
+
+      .phone:nth-child(1) {
+        transform: rotate(-4deg) translateY(18px);
+      }
+      .phone:nth-child(3) {
+        transform: rotate(4deg) translateY(18px);
+      }
+      .phone:nth-child(2) {
+        z-index: 2;
+        width: 250px;
+      }
+
+      .phone-screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 28px;
+        overflow: hidden;
+        background: var(--panel-muted);
+        position: relative;
+      }
+
+      .phone-screen img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+      }
+
+      .phone-screen .fallback {
+        display: none;
+        position: absolute;
+        inset: 0;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        color: var(--text-faint);
+        font-size: 12px;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .phone-screen img.is-broken {
+        display: none;
+      }
+      .phone-screen img.is-broken + .fallback {
+        display: flex;
+      }
+
+      .phone-notch {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 84px;
+        height: 22px;
+        border-radius: 999px;
+        background: #05070d;
+        z-index: 3;
+      }
+
+      .showcase-caption {
+        text-align: center;
+        color: var(--text-faint);
+        font-size: 13px;
+        margin-bottom: 0;
+      }
+
+      /* ---------- sections ---------- */
+      section {
+        padding: 64px 0;
+      }
+
+      #quickstart {
+        padding-top: 24px;
+      }
+
+      .section-head {
+        text-align: center;
+        max-width: 560px;
+        margin: 0 auto 48px;
+      }
+
+      .section-head .eyebrow {
+        margin-bottom: 16px;
+      }
+
+      .section-head h2 {
+        font-size: clamp(26px, 3.5vw, 34px);
+      }
+
+      .section-head p {
+        color: var(--text-dim);
+        margin: 14px 0 0;
+        font-size: 15.5px;
+      }
+
+      /* ---------- features ---------- */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .feature {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 26px;
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s ease;
+      }
+
+      .feature:hover {
+        transform: translateY(-3px);
+        border-color: rgba(249, 115, 22, 0.35);
+      }
+
+      .feature-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.18);
+        color: var(--accent);
+        margin-bottom: 18px;
+      }
+
+      .feature-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .feature h3 {
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 15.5px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--text-dim);
+        font-size: 13.8px;
+        line-height: 1.65;
+      }
+
+      /* ---------- quick start ---------- */
+      .quickstart {
+        display: grid;
+        grid-template-columns: 1fr 1.15fr;
+        gap: 48px;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 44px;
+      }
+
+      .quickstart h2 {
+        font-size: 26px;
+        margin-bottom: 12px;
+      }
+      .quickstart p {
+        color: var(--text-dim);
+        font-size: 14.5px;
+        margin: 0 0 22px;
+        line-height: 1.65;
+      }
+
+      .terminal {
+        background: var(--sidebar);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .terminal-bar {
+        display: flex;
+        gap: 6px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .terminal-bar span {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #374151;
+      }
+
+      .terminal pre {
+        margin: 0;
+        padding: 22px;
+        font-size: 12.8px;
+        color: #cbd5e1;
+        line-height: 1.85;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .terminal .c1 {
+        color: var(--accent-muted);
+      }
+      .terminal .c2 {
+        color: #64748b;
+      }
+
+      .quickstart-list {
+        list-style: none;
+        margin: 22px 0 0;
+        padding: 20px 0 0;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        font-size: 13.8px;
+        color: var(--text-dim);
+      }
+
+      .quickstart-list li {
+        display: flex;
+        gap: 8px;
+        line-height: 1.5;
+      }
+      .quickstart-list li::before {
+        content: "→";
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+
+      /* ---------- footer ---------- */
+      footer {
+        border-top: 1px solid var(--border);
+        margin-top: 40px;
+        padding: 32px 0 48px;
+      }
+
+      .footer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 22px;
+        font-size: 13.5px;
+        color: var(--text-dim);
+      }
+
+      .footer-links a {
+        text-decoration: none;
+      }
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+
+      .footer-note {
+        color: var(--text-faint);
+        font-size: 13px;
+      }
+
+      @media (max-width: 760px) {
+        .nav-links {
+          display: none;
+        }
+        .features {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .quickstart {
+          grid-template-columns: 1fr;
+          padding: 26px;
+        }
+        .showcase {
+          gap: 12px;
+        }
+        .phone {
+          width: 150px;
+        }
+        .phone:nth-child(2) {
+          width: 168px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <a class="brand" href="#top">
+          <span class="brand-mark">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M3 15c0 0 3 4 9 4s9-4 9-4l-3-3H6l-3 3Z" />
+              <rect x="11.3" y="2" width="1.4" height="11" rx="0.7" />
+              <path d="M12.7 4v7h6.3L12.7 4Z" />
+            </svg>
+          </span>
+          Workshop Manager
+        </a>
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#quickstart">Quick start</a>
+        </nav>
+        <a class="btn btn-ghost" href="https://github.com/Lucifix/model-workshop-manager"
+          >GitHub ↗</a
+        >
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero wrap">
+        <span class="eyebrow"
+          ><span class="dot"></span> Self-hosted &middot; Open source &middot; MIT</span
+        >
+        <h1>Your model kit stash,<br />paint shelf, and builds — <span>in one place</span>.</h1>
+        <p>
+          No more guessing whether you already own that Revell kit, digging through drawers for the
+          right shade of Tamiya paint, or losing track of build progress. Runs entirely on your own
+          hardware.
+        </p>
+        <div class="hero-ctas">
+          <a
+            class="btn btn-primary"
+            href="https://github.com/Lucifix/model-workshop-manager#quick-start-docker"
+            >Quick start →</a
+          >
+          <a class="btn btn-ghost" href="https://github.com/Lucifix/model-workshop-manager"
+            >View source</a
+          >
         </div>
-      </div>
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <img src="screenshots/mobile-build.png" alt="A build's progress and photo" onerror="this.classList.add('is-broken')" />
-          <div class="fallback">Build progress<br />screenshot coming soon</div>
-        </div>
-      </div>
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <img src="screenshots/mobile-models.png" alt="The model catalog" onerror="this.classList.add('is-broken')" />
-          <div class="fallback">Model catalog<br />screenshot coming soon</div>
-        </div>
-      </div>
-    </div>
-    <p class="showcase-caption">Installable as an app on your phone or desktop.</p>
-  </section>
 
-  <section id="features" class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">What it does</span>
-      <h2>Everything a workbench needs, nothing it doesn't</h2>
-      <p>Built for one person tracking a real collection — not a fleet-management dashboard in disguise.</p>
-    </div>
-    <div class="features">
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5V19a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg>
-        </span>
-        <h3>Dashboard</h3>
-        <p>Kit, paint, and build counts, low-stock paints, missing-paint alerts, and recent activity at a glance.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-        </span>
-        <h3>Models &amp; paints</h3>
-        <p>A searchable catalog, kept separate from what you actually own — so wishlist and stash never mix.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></svg>
-        </span>
-        <h3>Builds</h3>
-        <p>Start a build in one guided flow, log progress with timestamps and photos, and get automatic
-          "required vs. owned" paint matching per project.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.5 3h2l2.9 13.3a2 2 0 0 0 2 1.7h8.6a2 2 0 0 0 2-1.6L22 8H6.2"/></svg>
-        </span>
-        <h3>Shopping list &amp; wishlist</h3>
-        <p>One tap turns a build's missing paints into a shopping list; longer-term wants live separately.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z"/></svg>
-        </span>
-        <h3>Supplies</h3>
-        <p>Track tools and consumables — brushes, cement, masking tape — right alongside the kits they build.</p>
-      </div>
-      <div class="feature">
-        <span class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10 12 15l5-5"/><path d="M12 15V3"/></svg>
-        </span>
-        <h3>Import &amp; export</h3>
-        <p>Bring in an existing collection via CSV/JSON, and back everything up straight from the UI.</p>
-      </div>
-    </div>
-  </section>
+        <div class="showcase">
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-dashboard.png"
+                alt="Dashboard on mobile"
+                onerror="this.classList.add('is-broken')"
+              />
+              <div class="fallback">Dashboard<br />screenshot coming soon</div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-build.png"
+                alt="A build's progress and photo"
+                onerror="this.classList.add('is-broken')"
+              />
+              <div class="fallback">Build progress<br />screenshot coming soon</div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-models.png"
+                alt="The model catalog"
+                onerror="this.classList.add('is-broken')"
+              />
+              <div class="fallback">Model catalog<br />screenshot coming soon</div>
+            </div>
+          </div>
+        </div>
+        <p class="showcase-caption">Installable as an app on your phone or desktop.</p>
+      </section>
 
-  <section id="quickstart" class="wrap">
-    <div class="quickstart">
-      <div>
-        <span class="eyebrow">Docker &middot; ~2 minutes</span>
-        <h2 style="margin-top:16px;">Running on your own server</h2>
-        <p>One React Router app, one Express process, one SQLite file. No external services to wire up.</p>
-        <ul class="quickstart-list">
-          <li>Single-user, password-protected — nothing exposed without a login.</li>
-          <li>Photos live on disk, never as database blobs.</li>
-          <li>In-app backups, plus an automated nightly snapshot.</li>
-        </ul>
-      </div>
-      <div class="terminal">
-        <div class="terminal-bar"><span></span><span></span><span></span></div>
-        <pre><span class="c2"># clone &amp; configure</span>
+      <section id="features" class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">What it does</span>
+          <h2>Everything a workbench needs, nothing it doesn't</h2>
+          <p>
+            Built for one person tracking a real collection — not a fleet-management dashboard in
+            disguise.
+          </p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 9.5 12 4l9 5.5V19a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z" />
+              </svg>
+            </span>
+            <h3>Dashboard</h3>
+            <p>
+              Kit, paint, and build counts, low-stock paints, missing-paint alerts, and recent
+              activity at a glance.
+            </p>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              </svg>
+            </span>
+            <h3>Models &amp; paints</h3>
+            <p>
+              A searchable catalog, kept separate from what you actually own — so wishlist and stash
+              never mix.
+            </p>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9" />
+                <path d="m18 15 4-4" />
+                <path
+                  d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"
+                />
+              </svg>
+            </span>
+            <h3>Builds</h3>
+            <p>
+              Start a build in one guided flow, log progress with timestamps and photos, and get
+              automatic "required vs. owned" paint matching per project.
+            </p>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="19" cy="21" r="1" />
+                <path d="M2.5 3h2l2.9 13.3a2 2 0 0 0 2 1.7h8.6a2 2 0 0 0 2-1.6L22 8H6.2" />
+              </svg>
+            </span>
+            <h3>Shopping list &amp; wishlist</h3>
+            <p>
+              One tap turns a build's missing paints into a shopping list; longer-term wants live
+              separately.
+            </p>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z"
+                />
+              </svg>
+            </span>
+            <h3>Supplies</h3>
+            <p>
+              Track tools and consumables — brushes, cement, masking tape — right alongside the kits
+              they build.
+            </p>
+          </div>
+          <div class="feature">
+            <span class="feature-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M7 10 12 15l5-5" />
+                <path d="M12 15V3" />
+              </svg>
+            </span>
+            <h3>Import &amp; export</h3>
+            <p>
+              Bring in an existing collection via CSV/JSON, and back everything up straight from the
+              UI.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="quickstart" class="wrap">
+        <div class="quickstart">
+          <div>
+            <span class="eyebrow">Docker &middot; ~2 minutes</span>
+            <h2 style="margin-top: 16px">Running on your own server</h2>
+            <p>
+              One React Router app, one Express process, one SQLite file. No external services to
+              wire up.
+            </p>
+            <ul class="quickstart-list">
+              <li>Single-user, password-protected — nothing exposed without a login.</li>
+              <li>Photos live on disk, never as database blobs.</li>
+              <li>In-app backups, plus an automated nightly snapshot.</li>
+            </ul>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar"><span></span><span></span><span></span></div>
+            <pre><span class="c2"># clone &amp; configure</span>
 git clone https://github.com/Lucifix/model-workshop-manager.git
 <span class="c1">cd</span> model-workshop-manager
 cp .env.example .env
@@ -606,23 +855,25 @@ cp .env.example .env
 docker compose up -d --build
 
 <span class="c2"># open http://localhost:8080</span></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-row">
+        <span class="footer-note"
+          >MIT licensed &middot; built for the workbench, not the cloud.</span
+        >
+        <div class="footer-links">
+          <a href="https://github.com/Lucifix/model-workshop-manager">Repository</a>
+          <a href="https://github.com/Lucifix/model-workshop-manager/issues">Issues</a>
+          <a href="https://github.com/Lucifix/model-workshop-manager/blob/main/SECURITY.md"
+            >Security policy</a
+          >
+          <a href="https://github.com/Lucifix/model-workshop-manager/blob/main/LICENSE">License</a>
+        </div>
       </div>
-    </div>
-  </section>
-
-  </main>
-
-<footer>
-  <div class="wrap footer-row">
-    <span class="footer-note">MIT licensed &middot; built for the workbench, not the cloud.</span>
-    <div class="footer-links">
-      <a href="https://github.com/Lucifix/model-workshop-manager">Repository</a>
-      <a href="https://github.com/Lucifix/model-workshop-manager/issues">Issues</a>
-      <a href="https://github.com/Lucifix/model-workshop-manager/blob/main/SECURITY.md">Security policy</a>
-      <a href="https://github.com/Lucifix/model-workshop-manager/blob/main/LICENSE">License</a>
-    </div>
-  </div>
-</footer>
-
-</body>
+    </footer>
+  </body>
 </html>
