@@ -965,6 +965,53 @@ export function useAddBuildLogEntry() {
   });
 }
 
+export function useUpdateBuildLogEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      entryId,
+      data,
+    }: {
+      projectId: number;
+      entryId: number;
+      data: { title?: string; description?: string };
+    }) => {
+      const res = await fetch(`/api/projects/${projectId}/log/${entryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update build log entry");
+      }
+      return res.json();
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Log entry updated");
+    },
+    onError: toastError,
+  });
+}
+
+export function useDeleteBuildLogEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ projectId, entryId }: { projectId: number; entryId: number }) => {
+      const res = await fetch(`/api/projects/${projectId}/log/${entryId}`, { method: "DELETE" });
+      if (!res.ok) {
+        throw new Error("Failed to delete build log entry");
+      }
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      toast.success("Log entry deleted");
+    },
+    onError: toastError,
+  });
+}
+
 export function useUploadProjectPhoto() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -61,6 +61,7 @@ export default [
     route("api/projects", "routes/api.projects.ts"),
     route("api/projects/:id", "routes/api.projects.$id.ts"),
     route("api/projects/:id/log", "routes/api.projects.$id.log.ts"),
+    route("api/projects/:id/log/:entryId", "routes/api.projects.$id.log.$entryId.ts"),
     route("api/projects/:id/photos", "routes/api.projects.$id.photos.ts"),
     route("api/projects/:id/photos/:photoId", "routes/api.projects.$id.photos.$photoId.ts"),
     route("api/projects/:id/paints", "routes/api.projects.$id.paints.ts"),

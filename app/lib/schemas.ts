@@ -114,6 +114,7 @@ export const buildLogCreateSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
 });
+export const buildLogUpdateSchema = buildLogCreateSchema.partial();
 
 export const supplyCreateSchema = z.object({
   name: z.string().min(1),
