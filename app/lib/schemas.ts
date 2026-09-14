@@ -8,11 +8,19 @@ import {
   CURRENCIES,
 } from "../db/schema.js";
 
+// z.string().url() accepts any scheme, including javascript:/data:/file: —
+// these values later render as href/src, so use zod's http(s)-only variant.
+// Exported as a plain predicate for the import routes, which validate rows
+// field-by-field rather than through a schema.
+export function isHttpUrl(value: string): boolean {
+  return z.httpUrl().safeParse(value).success;
+}
+
 export const manufacturerCreateSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
-  website: z.string().url().optional(),
-  logoUrl: z.string().url().optional(),
+  website: z.httpUrl().optional(),
+  logoUrl: z.httpUrl().optional(),
 });
 
 export const paintCreateSchema = z.object({
@@ -29,7 +37,7 @@ export const paintCreateSchema = z.object({
   colorFamily: z.string().optional(),
   notes: z.string().optional(),
   source: z.string().optional(),
-  sourceUrl: z.string().url().optional(),
+  sourceUrl: z.httpUrl().optional(),
 });
 export const paintUpdateSchema = paintCreateSchema.partial();
 
@@ -43,9 +51,9 @@ export const modelCreateSchema = z.object({
   partCount: z.number().int().positive().optional(),
   description: z.string().optional(),
   source: z.string().optional(),
-  sourceUrl: z.string().url().optional(),
-  imageUrl: z.string().url().optional(),
-  instructionUrl: z.string().url().optional(),
+  sourceUrl: z.httpUrl().optional(),
+  imageUrl: z.httpUrl().optional(),
+  instructionUrl: z.httpUrl().optional(),
   tagNames: z.array(z.string().min(1)).optional(),
 });
 export const modelUpdateSchema = modelCreateSchema.partial();

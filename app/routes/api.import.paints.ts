@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/client.server";
 import { paints } from "../db/schema";
 import { readUploadedRows, type ImportResult } from "../lib/csv.server";
+import { isHttpUrl } from "../lib/schemas";
 
 /** Import paints from CSV/JSON. Columns: manufacturerId, productCode, name,
  * type, finish, sizeMl, colorHex, colorFamily, notes. */
@@ -21,6 +22,11 @@ export async function action({ request }: { request: Request }) {
           row: i + 1,
           error: "Missing required fields: manufacturerId, productCode, name, type",
         });
+        result.skipped++;
+        continue;
+      }
+      if (row.sourceUrl && !isHttpUrl(row.sourceUrl)) {
+        result.errors.push({ row: i + 1, error: "sourceUrl must be a valid http(s) URL" });
         result.skipped++;
         continue;
       }

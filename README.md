@@ -56,6 +56,7 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 | `SESSION_SECRET`        | Yes      | —                | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`.                                                                  |
 | `SESSION_COOKIE_SECURE` | No       | `false`          | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails.                                                  |
 | `TRUST_PROXY`           | No       | _(off)_          | Set to the number of reverse proxies in front of the app (usually `1`) so the login rate limiter sees real client IPs. `true` is refused — it's spoofable. |
+| `BIND_ADDRESS`          | No       | `127.0.0.1`      | Host interface the app port is published on. Set to `0.0.0.0` for LAN access, or leave it alone and put a reverse proxy/VPN in front.                      |
 | `HOST_PORT`             | No       | `8080`           | Host port the app is served on.                                                                                                                            |
 | `APP_PORT`              | No       | `3000`           | Port the app listens on inside the container. Rarely needs changing.                                                                                       |
 | `APP_UID` / `APP_GID`   | No       | `1000`           | uid:gid the container runs as. Set these to match the owner of `WORKSHOP_DATA_DIR`/`BACKUP_DIR` if bind-mounting.                                          |
@@ -118,8 +119,8 @@ reverse proxy, LAN-only or on a VPN.
 
 Three ways to get a backup, easiest first: the **Backups tab** in the app (create, list,
 download, restore, delete), an **automated nightly snapshot** (a `docker-volume-backup` sidecar
-container, on by default), or `./scripts/backup.sh` for a manual one from the shell. All three
-produce the same tarball format, so a backup from any one can be restored via any other.
+container, opt-in — see below), or `./scripts/backup.sh` for a manual one from the shell. All
+three produce the same tarball format, so a backup from any one can be restored via any other.
 
 <details>
 <summary>Details</summary>
@@ -127,10 +128,13 @@ produce the same tarball format, so a backup from any one can be restored via an
 - **In-app Backups tab** (Import & Export page) — the easiest path day to day.
   Uploaded archives are capped at 2 GiB, and refused if they expand past 4 GiB
   on extraction.
-- **Automated nightly backup** — the `backup` service in `docker-compose.yml`
+- **Automated nightly backup** — opt-in: `docker compose --profile backup up -d`. The `backup`
+  service in `docker-compose.yml`
   ([`offen/docker-volume-backup`](https://github.com/offen/docker-volume-backup)) snapshots the
   `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning by `BACKUP_RETENTION_DAYS`.
-  Point `BACKUP_DIR` at a real host path already covered by whatever backs up your other apps.
+  Point `BACKUP_DIR` at a real host path already covered by whatever backs up your other apps. It's
+  opt-in because it needs access to the Docker socket to pause the app during the snapshot, which
+  is root-equivalent on the host — the in-app Backups tab above doesn't need it.
 - **Manual script** — `./scripts/backup.sh` writes a timestamped `.tar.gz` of the database and
   uploaded photos to `$BACKUP_DIR`. Restore steps are in the comments at the top of the script:
   stop the stack, extract the tarball's `database/` and `uploads/` into the `workshop-data`

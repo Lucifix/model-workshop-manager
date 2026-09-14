@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/client.server";
 import { manufacturers } from "../db/schema";
 import { readUploadedRows, type ImportResult } from "../lib/csv.server";
+import { isHttpUrl } from "../lib/schemas";
 
 /** Import manufacturers from CSV/JSON. CSV columns: name, slug, website. */
 export async function action({ request }: { request: Request }) {
@@ -17,6 +18,11 @@ export async function action({ request }: { request: Request }) {
       const row = rows[i];
       if (!row.name || !row.slug) {
         result.errors.push({ row: i + 1, error: "Missing required fields: name, slug" });
+        result.skipped++;
+        continue;
+      }
+      if (row.website && !isHttpUrl(row.website)) {
+        result.errors.push({ row: i + 1, error: "website must be a valid http(s) URL" });
         result.skipped++;
         continue;
       }

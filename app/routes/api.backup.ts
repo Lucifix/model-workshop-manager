@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import * as tar from "tar";
 import { sqlite } from "../db/client.server";
 import { UPLOAD_DIR } from "../lib/upload.server";
+import { methodNotAllowed } from "../lib/api.server";
 
 const BACKUP_DIR = process.env.BACKUP_DIR ?? "./backups";
 
@@ -24,7 +25,11 @@ export async function loader() {
   return Response.json(listBackups());
 }
 
-export async function action() {
+export async function action({ request }: { request: Request }) {
+  if (request.method !== "POST") {
+    return methodNotAllowed();
+  }
+
   mkdirSync(BACKUP_DIR, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const filename = `manual-${stamp}.tar.gz`;

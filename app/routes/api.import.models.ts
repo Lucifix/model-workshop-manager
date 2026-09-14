@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/client.server";
 import { models } from "../db/schema";
 import { readUploadedRows, type ImportResult } from "../lib/csv.server";
+import { isHttpUrl } from "../lib/schemas";
 
 /** Import models from CSV/JSON. Columns: manufacturerId, kitNumber, name,
  * scale, category, difficulty, partCount, description. */
@@ -21,6 +22,21 @@ export async function action({ request }: { request: Request }) {
           row: i + 1,
           error: "Missing required fields: manufacturerId, kitNumber, name",
         });
+        result.skipped++;
+        continue;
+      }
+      if (row.sourceUrl && !isHttpUrl(row.sourceUrl)) {
+        result.errors.push({ row: i + 1, error: "sourceUrl must be a valid http(s) URL" });
+        result.skipped++;
+        continue;
+      }
+      if (row.imageUrl && !isHttpUrl(row.imageUrl)) {
+        result.errors.push({ row: i + 1, error: "imageUrl must be a valid http(s) URL" });
+        result.skipped++;
+        continue;
+      }
+      if (row.instructionUrl && !isHttpUrl(row.instructionUrl)) {
+        result.errors.push({ row: i + 1, error: "instructionUrl must be a valid http(s) URL" });
         result.skipped++;
         continue;
       }

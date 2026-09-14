@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { sqlite } from "../db/client.server";
 import { UPLOAD_DIR } from "../lib/upload.server";
-import { badRequest, notFound } from "../lib/api.server";
+import { badRequest, notFound, methodNotAllowed } from "../lib/api.server";
 import { isValidFilename } from "../lib/backupFile.server";
 import { InvalidBackupArchiveError, extractBackupArchive } from "../lib/backupArchive.server";
 
@@ -15,7 +15,17 @@ const DATABASE_DIR = join(DATA_DIR, "database");
 // container's restart left nginx serving the frontend throughout). Acceptable
 // for a single-user LAN app; see the migration plan doc. The client shows a
 // "app restarting" message rather than a background-only notice.
-export async function action({ params }: { params: { filename: string } }) {
+export async function action({
+  request,
+  params,
+}: {
+  request: Request;
+  params: { filename: string };
+}) {
+  if (request.method !== "POST") {
+    return methodNotAllowed();
+  }
+
   const { filename } = params;
   if (!isValidFilename(filename)) {
     return badRequest("invalid_filename");
