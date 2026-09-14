@@ -8,7 +8,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import { forwardRef } from "react";
-import { BoxIcon } from "./icons";
+import { BoxIcon, ChevronDownIcon } from "./icons";
 
 export function Card({
   children,
@@ -159,7 +159,12 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
   function Select({ className = "", ...props }, ref) {
-    return <select ref={ref} className={`${fieldClass} ${className}`} {...props} />;
+    return (
+      <div className={`relative ${className}`}>
+        <select ref={ref} className={`${fieldClass} appearance-none pr-9`} {...props} />
+        <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-slate-400" />
+      </div>
+    );
   },
 );
 

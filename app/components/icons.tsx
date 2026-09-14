@@ -3,6 +3,7 @@ import {
   Beaker,
   Box,
   Camera,
+  ChevronDown,
   DollarSign,
   Database,
   Droplet,
@@ -30,6 +31,10 @@ export function HomeIcon(props: IconProps) {
 
 export function BoxIcon(props: IconProps) {
   return <Box {...defaults} {...props} />;
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return <ChevronDown {...defaults} {...props} />;
 }
 
 export function ArchiveIcon(props: IconProps) {
