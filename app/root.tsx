@@ -74,8 +74,23 @@ export default function App() {
   // Registering the same /sw.js URL also replaces any leftover pre-merge
   // (or PR #31 kill-switch) worker on clients that had one — the browser
   // diffs the new byte content on this call and installs it in its place.
+  //
+  // Dev-only: never register here. Its cacheFirst strategy caches Vite's
+  // /node_modules/.vite/deps/* chunks, which go stale every time the dev
+  // server restarts and re-optimizes deps, producing 504 "Outdated
+  // Optimize Dep" errors and a broken HMR websocket. Instead, actively
+  // unregister any worker left over from a previous prod build served
+  // locally (or from before this guard existed) so dev stays clean.
   useEffect(() => {
     if (!("serviceWorker" in navigator)) {
+      return;
+    }
+    if (import.meta.env.DEV) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        for (const reg of regs) {
+          reg.unregister();
+        }
+      });
       return;
     }
     navigator.serviceWorker.register("/sw.js");
