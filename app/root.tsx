@@ -15,6 +15,7 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import { useAuthStatus } from "./api/client";
 import { LoadingState } from "./components/ui";
 import Login from "./pages/Login";
+import Setup from "./pages/Setup";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -97,6 +98,8 @@ function AuthGate() {
         <div className="flex min-h-screen items-center justify-center">
           <LoadingState />
         </div>
+      ) : auth?.needsSetup ? (
+        <Setup />
       ) : !auth?.authenticated ? (
         <Login />
       ) : (

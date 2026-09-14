@@ -32,12 +32,13 @@ phone or desktop, running entirely on your own server.
 
 ```bash
 git clone <this-repo-url> && cd model-workshop-manager
-cp .env.example .env          # set AUTH_USERNAME, AUTH_PASSWORD, SESSION_SECRET
+cp .env.example .env          # set SESSION_SECRET
 docker compose up -d --build
 docker compose exec app npm run db:seed   # optional: sample data (migrations run automatically on boot)
 ```
 
-Open `http://localhost:8080` (or whatever `HOST_PORT` you set) and log in.
+Open `http://localhost:8080` (or whatever `HOST_PORT` you set) — first visit shows a one-time
+setup screen to create your username/password, then you're logged in.
 
 **Updating:** `git pull && docker compose up -d --build`
 **Stopping:** `docker compose down` (your data lives in the `workshop-data` volume, untouched)
@@ -51,8 +52,6 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 
 | Variable                | Required | Default          | What it does                                                                                                                                               |
 | ----------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AUTH_USERNAME`         | Yes      | —                | Login username. App refuses to start without it.                                                                                                           |
-| `AUTH_PASSWORD`         | Yes      | —                | Login password.                                                                                                                                            |
 | `SESSION_SECRET`        | Yes      | —                | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`.                                                                  |
 | `SESSION_COOKIE_SECURE` | No       | `false`          | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails.                                                  |
 | `TRUST_PROXY`           | No       | _(off)_          | Set to the number of reverse proxies in front of the app (usually `1`) so the login rate limiter sees real client IPs. `true` is refused — it's spoofable. |
@@ -92,22 +91,29 @@ reverse proxy, LAN-only or on a VPN.
 <details>
 <summary>Implementation details</summary>
 
-- The whole API is protected by default (allow-list of exactly three public paths:
-  `/api/health`, `/api/auth/login`, `/api/auth/me`) — new routes are guarded automatically.
-- Credentials are a single username/password pair from `AUTH_USERNAME`/`AUTH_PASSWORD` env vars
-  (no user table — deliberately single-user), compared in constant time.
+- The whole API is protected by default (allow-list of exactly four public paths:
+  `/api/health`, `/api/auth/login`, `/api/auth/me`, `/api/auth/setup`) — new routes are guarded
+  automatically.
+- Credentials are one username/password row in the database (no user table — deliberately
+  single-user), hashed with scrypt. First visit to a fresh install shows a one-time setup screen
+  to create them; `AUTH_USERNAME`/`AUTH_PASSWORD` in `.env` are an optional way to seed that same
+  row on first boot instead (e.g. bringing an existing deployment forward) and are never read
+  again afterwards. Change your password any time from Settings. Forgot it? There's no email
+  flow — run `docker compose exec app npm run auth:reset` and you'll get the setup screen again
+  (or, if `AUTH_USERNAME`/`AUTH_PASSWORD` are still set in `.env`, the next restart quietly
+  recreates that same login instead — remove them from `.env` first if you want a blank setup
+  screen).
 - Sessions are a signed, `httpOnly` cookie (React Router's cookie session storage) — no
   server-side session store to run or lose. The 30-day expiry is stored _inside_ the signed
   payload and checked on every request, not left to the browser's cookie lifetime.
 - With no session store there is nothing to delete, so logging out can only clear the browser's
-  copy of the cookie. **To invalidate every existing session at once — a lost device, a cookie
-  you think was captured — change `SESSION_SECRET` and restart.** Every signed cookie stops
-  verifying immediately (and everyone, including you, signs in again).
+  copy of the cookie. Changing your password (or running `auth:reset`) invalidates every other
+  existing session immediately, the same way — no reason to also rotate `SESSION_SECRET` for that.
+  Rotating `SESSION_SECRET` and restarting remains the blunter, whole-app option.
 - The login endpoint is rate-limited (5 attempts/minute). Behind a reverse
   proxy, set `TRUST_PROXY` (see the table above) or that budget is shared
   across all clients rather than counted per client.
-- The app **refuses to start** if `AUTH_USERNAME`, `AUTH_PASSWORD`, or `SESSION_SECRET` aren't
-  set — see `.env.example`.
+- The app **refuses to start** if `SESSION_SECRET` isn't set — see `.env.example`.
 - Set `SESSION_COOKIE_SECURE=true` once this is served over HTTPS, otherwise the browser won't
   send the cookie and login will silently fail.
 - File uploads are size-capped (25 MB/file) but not otherwise scanned.

@@ -26,6 +26,9 @@ async function apiFetch<T>(path: string): Promise<T> {
 export interface AuthStatus {
   authenticated: boolean;
   username?: string;
+  /** True until the one-time setup screen has been completed — see
+   * routes/api.auth.setup.ts. */
+  needsSetup: boolean;
 }
 
 export function useAuthStatus() {
@@ -55,6 +58,24 @@ export function useLogin() {
   });
 }
 
+export function useSetup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const res = await fetch("/api/auth/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        throw new Error("Setup failed.");
+      }
+      return res.json() as Promise<AuthStatus>;
+    },
+    onSuccess: (data) => queryClient.setQueryData(["auth", "me"], data),
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -65,6 +86,32 @@ export function useLogout() {
       queryClient.setQueryData(["auth", "me"], { authenticated: false });
       queryClient.clear();
     },
+  });
+}
+
+export function useChangeCredential() {
+  return useMutation({
+    mutationFn: async (data: {
+      currentPassword: string;
+      newUsername?: string;
+      newPassword?: string;
+    }) => {
+      const res = await fetch("/api/auth/credential", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        throw new Error(
+          res.status === 400 ? "Current password is incorrect." : "Failed to update account.",
+        );
+      }
+      return res.json() as Promise<{ username: string }>;
+    },
+    // The session cookie this browser is holding is now stale (its
+    // passwordChangedAt no longer matches) — reload rather than try to
+    // patch client state, same as apiFetch's own 401 handling above.
+    onSuccess: () => window.location.reload(),
   });
 }
 

@@ -1,3 +1,4 @@
+import { hasCredential } from "../lib/credentials.server";
 import { getSession, isSessionAuthenticated } from "../lib/session.server";
 
 export async function loader({ request }: { request: Request }) {
@@ -10,5 +11,9 @@ export async function loader({ request }: { request: Request }) {
   return Response.json({
     authenticated,
     username: authenticated ? session.get("username") : undefined,
+    // Tells AuthGate (app/root.tsx) to show the one-time setup screen
+    // instead of the login form — true only until POST /api/auth/setup
+    // creates the one credential row.
+    needsSetup: !hasCredential(),
   });
 }

@@ -26,6 +26,7 @@ export default [
   route("api/health", "routes/api.health.ts"),
   route("api/auth/login", "routes/api.auth.login.ts"),
   route("api/auth/me", "routes/api.auth.me.ts"),
+  route("api/auth/setup", "routes/api.auth.setup.ts"),
 
   // --- Protected API routes ---------------------------------------------
   // No UI component on any of these — loader/action return a Response
@@ -35,6 +36,7 @@ export default [
   // requires action, by moving it out of this list.
   layout("routes/api.protected.ts", [
     route("api/auth/logout", "routes/api.auth.logout.ts"),
+    route("api/auth/credential", "routes/api.auth.credential.ts"),
 
     route("api/manufacturers", "routes/api.manufacturers.ts"),
     route("api/manufacturers/:id", "routes/api.manufacturers.$id.ts"),

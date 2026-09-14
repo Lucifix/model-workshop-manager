@@ -346,3 +346,20 @@ export const appSettings = sqliteTable("app_settings", {
   currency: text("currency").notNull().default("USD"), // one of CURRENCIES
   ...timestamps,
 });
+
+/** Single-row login credential (this is a single-user app — no users table).
+ * Row id is always 1; see lib/credentials.server.ts. Absent entirely on a
+ * fresh install until setup completes — see routes/api.auth.setup.ts. */
+export const authCredential = sqliteTable("auth_credential", {
+  id: integer("id").primaryKey().default(1),
+  username: text("username").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  // Copied into the session cookie at login/setup and re-checked on every
+  // request (see session.server.ts) — bumping this is what makes changing
+  // your password sign out every other existing session, with no session
+  // table to store or prune.
+  passwordChangedAt: text("password_changed_at")
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  ...timestamps,
+});

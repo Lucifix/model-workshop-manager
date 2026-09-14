@@ -1,10 +1,15 @@
 import { createCookieSessionStorage } from "react-router";
+import { db } from "../db/client.server";
+import { authCredential } from "../db/schema";
 
 export interface SessionData {
   authenticated: boolean;
   username: string;
   /** Absolute expiry, epoch ms. See SESSION_MAX_AGE_MS. */
   expiresAt: number;
+  /** Copy of auth_credential.passwordChangedAt at the moment this session was
+   * issued — see isSessionAuthenticated for why. */
+  passwordChangedAt: string;
 }
 
 const SESSION_SECRET = process.env.SESSION_SECRET!;
@@ -19,8 +24,8 @@ export const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 // Deviation from the old @fastify/secure-session cookie: that one encrypted
 // the payload (libsodium secretbox); this only HMAC-signs it (tamper-proof,
 // but the base64 payload is readable). Accepted deliberately — the only
-// session content is { authenticated, username, expiresAt }, no secrets — see
-// the migration plan doc.
+// session content is { authenticated, username, expiresAt, passwordChangedAt },
+// no secrets — see the migration plan doc.
 export const sessionStorage = createCookieSessionStorage<SessionData>({
   cookie: {
     name: "workshop_session",
@@ -51,6 +56,15 @@ export function getSession(cookieHeader?: string | null) {
  * A session missing `expiresAt` is rejected rather than trusted: that shape
  * predates this check, and treating it as unexpiring is exactly the bug being
  * fixed. The cost is that existing logins have to sign in once more.
+ *
+ * There is no session table to revoke a specific cookie from, so "sign out
+ * everywhere" is instead implemented by comparing the cookie's
+ * passwordChangedAt against the one live value in auth_credential (a single
+ * lookup on a one-row table) — changing your password bumps that value, and
+ * every other existing cookie stops matching immediately. A cookie issued
+ * before this check existed carries no passwordChangedAt at all, which fails
+ * the comparison the same way a missing expiresAt does — one more required
+ * re-login after upgrading, not a silent bypass.
  */
 export async function isSessionAuthenticated(cookieHeader?: string | null): Promise<boolean> {
   const session = await getSession(cookieHeader);
@@ -58,5 +72,11 @@ export async function isSessionAuthenticated(cookieHeader?: string | null): Prom
     return false;
   }
   const expiresAt = session.get("expiresAt");
-  return typeof expiresAt === "number" && Date.now() < expiresAt;
+  if (typeof expiresAt !== "number" || Date.now() >= expiresAt) {
+    return false;
+  }
+  const credential = db.select().from(authCredential).get();
+  return (
+    credential !== undefined && session.get("passwordChangedAt") === credential.passwordChangedAt
+  );
 }
