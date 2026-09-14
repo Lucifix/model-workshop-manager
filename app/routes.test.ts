@@ -9,7 +9,7 @@ const PROTECTED_LAYOUT_FILE = "routes/api.protected.ts";
 // under api/* must be nested under the protected layout. Keep this in sync
 // with routes.ts's "Public API routes" section; a mismatch fails the test
 // below rather than silently shipping an unauthenticated route.
-const PUBLIC_API_PATHS = new Set(["api/health", "api/auth/login", "api/auth/me"]);
+const PUBLIC_API_PATHS = new Set(["api/health", "api/auth/login", "api/auth/me", "api/auth/setup"]);
 
 function collectApiRoutes(
   entries: RouteConfigEntry[],

@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx app/db/migrate.server.ts",
     "db:seed": "tsx app/db/seed.server.ts",
+    "auth:reset": "tsx app/db/resetCredential.server.ts",
     "import:miniature-paints": "tsx app/scripts/importMiniaturePaints.server.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",

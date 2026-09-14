@@ -35,9 +35,11 @@ npm run db:migrate && npm run db:seed   # first time only; db:seed is optional
 npm run dev                              # :3000 — one process, UI + API
 ```
 
-The server refuses to boot without `AUTH_USERNAME`, `AUTH_PASSWORD`, and
-`SESSION_SECRET` set (`.env` at repo root, see `.env.example`). `npm run dev`
-uses `node --env-file-if-exists=.env`.
+The server refuses to boot without `SESSION_SECRET` set (`.env` at repo root,
+see `.env.example`). The login itself lives in the database (one row, created
+via a first-run setup screen or migrated in from `AUTH_USERNAME`/
+`AUTH_PASSWORD` if those are set — see `app/lib/credentials.server.ts`), not
+in env vars. `npm run dev` uses `node --env-file-if-exists=.env`.
 
 **Node 22+ is required** (`.nvmrc`) — `better-sqlite3` needs a matching native
 build, and older Node versions fail _silently_ rather than erroring.
@@ -98,9 +100,11 @@ build, and older Node versions fail _silently_ rather than erroring.
 
 ## Things not to "fix"
 
-- **Single-user auth is intentional**, not a missing feature — one
-  username/password pair from env vars, no users table. Don't add
-  multi-user auth, registration, or a user table unless explicitly asked.
+- **Single-user auth is intentional**, not a missing feature — exactly one
+  account, stored as the single row of `auth_credential`
+  (`app/lib/credentials.server.ts`), no registration. Don't add multi-user
+  auth, a real users table, or invite/registration flows unless explicitly
+  asked.
 - **No direct manufacturer-site scraping** for catalog data — rate-limit/ToS
   risk. Any such source must stay opt-in and feature-flagged, same as
   `upcItemDbProvider.ts`.

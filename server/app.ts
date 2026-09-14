@@ -3,26 +3,30 @@ import express from "express";
 import { rateLimit } from "express-rate-limit";
 import { isUploadPath } from "../app/lib/auth.server";
 import { BACKUP_UPLOAD_PATH, MAX_BACKUP_UPLOAD_BYTES } from "../app/lib/backupFile.server";
+import { ensureCredential } from "../app/lib/credentials.server";
 import { isSessionAuthenticated } from "../app/lib/session.server";
 import { parseTrustProxy } from "../app/lib/trustProxy.server";
 import { UPLOAD_DIR } from "../app/lib/upload.server";
 import { runMigrations } from "../app/db/migrate.server";
 
 // Fail closed: refuse to boot rather than silently serve an unauthenticated
-// API. All three must be explicitly configured — see .env.example.
-for (const name of ["AUTH_USERNAME", "AUTH_PASSWORD", "SESSION_SECRET"]) {
-  if (!process.env[name]) {
-    console.error(
-      `Missing required env var ${name}. See .env.example — this app requires login to be configured.`,
-    );
-    process.exit(1);
-  }
+// API. Login credentials themselves are no longer required at boot — a
+// fresh install with no credential row serves the setup screen instead (see
+// ensureCredential below) — but sessions can't function at all without this.
+if (!process.env.SESSION_SECRET) {
+  console.error("Missing required env var SESSION_SECRET. See .env.example.");
+  process.exit(1);
 }
 
 // Idempotent — safe to run on every boot. Ensures a fresh deployment (empty
 // volume, no tables yet) works without a separate manual migration step.
 runMigrations();
 console.log("Database migrations applied.");
+
+// Migrates AUTH_USERNAME/AUTH_PASSWORD into the credential row on an
+// existing deployment's first boot after upgrading; a no-op otherwise. See
+// app/lib/credentials.server.ts.
+await ensureCredential();
 
 export const app = express();
 

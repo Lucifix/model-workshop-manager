@@ -1,33 +1,27 @@
-import { timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { db } from "../db/client.server";
+import { authCredential } from "../db/schema";
+import { hashPassword, verifyPassword } from "./passwordHash.server";
+
+// A wrong username must still pay the same scrypt cost as a wrong password
+// against a real account — otherwise response time alone reveals which one
+// it was. Hashed once per process against a value nobody could guess, and
+// reused as the comparison target whenever there's no real row to check.
+const dummyHash = hashPassword(randomBytes(32).toString("hex"));
 
 /**
- * Single-user credential check against env-configured values. This app is
- * explicitly single-user by design — a full users table would be
- * over-engineering. Both AUTH_USERNAME and AUTH_PASSWORD must be set for the
- * server to accept any login at all — see server/app.ts, which refuses to
- * boot without them.
+ * Single-user credential check against the one-row auth_credential table
+ * (see db/schema.ts and lib/credentials.server.ts). This app is explicitly
+ * single-user by design — a full users table would be over-engineering.
  */
-export function checkCredentials(username: string, password: string): boolean {
-  const expectedUsername = process.env.AUTH_USERNAME ?? "";
-  const expectedPassword = process.env.AUTH_PASSWORD ?? "";
-  if (!expectedUsername || !expectedPassword) {
-    return false;
-  }
-  return safeEqual(username, expectedUsername) && safeEqual(password, expectedPassword);
-}
-
-/** Constant-time string comparison — avoids leaking length/content via timing. */
-function safeEqual(a: string, b: string): boolean {
-  const aBuf = Buffer.from(a);
-  const bBuf = Buffer.from(b);
-  // timingSafeEqual throws on mismatched lengths, so pad to a fixed size first
-  // rather than short-circuiting on length (which would itself leak timing).
-  const len = Math.max(aBuf.length, bBuf.length, 32);
-  const aPadded = Buffer.alloc(len);
-  const bPadded = Buffer.alloc(len);
-  aBuf.copy(aPadded);
-  bBuf.copy(bPadded);
-  return timingSafeEqual(aPadded, bPadded) && aBuf.length === bBuf.length;
+export async function checkCredentials(username: string, password: string): Promise<boolean> {
+  const row = db.select().from(authCredential).get();
+  const matchesUsername = row !== undefined && row.username === username;
+  const validPassword = await verifyPassword(
+    matchesUsername ? row.passwordHash : await dummyHash,
+    password,
+  );
+  return matchesUsername && validPassword;
 }
 
 /**
