@@ -5,6 +5,8 @@ import {
   useProjectDetail,
   useUpdateProject,
   useAddBuildLogEntry,
+  useUpdateBuildLogEntry,
+  useDeleteBuildLogEntry,
   useUploadProjectPhoto,
   useAddProjectPaint,
   useRemoveProjectPaint,
@@ -42,6 +44,9 @@ export default function ProjectDetail() {
   const [logFormOpen, setLogFormOpen] = useState(false);
   const [logTitle, setLogTitle] = useState("");
   const [logDesc, setLogDesc] = useState("");
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
+  const [editLogTitle, setEditLogTitle] = useState("");
+  const [editLogDesc, setEditLogDesc] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showAddPaint, setShowAddPaint] = useState(false);
@@ -53,6 +58,8 @@ export default function ProjectDetail() {
   const { data: project, isLoading, isError } = useProjectDetail(Number(id!));
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject();
   const { mutate: addBuildLog, isPending: isAddingLog } = useAddBuildLogEntry();
+  const { mutate: updateBuildLog, isPending: isUpdatingLog } = useUpdateBuildLogEntry();
+  const deleteBuildLog = useDeleteBuildLogEntry();
   const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadProjectPhoto();
   const addProjectPaint = useAddProjectPaint();
   const removeProjectPaint = useRemoveProjectPaint();
@@ -94,6 +101,36 @@ export default function ProjectDetail() {
         },
       },
     );
+  };
+
+  const startEditLogEntry = (entry: { id: number; title: string; description?: string | null }) => {
+    setEditingLogId(entry.id);
+    setEditLogTitle(entry.title);
+    setEditLogDesc(entry.description ?? "");
+  };
+
+  const handleUpdateLogEntry = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingLogId == null) {
+      return;
+    }
+    updateBuildLog(
+      {
+        projectId: project.id,
+        entryId: editingLogId,
+        data: { title: editLogTitle, description: editLogDesc },
+      },
+      {
+        onSuccess: () => setEditingLogId(null),
+      },
+    );
+  };
+
+  const handleDeleteLogEntry = (entryId: number) => {
+    if (!confirm("Delete this log entry?")) {
+      return;
+    }
+    deleteBuildLog.mutate({ projectId: project.id, entryId });
   };
 
   const handleAddPaint = (e: React.FormEvent) => {
@@ -564,21 +601,72 @@ export default function ProjectDetail() {
 
             {project.log && project.log.length > 0 ? (
               <div className="space-y-3">
-                {project.log.map((entry) => (
-                  <Card key={entry.id}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h3 className="mb-1 font-semibold text-slate-100">{entry.title}</h3>
-                        {entry.description && (
-                          <p className="mb-2 text-xs text-slate-400">{entry.description}</p>
-                        )}
+                {project.log.map((entry) =>
+                  editingLogId === entry.id ? (
+                    <Card key={entry.id}>
+                      <form onSubmit={handleUpdateLogEntry} className="flex flex-col gap-3">
+                        <Input
+                          type="text"
+                          value={editLogTitle}
+                          onChange={(e) => setEditLogTitle(e.target.value)}
+                          placeholder="What did you work on?"
+                          required
+                        />
+                        <Textarea
+                          value={editLogDesc}
+                          onChange={(e) => setEditLogDesc(e.target.value)}
+                          placeholder="Add details (optional)"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button type="submit" disabled={isUpdatingLog} className="flex-1">
+                            {isUpdatingLog ? "Saving..." : "Save"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={() => setEditingLogId(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    </Card>
+                  ) : (
+                    <Card key={entry.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h3 className="mb-1 font-semibold text-slate-100">{entry.title}</h3>
+                          {entry.description && (
+                            <p className="mb-2 text-xs text-slate-400">{entry.description}</p>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <span className="text-xs text-slate-500">
+                            {new Date(entry.createdAt).toLocaleDateString()}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => startEditLogEntry(entry)}
+                              className="text-xs text-slate-500 hover:text-slate-200"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLogEntry(entry.id)}
+                              className="text-xs text-slate-500 hover:text-red-400"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <span className="shrink-0 text-xs text-slate-500">
-                        {new Date(entry.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ),
+                )}
               </div>
             ) : (
               <p className="text-xs text-slate-500">

@@ -39,3 +39,44 @@ test("can start a new build with a new model and track its progress", async ({ p
   await page.getByRole("link", { name: "Builds", exact: true }).click();
   await expect(page.getByRole("heading", { name: "E2E Test Build" })).toBeVisible();
 });
+
+test("can edit and delete a build log entry", async ({ page }) => {
+  await page.getByRole("link", { name: "Builds", exact: true }).click();
+  await page.getByRole("button", { name: "+ New Build" }).click();
+  await page.getByRole("button", { name: "Can't find it? + Add a new model" }).click();
+
+  const modelForm = page.locator("form");
+  await modelForm.locator("select").selectOption("__new__");
+  await modelForm.getByPlaceholder("Manufacturer name").fill("E2E Log Manufacturer");
+  await modelForm.getByPlaceholder("05239").fill("E2E-201");
+  await modelForm.getByPlaceholder("Smit Houston").fill("E2E Log Kit");
+  await modelForm.getByRole("button", { name: "Save model" }).click();
+
+  const buildForm = page.locator("form");
+  await buildForm.getByPlaceholder("E2E Log Kit Build").fill("E2E Log Build");
+  await buildForm.getByRole("button", { name: "Start build" }).click();
+  await expect(page).toHaveURL(/\/projects\/\d+/);
+
+  await page.getByRole("button", { name: "Build Log" }).click();
+  await page.getByRole("button", { name: "+ Add progress" }).click();
+  await page.getByPlaceholder("What did you work on?").fill("Original log entry");
+  await page.getByRole("button", { name: "Add entry" }).click();
+  const entry = page.locator(".rounded-2xl").filter({ hasText: "Original log entry" });
+  await expect(entry).toBeVisible();
+
+  // Edit the entry in place.
+  await entry.getByRole("button", { name: "Edit" }).click();
+  const editForm = page.locator("form").filter({ hasText: "Save" });
+  await editForm.getByPlaceholder("What did you work on?").fill("Edited log entry");
+  await editForm.getByRole("button", { name: "Save" }).click();
+
+  await expect(page.getByRole("heading", { name: "Edited log entry" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Original log entry" })).not.toBeVisible();
+
+  // Delete the entry, confirming the native dialog.
+  page.once("dialog", (dialog) => dialog.accept());
+  const editedEntry = page.locator(".rounded-2xl").filter({ hasText: "Edited log entry" });
+  await editedEntry.getByRole("button", { name: "Delete" }).click();
+  await expect(page.getByRole("heading", { name: "Edited log entry" })).not.toBeVisible();
+  await expect(page.getByText("No log entries yet.")).toBeVisible();
+});
