@@ -28,9 +28,9 @@ services:
       - ${WORKSHOP_DATA_DIR:-workshop-data}:/data
       - ${BACKUP_DIR:-./backups}:/backups
     ports:
-      # Loopback by default so this isn't reachable off the host without a
-      # reverse proxy or VPN in front. Set BIND_ADDRESS=0.0.0.0 for LAN use.
-      - "${BIND_ADDRESS:-127.0.0.1}:${HOST_PORT:-8080}:${APP_PORT:-3000}"
+      # Container side has to track PORT above — the app listens on exactly
+      # one port and publishing a different one just yields a dead mapping.
+      - "${HOST_PORT:-8080}:${APP_PORT:-3000}"
 
   # Off by default (mounts the Docker socket, which is root-equivalent on the
   # host) — enable with: docker compose --profile backup up -d
