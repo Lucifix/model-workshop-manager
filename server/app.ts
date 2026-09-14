@@ -52,9 +52,22 @@ try {
 // limit from the same constant so they can't drift apart again.
 const MAX_BODY_BYTES = 50 * 1024 * 1024;
 app.use((req, res, next) => {
+  // A chunked request has no Content-Length by design (that's what makes it
+  // chunked) — Number(undefined) is NaN, and `NaN > limit` is always false,
+  // so it would otherwise bypass the cap below entirely. A request with
+  // neither header (a bodyless DELETE/PATCH, the common case) has nothing to
+  // cap and is left alone.
+  if (req.headers["transfer-encoding"]) {
+    return res.status(411).json({ error: "length_required" });
+  }
+
+  const contentLength = Number(req.headers["content-length"]);
+  if (Number.isNaN(contentLength)) {
+    return next();
+  }
+
   const limit =
     req.path.toLowerCase() === BACKUP_UPLOAD_PATH ? MAX_BACKUP_UPLOAD_BYTES : MAX_BODY_BYTES;
-  const contentLength = Number(req.headers["content-length"]);
   if (contentLength > limit) {
     return res.status(413).json({ error: "payload_too_large" });
   }

@@ -118,8 +118,8 @@ reverse proxy, LAN-only or on a VPN.
 
 Three ways to get a backup, easiest first: the **Backups tab** in the app (create, list,
 download, restore, delete), an **automated nightly snapshot** (a `docker-volume-backup` sidecar
-container, on by default), or `./scripts/backup.sh` for a manual one from the shell. All three
-produce the same tarball format, so a backup from any one can be restored via any other.
+container, opt-in — see below), or `./scripts/backup.sh` for a manual one from the shell. All
+three produce the same tarball format, so a backup from any one can be restored via any other.
 
 <details>
 <summary>Details</summary>
@@ -127,10 +127,13 @@ produce the same tarball format, so a backup from any one can be restored via an
 - **In-app Backups tab** (Import & Export page) — the easiest path day to day.
   Uploaded archives are capped at 2 GiB, and refused if they expand past 4 GiB
   on extraction.
-- **Automated nightly backup** — the `backup` service in `docker-compose.yml`
+- **Automated nightly backup** — opt-in: `docker compose --profile backup up -d`. The `backup`
+  service in `docker-compose.yml`
   ([`offen/docker-volume-backup`](https://github.com/offen/docker-volume-backup)) snapshots the
   `workshop-data` volume to `BACKUP_DIR` every night at 03:00, pruning by `BACKUP_RETENTION_DAYS`.
-  Point `BACKUP_DIR` at a real host path already covered by whatever backs up your other apps.
+  Point `BACKUP_DIR` at a real host path already covered by whatever backs up your other apps. It's
+  opt-in because it needs access to the Docker socket to pause the app during the snapshot, which
+  is root-equivalent on the host — the in-app Backups tab above doesn't need it.
 - **Manual script** — `./scripts/backup.sh` writes a timestamped `.tar.gz` of the database and
   uploaded photos to `$BACKUP_DIR`. Restore steps are in the comments at the top of the script:
   stop the stack, extract the tarball's `database/` and `uploads/` into the `workshop-data`

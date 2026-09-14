@@ -14,6 +14,16 @@ export function conflict(error: string, message?: string) {
   return Response.json({ error, message }, { status: 409 });
 }
 
+export function methodNotAllowed() {
+  return new Response("Method Not Allowed", { status: 405 });
+}
+
+// Rejects non-numeric/negative/non-integer ids up front instead of letting
+// NaN flow into a Drizzle eq() unchecked.
 export function idParam(params: Record<string, string | undefined>, key = "id"): number {
-  return Number(params[key]);
+  const value = Number(params[key]);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw badRequest("invalid_id");
+  }
+  return value;
 }

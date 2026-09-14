@@ -32,7 +32,10 @@ services:
       # one port and publishing a different one just yields a dead mapping.
       - "${HOST_PORT:-8080}:${APP_PORT:-3000}"
 
+  # Off by default (mounts the Docker socket, which is root-equivalent on the
+  # host) — enable with: docker compose --profile backup up -d
   backup:
+    profiles: ["backup"]
     image: offen/docker-volume-backup:v2
     restart: unless-stopped
     environment:
