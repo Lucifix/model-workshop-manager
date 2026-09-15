@@ -142,13 +142,25 @@ jobs:
 
       - name: Create multi-arch manifest
         working-directory: /tmp/digests
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          # Word splitting is deliberate here: the first substitution expands
-          # to "-t tag -t tag ...", the second to one ref per digest file.
-          # shellcheck disable=SC2046
-          docker buildx imagetools create \
-            $(jq -cr '.target."docker-metadata-action".tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.IMAGE }}@sha256:%s ' *)
+          # Read the newline-separated tags output directly rather than
+          # jq-ing DOCKER_METADATA_OUTPUT_JSON: that env var's shape is not
+          # the bake-file layout, and a wrong path yields zero tags, which
+          # imagetools rejects ("can't push with no tags specified").
+          args=()
+          while read -r tag; do
+            [ -n "$tag" ] && args+=(-t "$tag")
+          done <<< "$TAGS"
+          if [ ${#args[@]} -eq 0 ]; then
+            echo "::error::docker/metadata-action produced no tags for ${GITHUB_REF}"
+            exit 1
+          fi
+          for digest in *; do
+            args+=("${IMAGE}@sha256:${digest}")
+          done
+          docker buildx imagetools create "${args[@]}"
 
       # The secrets context is not available in `if:` expressions, so
       # presence has to be probed in a shell step and passed on as an output.
