@@ -37,7 +37,7 @@ describe("dashboard loader paint stats", () => {
     expect(data.totalPaints).toBe(0);
   });
 
-  it("counts paints with inventory as owned, not the whole catalog", async () => {
+  it("excludes catalog paints with no inventory row from the owned count", async () => {
     const [mfr] = await db
       .insert(manufacturers)
       .values({ name: "Tamiya", slug: "tamiya" })
