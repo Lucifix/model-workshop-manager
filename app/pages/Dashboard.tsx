@@ -48,7 +48,7 @@ export default function Dashboard() {
         actions={<Button onClick={() => navigate("/projects/new")}>+ New Build</Button>}
       />
 
-      {data.totalPaints === 0 && (
+      {data.paintCatalogIsEmpty && (
         <Card className="border-workshop-accent/50 bg-workshop-accent/10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-200">
@@ -89,7 +89,7 @@ export default function Dashboard() {
           icon={<CartIcon className="h-5 w-5" />}
         />
         <StatTile
-          label="Paints"
+          label="Paints owned"
           value={data.totalPaints}
           icon={<DropletIcon className="h-5 w-5" />}
         />
