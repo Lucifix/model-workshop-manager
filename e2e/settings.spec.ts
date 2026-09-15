@@ -12,7 +12,7 @@ test("can change the display currency and have it persist across reloads", async
   const next = original === "EUR" ? "GBP" : "EUR";
 
   await select.selectOption(next);
-  const saveButton = page.getByRole("button", { name: "Save" });
+  const saveButton = page.getByRole("button", { name: "Save currency" });
   await saveButton.click();
   // The Save button re-disables itself once the saved value matches the
   // selection, confirming the mutation round-tripped.
@@ -24,5 +24,27 @@ test("can change the display currency and have it persist across reloads", async
   // Restore the original value so other tests relying on currency formatting
   // aren't affected.
   await page.locator("select").selectOption(original);
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save currency" }).click();
+});
+
+test("can toggle barcode lookup and have it persist across reloads", async ({ page }) => {
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+
+  const checkbox = page.getByRole("checkbox", { name: "Enable barcode lookup" });
+  const original = await checkbox.isChecked();
+  const saveButton = page.getByRole("button", { name: "Save barcode lookup setting" });
+
+  await checkbox.setChecked(!original);
+  await saveButton.click();
+  await expect(saveButton).toBeDisabled();
+
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Enable barcode lookup" })).toBeChecked({
+    checked: !original,
+  });
+
+  // Restore the original value so other tests relying on this provider
+  // being off (or on) aren't affected.
+  await page.getByRole("checkbox", { name: "Enable barcode lookup" }).setChecked(original);
+  await page.getByRole("button", { name: "Save barcode lookup setting" }).click();
 });

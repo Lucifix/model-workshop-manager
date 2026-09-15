@@ -1,0 +1,1 @@
+ALTER TABLE `app_settings` ADD `upc_item_db_enabled` integer DEFAULT false NOT NULL;
