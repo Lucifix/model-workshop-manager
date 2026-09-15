@@ -61,7 +61,6 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 | `WORKSHOP_DATA_DIR`     | No       | _(named volume)_ | Host path for the database + uploaded photos, instead of the `workshop-data` Docker volume — e.g. a NAS mount.                                             |
 | `BACKUP_DIR`            | No       | `./backups`      | Host path where backups (in-app, manual script, and the nightly job) are written.                                                                          |
 | `BACKUP_RETENTION_DAYS` | No       | `14`             | How many days of nightly backups to keep before pruning.                                                                                                   |
-| `UPCITEMDB_ENABLED`     | No       | `false`          | Turns on the optional barcode-lookup convenience provider (see Data import below).                                                                         |
 
 ## Tech stack
 

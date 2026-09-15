@@ -78,6 +78,13 @@
       "when": 1789397176003,
       "tag": "0010_add_auth_credential",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1789448112790,
+      "tag": "0011_conscious_queen_noir",
+      "breakpoints": true
     }
   ]
 }

@@ -344,6 +344,10 @@ export const CURRENCIES = [
 export const appSettings = sqliteTable("app_settings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   currency: text("currency").notNull().default("USD"), // one of CURRENCIES
+  // Effective value is this OR'd with UPCITEMDB_ENABLED=true (see
+  // providers/upcItemDbProvider.ts) so deployments that already set the env
+  // var keep working after upgrading without needing to touch Settings.
+  upcItemDbEnabled: integer("upc_item_db_enabled", { mode: "boolean" }).notNull().default(false),
   ...timestamps,
 });
 

@@ -1439,6 +1439,7 @@ export function useExportData() {
 export interface AppSettings {
   id: number;
   currency: string;
+  upcItemDbEnabled: boolean;
 }
 
 export function useSettings() {
@@ -1452,7 +1453,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { currency: string }) => {
+    mutationFn: async (data: Partial<{ currency: string; upcItemDbEnabled: boolean }>) => {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -1465,6 +1466,9 @@ export function useUpdateSettings() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], data);
+      // Toggling upcItemDbEnabled changes which providers /catalog/providers
+      // reports — refetch so the barcode-lookup UI updates without a reload.
+      queryClient.invalidateQueries({ queryKey: ["catalog", "providers"] });
       toast.success("Settings updated");
     },
     onError: toastError,

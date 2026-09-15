@@ -97,10 +97,12 @@ export default function Settings() {
   const { data: settings, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
   const [currency, setCurrency] = useState("USD");
+  const [upcItemDbEnabled, setUpcItemDbEnabled] = useState(false);
 
   useEffect(() => {
     if (settings) {
       setCurrency(settings.currency);
+      setUpcItemDbEnabled(settings.upcItemDbEnabled);
     }
   }, [settings]);
 
@@ -129,10 +131,36 @@ export default function Settings() {
               <Button
                 onClick={() => updateSettings.mutate({ currency })}
                 disabled={updateSettings.isPending || currency === settings?.currency}
+                aria-label="Save currency"
               >
                 Save
               </Button>
             </div>
+          </Card>
+
+          <Card className="max-w-sm">
+            <FieldLabel>Barcode lookup</FieldLabel>
+            <p className="mb-3 text-xs text-slate-400">
+              Quick-fills model and paint details from a barcode scan via UPCitemdb's free-tier API
+              (generic retail data, not hobby-specific — a convenience only).
+            </p>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={upcItemDbEnabled}
+                onChange={(e) => setUpcItemDbEnabled(e.target.checked)}
+                className="h-4 w-4 rounded-sm border-workshop-border accent-workshop-accent"
+              />
+              Enable barcode lookup
+            </label>
+            <Button
+              onClick={() => updateSettings.mutate({ upcItemDbEnabled })}
+              disabled={updateSettings.isPending || upcItemDbEnabled === settings?.upcItemDbEnabled}
+              className="mt-3"
+              aria-label="Save barcode lookup setting"
+            >
+              Save
+            </Button>
           </Card>
 
           <AccountCard />

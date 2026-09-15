@@ -143,6 +143,8 @@ export const wishlistCreateSchema = z.object({
 });
 export const wishlistUpdateSchema = wishlistCreateSchema.partial();
 
-export const settingsUpdateSchema = z.object({
+export const settingsSchema = z.object({
   currency: z.enum(CURRENCIES),
+  upcItemDbEnabled: z.boolean(),
 });
+export const settingsUpdateSchema = settingsSchema.partial();
