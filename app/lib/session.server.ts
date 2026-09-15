@@ -1,6 +1,7 @@
 import { createCookieSessionStorage } from "react-router";
 import { db } from "../db/client.server";
 import { authCredential } from "../db/schema";
+import { resolveSessionSecret } from "./sessionSecret.server";
 
 export interface SessionData {
   authenticated: boolean;
@@ -12,7 +13,7 @@ export interface SessionData {
   passwordChangedAt: string;
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET!;
+const SESSION_SECRET = resolveSessionSecret();
 
 /**
  * One constant for both the cookie's `maxAge` attribute and the expiry stored

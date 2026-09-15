@@ -35,8 +35,9 @@ npm run db:migrate && npm run db:seed   # first time only; db:seed is optional
 npm run dev                              # :3000 — one process, UI + API
 ```
 
-The server refuses to boot without `SESSION_SECRET` set (`.env` at repo root,
-see `.env.example`). The login itself lives in the database (one row, created
+No env vars are required. The cookie-signing key comes from `SESSION_SECRET`
+if set, otherwise it's generated once into `$DATA_DIR/session-secret` (see
+`app/lib/sessionSecret.server.ts`). The login itself lives in the database (one row, created
 via a first-run setup screen or migrated in from `AUTH_USERNAME`/
 `AUTH_PASSWORD` if those are set — see `app/lib/credentials.server.ts`), not
 in env vars. `npm run dev` uses `node --env-file-if-exists=.env`.

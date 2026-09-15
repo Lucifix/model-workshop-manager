@@ -9,15 +9,6 @@ import { parseTrustProxy } from "../app/lib/trustProxy.server";
 import { UPLOAD_DIR } from "../app/lib/upload.server";
 import { runMigrations } from "../app/db/migrate.server";
 
-// Fail closed: refuse to boot rather than silently serve an unauthenticated
-// API. Login credentials themselves are no longer required at boot — a
-// fresh install with no credential row serves the setup screen instead (see
-// ensureCredential below) — but sessions can't function at all without this.
-if (!process.env.SESSION_SECRET) {
-  console.error("Missing required env var SESSION_SECRET. See .env.example.");
-  process.exit(1);
-}
-
 // Idempotent — safe to run on every boot. Ensures a fresh deployment (empty
 // volume, no tables yet) works without a separate manual migration step.
 runMigrations();
