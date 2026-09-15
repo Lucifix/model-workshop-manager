@@ -1,0 +1,8 @@
+# Auto-loaded by Compose only when it sits next to docker-compose.yml — i.e.
+# in a repo clone. Builds the image from source instead of pulling it, so
+# `docker compose up -d --build` works exactly as it did before. A Portainer
+# stack or a curl'd docker-compose.yml never sees this file, and pulls.
+services:
+  app:
+    build:
+      context: .

@@ -1,7 +1,9 @@
 services:
   app:
-    build:
-      context: .
+    # Published multi-arch image (linux/amd64 + linux/arm64). In a repo
+    # clone, docker-compose.override.yml sits next to this file and builds
+    # this same tag from source instead.
+    image: ghcr.io/lucifix/model-workshop-manager:${APP_IMAGE_TAG:-latest}
     restart: unless-stopped
     # Runs unprivileged. Defaults to the image's own `node` user (uid 1000),
     # which owns /data and /backups inside the image — so a named volume just
