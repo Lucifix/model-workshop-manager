@@ -30,6 +30,62 @@ phone or desktop, running entirely on your own server.
 
 ## Quick start (Docker)
 
+Two ways to run it: pull the published image (no clone needed — this is the one to use for a
+Portainer stack), or build from source.
+
+### Option A: pull the published image
+
+Multi-arch (`linux/amd64` + `linux/arm64` — Raspberry Pi and ARM NAS boxes included):
+
+- GHCR: `ghcr.io/lucifix/model-workshop-manager`
+- Docker Hub: `docker.io/lucifix/model-workshop-manager`
+
+Paste this straight into Portainer (Stacks &rarr; Add stack &rarr; Web editor) or save it as
+`docker-compose.yml` anywhere. Set `SESSION_SECRET` in Portainer's environment-variables box, or
+in a `.env` file next to the compose file:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/lucifix/model-workshop-manager:latest
+    container_name: model-workshop-manager
+    restart: unless-stopped
+    ports:
+      - 8080:3000
+    environment:
+      # Required — the app won't start without it.
+      # Generate one with: openssl rand -base64 32
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in your stack environment or .env}
+      # Set true once you're serving this over HTTPS, or login will silently fail.
+      SESSION_COOKIE_SECURE: "false"
+      # Number of reverse proxies in front of the app, if any. Omit if none.
+      # TRUST_PROXY: 1
+    volumes:
+      - workshop-data:/data
+      - workshop-backups:/backups
+
+volumes:
+  workshop-data:
+  workshop-backups:
+```
+
+Everything else (database path, uploads, port inside the container) is baked into the image.
+For the full file — including the optional nightly-backup sidecar and bind-mount options — use
+[`docker-compose.yml`](docker-compose.yml) from this repo:
+
+```bash
+mkdir model-workshop-manager && cd model-workshop-manager
+curl -O https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/.env.example
+cp .env.example .env          # set SESSION_SECRET
+docker compose pull
+docker compose up -d
+```
+
+**Updating:** `docker compose pull && docker compose up -d`
+
+### Option B: build from source
+
 ```bash
 git clone <this-repo-url> && cd model-workshop-manager
 cp .env.example .env          # set SESSION_SECRET
@@ -37,10 +93,11 @@ docker compose up -d --build
 docker compose exec app npm run db:seed   # optional: sample data (migrations run automatically on boot)
 ```
 
-Open `http://localhost:8080` (or whatever `HOST_PORT` you set) — first visit shows a one-time
-setup screen to create your username/password, then you're logged in.
-
 **Updating:** `git pull && docker compose up -d --build`
+
+Both options open `http://localhost:8080` (or whatever `HOST_PORT` you set) — first visit shows a
+one-time setup screen to create your username/password, then you're logged in.
+
 **Stopping:** `docker compose down` (your data lives in the `workshop-data` volume, untouched)
 
 > **Before you expose this anywhere:** it's a single-user app meant for your LAN or a VPN
@@ -57,6 +114,7 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 | `TRUST_PROXY`           | No       | _(off)_          | Set to the number of reverse proxies in front of the app (usually `1`) so the login rate limiter sees real client IPs. `true` is refused — it's spoofable. |
 | `HOST_PORT`             | No       | `8080`           | Host port the app is served on.                                                                                                                            |
 | `APP_PORT`              | No       | `3000`           | Port the app listens on inside the container. Rarely needs changing.                                                                                       |
+| `APP_IMAGE_TAG`         | No       | `latest`         | Which published image tag to run (`latest`, or a pinned version like `1.2.3`). Ignored when building from source.                                          |
 | `APP_UID` / `APP_GID`   | No       | `1000`           | uid:gid the container runs as. Set these to match the owner of `WORKSHOP_DATA_DIR`/`BACKUP_DIR` if bind-mounting.                                          |
 | `WORKSHOP_DATA_DIR`     | No       | _(named volume)_ | Host path for the database + uploaded photos, instead of the `workshop-data` Docker volume — e.g. a NAS mount.                                             |
 | `BACKUP_DIR`            | No       | `./backups`      | Host path where backups (in-app, manual script, and the nightly job) are written.                                                                          |
