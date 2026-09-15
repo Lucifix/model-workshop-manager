@@ -121,6 +121,7 @@ export interface DashboardData {
   completedCount: number;
   plannedCount: number;
   totalPaints: number;
+  paintCatalogIsEmpty: boolean;
   lowStockCount: number;
   totalSupplies: number;
   lowStockSuppliesCount: number;

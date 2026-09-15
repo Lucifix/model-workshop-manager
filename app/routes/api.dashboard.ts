@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db/client.server";
 import {
   models,
@@ -15,10 +15,13 @@ const SUPPLY_LOW_STOCK_THRESHOLD = 1;
 export async function loader() {
   const allModels = db.select().from(models).all();
   const allProjects = db.select().from(projects).all();
-  const allPaints = db.select().from(paints).all();
   const allPaintInventory = db.select().from(paintInventory).all();
   const allSupplies = db.select().from(supplies).all();
   const allOwnedModels = db.select().from(ownedModels).all();
+  const paintCatalogSize = db
+    .select({ count: sql<number>`count(*)` })
+    .from(paints)
+    .get()!.count;
 
   const inProgress = allProjects.filter((p) => p.status === "In Progress");
   const completed = allProjects.filter((p) => p.status === "Completed");
@@ -27,6 +30,7 @@ export async function loader() {
     (p) => p.fillLevel === "Low" || p.fillLevel === "Empty",
   );
   const lowStockSupplies = allSupplies.filter((s) => s.quantity <= SUPPLY_LOW_STOCK_THRESHOLD);
+  const ownedPaintCount = new Set(allPaintInventory.map((p) => p.paintId)).size;
 
   const totalStashValue =
     allOwnedModels.reduce((sum, m) => sum + (m.purchasePrice ?? 0) * m.quantity, 0) +
@@ -54,7 +58,8 @@ export async function loader() {
     inProgressCount: inProgress.length,
     completedCount: completed.length,
     plannedCount: planned.length,
-    totalPaints: allPaints.length,
+    totalPaints: ownedPaintCount,
+    paintCatalogIsEmpty: paintCatalogSize === 0,
     lowStockCount: lowStock.length,
     totalSupplies: allSupplies.length,
     lowStockSuppliesCount: lowStockSupplies.length,
