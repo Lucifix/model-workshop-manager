@@ -27,7 +27,8 @@ services:
       # instead; safe to remove from .env once a credential exists either way.
       AUTH_USERNAME: ${AUTH_USERNAME:-}
       AUTH_PASSWORD: ${AUTH_PASSWORD:-}
-      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in your .env or stack environment — see .env.example}
+      # Optional — generated automatically into the data volume if unset.
+      SESSION_SECRET: ${SESSION_SECRET:-}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
       TRUST_PROXY: ${TRUST_PROXY:-}
     volumes:

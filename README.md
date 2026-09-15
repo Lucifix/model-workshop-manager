@@ -41,8 +41,7 @@ Multi-arch (`linux/amd64` + `linux/arm64` — Raspberry Pi and ARM NAS boxes inc
 - Docker Hub: `docker.io/lucifix/model-workshop-manager`
 
 Paste this straight into Portainer (Stacks &rarr; Add stack &rarr; Web editor) or save it as
-`docker-compose.yml` anywhere. Set `SESSION_SECRET` in Portainer's environment-variables box, or
-in a `.env` file next to the compose file:
+`docker-compose.yml` anywhere — nothing needs to be filled in:
 
 ```yaml
 services:
@@ -53,9 +52,6 @@ services:
     ports:
       - 8080:3000
     environment:
-      # Required — the app won't start without it.
-      # Generate one with: openssl rand -base64 32
-      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in your stack environment or .env}
       # Set true once you're serving this over HTTPS, or login will silently fail.
       SESSION_COOKIE_SECURE: "false"
       # Number of reverse proxies in front of the app, if any. Omit if none.
@@ -77,7 +73,7 @@ For the full file — including the optional nightly-backup sidecar and bind-mou
 mkdir model-workshop-manager && cd model-workshop-manager
 curl -O https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docker-compose.yml
 curl -O https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/.env.example
-cp .env.example .env          # set SESSION_SECRET
+cp .env.example .env          # optional tweaks — nothing required
 docker compose pull
 docker compose up -d
 ```
@@ -88,7 +84,7 @@ docker compose up -d
 
 ```bash
 git clone <this-repo-url> && cd model-workshop-manager
-cp .env.example .env          # set SESSION_SECRET
+cp .env.example .env          # optional tweaks — nothing required
 docker compose up -d --build
 docker compose exec app npm run db:seed   # optional: sample data (migrations run automatically on boot)
 ```
@@ -109,7 +105,7 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 
 | Variable                | Required | Default          | What it does                                                                                                                                               |
 | ----------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SESSION_SECRET`        | Yes      | —                | Signs the session cookie. Any string works — generate one with `openssl rand -base64 32`.                                                                  |
+| `SESSION_SECRET`        | No       | _(generated)_    | Signs the session cookie. Unset, a random key is generated on first boot into the data volume (`/data/session-secret`). Set it only to pin your own key.   |
 | `SESSION_COOKIE_SECURE` | No       | `false`          | Set `true` once served over HTTPS — otherwise the browser won't send the cookie and login silently fails.                                                  |
 | `TRUST_PROXY`           | No       | _(off)_          | Set to the number of reverse proxies in front of the app (usually `1`) so the login rate limiter sees real client IPs. `true` is refused — it's spoofable. |
 | `HOST_PORT`             | No       | `8080`           | Host port the app is served on.                                                                                                                            |
@@ -165,12 +161,15 @@ reverse proxy, LAN-only or on a VPN.
   payload and checked on every request, not left to the browser's cookie lifetime.
 - With no session store there is nothing to delete, so logging out can only clear the browser's
   copy of the cookie. Changing your password (or running `auth:reset`) invalidates every other
-  existing session immediately, the same way — no reason to also rotate `SESSION_SECRET` for that.
-  Rotating `SESSION_SECRET` and restarting remains the blunter, whole-app option.
+  existing session immediately, the same way — no reason to also rotate the signing key for that.
+  Deleting `/data/session-secret` (or changing `SESSION_SECRET`, if you set one) and restarting
+  remains the blunter, whole-app option.
 - The login endpoint is rate-limited (5 attempts/minute). Behind a reverse
   proxy, set `TRUST_PROXY` (see the table above) or that budget is shared
   across all clients rather than counted per client.
-- The app **refuses to start** if `SESSION_SECRET` isn't set — see `.env.example`.
+- The cookie-signing key is 32 random bytes generated on first boot and stored with `0600`
+  permissions at `/data/session-secret`, outside the database — so a backup restore doesn't sign
+  you out. `SESSION_SECRET` overrides it if set.
 - Set `SESSION_COOKIE_SECURE=true` once this is served over HTTPS, otherwise the browser won't
   send the cookie and login will silently fail.
 - File uploads are size-capped (25 MB/file) but not otherwise scanned.
