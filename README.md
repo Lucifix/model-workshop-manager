@@ -8,9 +8,9 @@ Manager keeps your catalog, inventory, and builds in one place, installable as a
 phone or desktop, running entirely on your own server.
 
 <p align="center">
-  <img src="screenshots/mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
-  <img src="screenshots/mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
-  <img src="screenshots/mobile-models.png" width="240" alt="The model catalog, browsable on the go">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-models.png" width="240" alt="The model catalog, browsable on the go">
 </p>
 
 ## What it does

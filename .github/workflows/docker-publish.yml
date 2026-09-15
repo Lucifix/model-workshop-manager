@@ -197,3 +197,28 @@ jobs:
             docker buildx imagetools create \
               -t "docker.io/${DOCKERHUB_USERNAME}/${REPO_NAME}:${tag##*:}" "$tag"
           done
+
+      # The merge job otherwise never checks out the repo — it only needs
+      # the digests — so fetch just the README for the description sync.
+      - uses: actions/checkout@v4
+        if: steps.hub.outputs.enabled == 'true' && github.ref == 'refs/heads/main'
+        with:
+          sparse-checkout: README.md
+          sparse-checkout-cone-mode: false
+
+      # Main only, so a release tag or manual run can't overwrite the Hub
+      # overview with some other ref's README. Needs a token with Read,
+      # Write, Delete scope — Read & Write is enough to push images but this
+      # endpoint rejects it with a 403. url-completion rewrites relative
+      # markdown links (Docker Hub can't resolve them); raw <img> tags are
+      # left alone, which is why the README uses absolute image URLs.
+      - name: Sync README to Docker Hub
+        if: steps.hub.outputs.enabled == 'true' && github.ref == 'refs/heads/main'
+        uses: peter-evans/dockerhub-description@v5
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.REPO_NAME }}
+          short-description: Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware.
+          readme-filepath: ./README.md
+          enable-url-completion: true
