@@ -14,6 +14,7 @@ import {
   type CatalogSearchResult,
   type ModelListRow,
 } from "../api/client";
+import { decodeBarcodeFromImage } from "../lib/barcodeScan";
 import { formatCurrency } from "../lib/currency";
 import {
   CATEGORY_PRESETS,
@@ -33,7 +34,7 @@ import {
   type ModelPrefill,
 } from "../lib/modelPrefill";
 import { Combobox } from "./Combobox";
-import { CameraIcon, ChevronDownIcon, SearchIcon } from "./icons";
+import { CameraIcon, ChevronDownIcon, ScanBarcodeIcon, SearchIcon } from "./icons";
 import { PhotoPicker } from "./PhotoPicker";
 import { TagInput } from "./TagInput";
 import { Button, Card, FieldLabel, Input, Textarea } from "./ui";
@@ -143,6 +144,7 @@ export function AddModelForm({
   const [imageBroken, setImageBroken] = useState(false);
 
   const [query, setQuery] = useState("");
+  const [scanning, setScanning] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [searchResults, setSearchResults] = useState<CatalogSearchResult[] | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -165,6 +167,7 @@ export function AddModelForm({
   const [saving, setSaving] = useState(false);
 
   const queryInputRef = useRef<HTMLInputElement>(null);
+  const scanInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const last = readLastManufacturer();
@@ -354,7 +357,7 @@ export function AddModelForm({
     if (!lookupEnabled) {
       setNotice({
         tone: "info",
-        text: "Searching by name needs the online lookup, which is off. Type the barcode instead, or fill the fields in by hand.",
+        text: "Searching by name needs the online lookup, which is off. Scan or type the barcode instead, or fill the fields in by hand.",
       });
       return;
     }
@@ -378,6 +381,30 @@ export function AddModelForm({
     if (page) {
       setSearchResults((prev) => [...(prev ?? []), ...page.results]);
       setNextOffset(page.nextOffset);
+    }
+  };
+
+  const handleScan = async (file: File) => {
+    setScanning(true);
+    setNotice(null);
+    try {
+      const code = await decodeBarcodeFromImage(file);
+      if (!code) {
+        setNotice({
+          tone: "warn",
+          text: "Couldn't read a barcode in that photo. Get closer so the barcode fills more of the frame, keep it in focus, or type the digits instead.",
+        });
+        return;
+      }
+      setQuery(code);
+      await find(code);
+    } catch {
+      setNotice({
+        tone: "warn",
+        text: "Couldn't open that photo to look for a barcode — type the digits instead.",
+      });
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -498,7 +525,7 @@ export function AddModelForm({
     }
   };
 
-  const busy = saving || catalogSearch.isPending;
+  const busy = saving || catalogSearch.isPending || scanning;
   const imageChoices = (applied?.imageUrls ?? []).filter((url) => !brokenImages.has(url));
 
   return (
@@ -512,7 +539,7 @@ export function AddModelForm({
         className="flex flex-col gap-4"
         noValidate
       >
-        {/* Quick fill: barcode lookup / text search */}
+        {/* Quick fill: barcode scan / lookup / text search */}
         <div>
           <FieldLabel htmlFor="add-model-find">Barcode or kit search</FieldLabel>
           <div className="flex gap-2">
@@ -536,6 +563,17 @@ export function AddModelForm({
             <Button
               type="button"
               variant="secondary"
+              onClick={() => scanInputRef.current?.click()}
+              disabled={busy}
+              aria-label="Scan barcode from photo"
+              title="Scan barcode from a photo"
+            >
+              <ScanBarcodeIcon className="size-4" />
+              <span className="hidden sm:inline">{scanning ? "Reading…" : "Scan"}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
               onClick={() => void find(query)}
               disabled={busy || !query.trim()}
             >
@@ -543,6 +581,21 @@ export function AddModelForm({
               {catalogSearch.isPending ? "Looking…" : "Find"}
             </Button>
           </div>
+          <input
+            ref={scanInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            data-testid="barcode-scan-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) {
+                void handleScan(file);
+              }
+            }}
+          />
           {!lookupEnabled && catalogProviders && (
             <p className="mt-1.5 text-xs text-slate-500">
               Barcodes are checked against your own catalog. To auto-fill new kits from the barcode
