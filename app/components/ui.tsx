@@ -175,8 +175,12 @@ export const Textarea = forwardRef<
   return <textarea ref={ref} className={`${fieldClass} ${className}`} {...props} />;
 });
 
-export function FieldLabel({ children }: PropsWithChildren) {
-  return <label className="mb-1.5 block text-sm font-medium text-slate-300">{children}</label>;
+export function FieldLabel({ children, htmlFor }: PropsWithChildren<{ htmlFor?: string }>) {
+  return (
+    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-slate-300">
+      {children}
+    </label>
+  );
 }
 
 export function ProgressBar({ percent, className = "" }: { percent: number; className?: string }) {

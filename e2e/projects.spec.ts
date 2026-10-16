@@ -10,8 +10,8 @@ test("can start a new build with a new model and track its progress", async ({ p
 
   await page.getByRole("button", { name: "Can't find it? + Add a new model" }).click();
   const modelForm = page.locator("form");
-  await modelForm.locator("select").selectOption("__new__");
-  await modelForm.getByPlaceholder("Manufacturer name").fill("E2E Build Manufacturer");
+  await modelForm.getByLabel("Manufacturer").fill("E2E Build Manufacturer");
+  await modelForm.getByRole("option", { name: '+ Add "E2E Build Manufacturer"' }).click();
   await modelForm.getByPlaceholder("05239").fill("E2E-200");
   await modelForm.getByPlaceholder("Smit Houston").fill("E2E Build Kit");
   await modelForm.getByRole("button", { name: "Save model" }).click();
@@ -46,8 +46,8 @@ test("can edit and delete a build log entry", async ({ page }) => {
   await page.getByRole("button", { name: "Can't find it? + Add a new model" }).click();
 
   const modelForm = page.locator("form");
-  await modelForm.locator("select").selectOption("__new__");
-  await modelForm.getByPlaceholder("Manufacturer name").fill("E2E Log Manufacturer");
+  await modelForm.getByLabel("Manufacturer").fill("E2E Log Manufacturer");
+  await modelForm.getByRole("option", { name: '+ Add "E2E Log Manufacturer"' }).click();
   await modelForm.getByPlaceholder("05239").fill("E2E-201");
   await modelForm.getByPlaceholder("Smit Houston").fill("E2E Log Kit");
   await modelForm.getByRole("button", { name: "Save model" }).click();

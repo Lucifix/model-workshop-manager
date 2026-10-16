@@ -138,6 +138,8 @@ export default function ProjectNew() {
             <AddModelForm
               onCreated={(model) => setSelectedModel(model)}
               onCancel={() => setShowAddForm(false)}
+              ownershipToggle={false}
+              addAnother={false}
             />
           )}
         </>
