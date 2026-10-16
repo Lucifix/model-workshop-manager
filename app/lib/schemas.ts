@@ -16,6 +16,25 @@ export function isHttpUrl(value: string): boolean {
   return z.httpUrl().safeParse(value).success;
 }
 
+type WithoutDefaults<S extends z.ZodRawShape> = {
+  [K in keyof S]: S[K] extends z.ZodDefault<infer Inner> ? Inner : S[K];
+};
+
+// Zod 4 still applies a field's .default() inside .partial(), so an update
+// schema derived straight from a create schema fills every omitted field with
+// its create-time default — a PATCH of just { progressPercent } would also
+// reset status to "Planned" (issue #14). Strip the defaults first so a PATCH
+// only touches the fields it actually sends.
+function partialWithoutDefaults<S extends z.ZodRawShape>(schema: z.ZodObject<S>) {
+  const shape = Object.fromEntries(
+    Object.entries(schema.shape).map(([key, field]) => [
+      key,
+      field instanceof z.ZodDefault ? field.unwrap() : field,
+    ]),
+  ) as WithoutDefaults<S>;
+  return z.object(shape).partial();
+}
+
 export const manufacturerCreateSchema = z.object({
   name: z.string().min(1),
   slug: z.string().min(1),
@@ -89,7 +108,7 @@ export const paintInventoryCreateSchema = z.object({
   purchasePrice: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
-export const paintInventoryUpdateSchema = paintInventoryCreateSchema.partial();
+export const paintInventoryUpdateSchema = partialWithoutDefaults(paintInventoryCreateSchema);
 
 export const projectCreateSchema = z.object({
   modelId: z.number().int().positive(),
@@ -100,7 +119,7 @@ export const projectCreateSchema = z.object({
   completedAt: z.string().optional(),
   notes: z.string().optional(),
 });
-export const projectUpdateSchema = projectCreateSchema.partial().extend({
+export const projectUpdateSchema = partialWithoutDefaults(projectCreateSchema).extend({
   coverPhotoId: z.number().int().positive().nullable().optional(),
 });
 
@@ -125,7 +144,7 @@ export const supplyCreateSchema = z.object({
   purchasePrice: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
-export const supplyUpdateSchema = supplyCreateSchema.partial();
+export const supplyUpdateSchema = partialWithoutDefaults(supplyCreateSchema);
 
 export const shoppingListCreateSchema = z.object({
   paintId: z.number().int().positive().optional(),
@@ -141,7 +160,7 @@ export const wishlistCreateSchema = z.object({
   targetPrice: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
-export const wishlistUpdateSchema = wishlistCreateSchema.partial();
+export const wishlistUpdateSchema = partialWithoutDefaults(wishlistCreateSchema);
 
 export const settingsSchema = z.object({
   currency: z.enum(CURRENCIES),
