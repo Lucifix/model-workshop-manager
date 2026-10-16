@@ -45,6 +45,7 @@ export default [
     route("api/paints/:id", "routes/api.paints.$id.ts"),
 
     route("api/models", "routes/api.models.ts"),
+    route("api/models/field-options", "routes/api.models.field-options.ts"),
     route("api/models/:id", "routes/api.models.$id.ts"),
     route("api/models/:id/image", "routes/api.models.$id.image.ts"),
     route("api/models/:id/instructions", "routes/api.models.$id.instructions.ts"),

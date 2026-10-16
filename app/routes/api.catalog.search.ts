@@ -1,5 +1,6 @@
 import { providers } from "../lib/catalogProviders.server";
 import { badRequest } from "../lib/api.server";
+import { CatalogProviderError } from "../providers/types";
 
 export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
@@ -24,6 +25,22 @@ export async function loader({ request }: { request: Request }) {
     return badRequest("provider_disabled", { provider: selected.id });
   }
 
-  const results = await selected.searchModels(q);
-  return Response.json({ provider: selected.id, results });
+  const offset = Number(url.searchParams.get("offset") ?? 0);
+  try {
+    const page = await selected.searchModels(q, {
+      offset: Number.isSafeInteger(offset) && offset > 0 ? offset : 0,
+    });
+    return Response.json({ provider: selected.id, ...page, quota: selected.quota?.() ?? null });
+  } catch (err) {
+    if (!(err instanceof CatalogProviderError)) {
+      throw err;
+    }
+    // Distinct statuses so the form can tell "out of lookups for today" and
+    // "slow down" apart from a plain "no match" (which is a 200 with no results).
+    const status = err.code === "unavailable" ? 503 : 429;
+    return Response.json(
+      { error: err.code, provider: selected.id, quota: selected.quota?.() ?? null },
+      { status },
+    );
+  }
 }

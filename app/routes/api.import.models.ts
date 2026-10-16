@@ -5,7 +5,7 @@ import { readUploadedRows, type ImportResult } from "../lib/csv.server";
 import { isHttpUrl } from "../lib/schemas";
 
 /** Import models from CSV/JSON. Columns: manufacturerId, kitNumber, name,
- * scale, category, difficulty, partCount, description. */
+ * scale, category, difficulty, partCount, description, barcode. */
 export async function action({ request }: { request: Request }) {
   const { rows, error } = await readUploadedRows(request);
   if (error) {
@@ -67,6 +67,9 @@ export async function action({ request }: { request: Request }) {
         sourceUrl: row.sourceUrl || undefined,
         imageUrl: row.imageUrl || undefined,
         instructionUrl: row.instructionUrl || undefined,
+        // Silently dropped rather than rejecting the row: a mangled barcode
+        // (Excel loves turning EANs into 4.95E+12) shouldn't block the kit.
+        barcode: /^(?:\d{8}|\d{12,14})$/.test(row.barcode ?? "") ? row.barcode : undefined,
         importedAt: new Date().toISOString(),
       });
       result.imported++;

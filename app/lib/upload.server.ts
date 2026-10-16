@@ -73,3 +73,72 @@ export async function saveUploadedFile(
   const relativePath = join(...subdirParts, filename);
   return { filename, relativePath, url: `/uploads/${relativePath}` };
 }
+
+export class RemoteImageError extends Response {
+  constructor(reason: string) {
+    super(JSON.stringify({ error: "remote_image_failed", reason }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+// Retail CDNs are sloppy with Content-Type ("image/jpg", or a bare
+// "application/octet-stream"), so the bytes decide when the header doesn't.
+function sniffImageType(bytes: Uint8Array): string | undefined {
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.subarray(start, end));
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (ascii(0, 8) === "\x89PNG\r\n\x1a\n") {
+    return "image/png";
+  }
+  if (ascii(0, 4) === "GIF8") {
+    return "image/gif";
+  }
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") {
+    return "image/webp";
+  }
+  if (ascii(4, 12) === "ftypavif") {
+    return "image/avif";
+  }
+  return undefined;
+}
+
+/** Downloads a remote image into UPLOAD_DIR, same rules as an upload: size
+ * cap, image types only, extension derived server-side. Callers must vet the
+ * URL first — this is only for images a catalog provider returned (see
+ * CatalogProvider.ownsImageUrl), never an arbitrary user-supplied address. */
+export async function saveRemoteImage(
+  url: string,
+  ...subdirParts: string[]
+): Promise<{ filename: string; relativePath: string; url: string }> {
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  } catch {
+    throw new RemoteImageError("fetch_failed");
+  }
+  if (!res.ok) {
+    throw new RemoteImageError(`http_${res.status}`);
+  }
+  if (Number(res.headers.get("content-length") ?? 0) > MAX_FILE_SIZE) {
+    throw new UploadTooLargeError();
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const declared = res.headers.get("content-type")?.split(";")[0]!.trim().toLowerCase();
+  const type =
+    declared === "image/jpg"
+      ? "image/jpeg"
+      : declared && IMAGE_UPLOAD_TYPES.has(declared)
+        ? declared
+        : sniffImageType(bytes);
+  if (!type) {
+    throw new UnsupportedUploadTypeError(IMAGE_UPLOAD_TYPES);
+  }
+  return saveUploadedFile(
+    new File([bytes], "remote", { type }),
+    IMAGE_UPLOAD_TYPES,
+    ...subdirParts,
+  );
+}

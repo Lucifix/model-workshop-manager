@@ -9,7 +9,7 @@ export const manualProvider: CatalogProvider = {
   id: "manual",
   label: "Manual entry",
   async searchModels() {
-    return [];
+    return { results: [] };
   },
   async getModel() {
     return null;

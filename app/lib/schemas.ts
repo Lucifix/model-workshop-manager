@@ -73,9 +73,20 @@ export const modelCreateSchema = z.object({
   sourceUrl: z.httpUrl().optional(),
   imageUrl: z.httpUrl().optional(),
   instructionUrl: z.httpUrl().optional(),
+  barcode: z
+    .string()
+    .trim()
+    .regex(/^(?:\d{8}|\d{12,14})$/, "EAN-8, UPC-A, EAN-13 or GTIN-14 digits")
+    .optional(),
   tagNames: z.array(z.string().min(1)).optional(),
 });
 export const modelUpdateSchema = modelCreateSchema.partial();
+
+// Only a URL: where it came from is checked server-side against what the
+// catalog providers actually returned (CatalogProvider.ownsImageUrl).
+export const modelImageImportSchema = z.object({
+  url: z.httpUrl(),
+});
 
 export const tagCreateSchema = z.object({
   name: z.string().min(1),
