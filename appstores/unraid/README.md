@@ -16,8 +16,9 @@ ca_profile.xml                      repository profile shown in Community Apps
 templates/model-workshop-manager.xml the Docker template
 ```
 
-`TemplateURL` and `WebPage` assume the repo is named `unraid-templates`. Pick
-a different name and you'll need to update both.
+`TemplateURL` and `WebPage` assume the repo is named `unraid-templates`. Both
+return 404 until that repo exists. Pick a different name and you'll need to
+update both.
 
 ## Unraid-specific defaults
 

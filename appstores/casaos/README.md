@@ -21,6 +21,12 @@ Notes on the choices:
   change it.
 - The store's app assets (`icon.svg`, `thumbnail.png`, `screenshot-*.png`) are
   copied from this repo when you submit, not stored here twice.
+- **The `cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/...`
+  URLs return 404 until the store PR is merged.** Every app in the store points at
+  its own folder this way. The store build doesn't download them: it maps
+  `Apps/ModelWorkshopManager/<file>` to the copied local file, then rewrites the
+  URL to the published asset. If the files aren't copied in (step 2 below), the
+  build fails on those URLs.
 
 ## Submitting
 
