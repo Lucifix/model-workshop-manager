@@ -10,6 +10,7 @@ import {
   useCreateModel,
   useManufacturers,
   useModelFieldOptions,
+  useModels,
   useUploadModelImage,
   type CatalogSearchResult,
   type ModelListRow,
@@ -28,6 +29,7 @@ import {
   DETAIL_FIELDS,
   EMPTY_MODEL_FORM,
   applyPrefill,
+  clearAutoFilled,
   prefillFromCatalogResult,
   type ModelFormField,
   type ModelFormValues,
@@ -66,6 +68,10 @@ function writeLastManufacturer(name: string) {
   } catch {
     // see readLastManufacturer
   }
+}
+
+function kitKey(manufacturer: string, kitNumber: string): string {
+  return `${manufacturer.trim().toLowerCase()}|${kitNumber.trim().toLowerCase()}`;
 }
 
 function scaleSortKey(scale: string): number {
@@ -123,6 +129,7 @@ export function AddModelForm({
   const { data: manufacturers } = useManufacturers();
   const { data: fieldOptions } = useModelFieldOptions();
   const { data: catalogProviders } = useCatalogProviders();
+  const { data: catalogRows } = useModels();
   const lookupEnabled = catalogProviders?.some((p) => p.id === "upcitemdb") ?? false;
   const createManufacturer = useCreateManufacturer();
   const createModel = useCreateModel();
@@ -145,7 +152,16 @@ export function AddModelForm({
       touchedRef.current = new Set(touchedRef.current).add(field);
     }
   };
-  const [prefilled, setPrefilled] = useState<ReadonlySet<ModelFormField>>(new Set());
+  const [prefilled, setPrefilledState] = useState<ReadonlySet<ModelFormField>>(new Set());
+  const prefilledRef = useRef(prefilled);
+  const setPrefilled = (next: ReadonlySet<ModelFormField>) => {
+    prefilledRef.current = next;
+    setPrefilledState(next);
+  };
+  // The barcode the last applied lookup result was matched by — it belongs
+  // to that kit and goes away with it when the user moves on (see
+  // clearAutoFilled).
+  const boundBarcodeRef = useRef<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [owned, setOwned] = useState(true);
@@ -223,7 +239,10 @@ export function AddModelForm({
   const kitNumberTrimmed = values.kitNumber.trim();
   useEffect(() => {
     setDuplicate(null);
-    if (!matchedManufacturer || !kitNumberTrimmed) {
+    // Paused while saving: creating a new manufacturer refreshes the list
+    // mid-save, which would re-run this and flag the kit being saved as a
+    // duplicate of itself. The submit path does its own pre-save check.
+    if (saving || !matchedManufacturer || !kitNumberTrimmed) {
       return;
     }
     const controller = new AbortController();
@@ -250,7 +269,7 @@ export function AddModelForm({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [matchedManufacturer, kitNumberTrimmed]);
+  }, [saving, matchedManufacturer, kitNumberTrimmed]);
 
   const scaleOptions = useMemo(
     () =>
@@ -267,6 +286,30 @@ export function AddModelForm({
     () => mergeOptions(DIFFICULTY_PRESETS, fieldOptions?.difficulties ?? []),
     [fieldOptions],
   );
+  // Search picks get the same "you already have this" treatment a scanned
+  // barcode gets — flagged in the list, before anything is filled in.
+  const findInCatalog = useMemo(() => {
+    const byBarcode = new Map<string, ModelListRow>();
+    const byKit = new Map<string, ModelListRow>();
+    for (const row of catalogRows ?? []) {
+      if (row.model.barcode) {
+        byBarcode.set(row.model.barcode, row);
+      }
+      if (row.manufacturer) {
+        byKit.set(kitKey(row.manufacturer.name, row.model.kitNumber), row);
+      }
+    }
+    return (r: CatalogSearchResult): ModelListRow | undefined => {
+      for (const code of [r.barcode, ...(r.barcodes ?? [])]) {
+        const hit = code ? byBarcode.get(code) : undefined;
+        if (hit) {
+          return hit;
+        }
+      }
+      return r.kitNumber ? byKit.get(kitKey(r.manufacturerName, r.kitNumber)) : undefined;
+    };
+  }, [catalogRows]);
+
   const manufacturerOptions = useMemo(
     () => (manufacturers ?? []).map((m) => m.name).toSorted((a, b) => a.localeCompare(b)),
     [manufacturers],
@@ -275,14 +318,11 @@ export function AddModelForm({
   const setField = <K extends ModelFormField>(field: K, value: ModelFormValues[K]) => {
     setValues({ ...valuesRef.current, [field]: value });
     markTouched(field);
-    setPrefilled((p) => {
-      if (!p.has(field)) {
-        return p;
-      }
-      const next = new Set(p);
+    if (prefilledRef.current.has(field)) {
+      const next = new Set(prefilledRef.current);
       next.delete(field);
-      return next;
-    });
+      setPrefilled(next);
+    }
     if (field === "manufacturer" || field === "kitNumber" || field === "name") {
       setErrors((e) => ({ ...e, [field]: undefined }));
     }
@@ -293,7 +333,7 @@ export function AddModelForm({
   const prefill = (data: ModelPrefill): ModelFormField[] => {
     const result = applyPrefill(valuesRef.current, touchedRef.current, data);
     setValues(result.values);
-    setPrefilled((p) => new Set([...p, ...result.applied]));
+    setPrefilled(new Set([...prefilledRef.current, ...result.applied]));
     if (result.applied.some((f) => DETAIL_FIELDS.includes(f))) {
       setShowDetails(true);
     }
@@ -301,13 +341,10 @@ export function AddModelForm({
   };
 
   const applyResult = (result: CatalogSearchResult) => {
-    // A text-search pick carries one reseller's barcode; don't let it replace
-    // the one actually scanned off this box.
-    const data = prefillFromCatalogResult(result);
-    if (valuesRef.current.barcode) {
-      delete data.barcode;
-    }
-    const filled = prefill(data);
+    // A barcode scanned off this box is "touched", so applyPrefill keeps it
+    // over the (reseller) barcode a text-search pick carries.
+    const filled = prefill(prefillFromCatalogResult(result));
+    boundBarcodeRef.current = valuesRef.current.barcode || null;
     setApplied(result);
     setImageBroken(false);
     setLookupImages((prev) => new Set([...prev, ...(result.imageUrls ?? [])]));
@@ -326,13 +363,35 @@ export function AddModelForm({
     }
   };
 
+  /** A new Find means the user has moved on from the last result: clear
+   * what it filled in (keeping anything typed) so the old kit doesn't sit
+   * next to — or get saved with — the new one. */
+  const startNewKit = () => {
+    const cleared = clearAutoFilled(valuesRef.current, touchedRef.current, prefilledRef.current, {
+      boundBarcode: boundBarcodeRef.current,
+      lookupImages,
+    });
+    // Back to the remembered default rather than blank, same as on open.
+    setValues({
+      ...cleared.values,
+      manufacturer: cleared.values.manufacturer || readLastManufacturer(),
+    });
+    touchedRef.current = cleared.touched;
+    setPrefilled(new Set());
+    boundBarcodeRef.current = null;
+    setApplied(null);
+    setLookupImages(new Set());
+    setImageBroken(false);
+    setNotice(null);
+    setSearchResults(null);
+  };
+
   const find = async (raw: string) => {
     const q = raw.trim();
     if (!q) {
       return;
     }
-    setNotice(null);
-    setSearchResults(null);
+    startNewKit();
 
     if (isBarcode(q)) {
       // The local catalog first: re-scanning a kit you already have should
@@ -347,9 +406,14 @@ export function AddModelForm({
             text: (
               <>
                 Already in your catalog: <strong>{existing.model.name}</strong>.{" "}
-                <Link to={`/models/${existing.model.id}`} className="underline">
+                {/* onCreated, not a link: on New Build "open" means "build this one". */}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => onCreated(existing.model)}
+                >
                   Open
-                </Link>
+                </button>
               </>
             ),
           });
@@ -456,6 +520,7 @@ export function AddModelForm({
     });
     touchedRef.current = new Set();
     setPrefilled(new Set());
+    boundBarcodeRef.current = null;
     setShowDetails(false);
     setPhoto(null);
     setImageBroken(false);
@@ -704,37 +769,46 @@ export function AddModelForm({
               Pick a kit
             </p>
             <ul className="max-h-72 divide-y divide-workshop-border overflow-y-auto">
-              {searchResults.map((r) => (
-                <li key={`${r.manufacturerName}|${r.kitNumber}|${r.externalId}`}>
-                  <button
-                    type="button"
-                    onClick={() => applyResult(r)}
-                    className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-workshop-panelmuted"
-                  >
-                    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-workshop-border bg-workshop-panelmuted">
-                      {r.imageUrl && !brokenImages.has(r.imageUrl) && (
-                        <img
-                          onError={() => markBroken(r.imageUrl!)}
-                          src={r.imageUrl}
-                          alt=""
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                          className="size-full object-cover"
-                        />
+              {searchResults.map((r) => {
+                const existing = findInCatalog(r);
+                return (
+                  <li key={`${r.manufacturerName}|${r.kitNumber}|${r.externalId}`}>
+                    <button
+                      type="button"
+                      onClick={() => (existing ? onCreated(existing.model) : applyResult(r))}
+                      className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-workshop-panelmuted"
+                    >
+                      <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-workshop-border bg-workshop-panelmuted">
+                        {r.imageUrl && !brokenImages.has(r.imageUrl) && (
+                          <img
+                            onError={() => markBroken(r.imageUrl!)}
+                            src={r.imageUrl}
+                            alt=""
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            className="size-full object-cover"
+                          />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-slate-100">
+                          {r.name}
+                        </span>
+                        <span className="block truncate text-xs text-slate-400">
+                          {[r.manufacturerName, r.kitNumber, r.scale].filter(Boolean).join(" · ")}
+                          {(r.listingCount ?? 1) > 1 && ` · ${r.listingCount} listings`}
+                        </span>
+                      </span>
+                      {existing && (
+                        <span className="shrink-0 text-right text-xs leading-tight">
+                          <span className="block text-emerald-400">In your catalog</span>
+                          <span className="text-slate-400 underline">Open</span>
+                        </span>
                       )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-slate-100">
-                        {r.name}
-                      </span>
-                      <span className="block truncate text-xs text-slate-400">
-                        {[r.manufacturerName, r.kitNumber, r.scale].filter(Boolean).join(" · ")}
-                        {(r.listingCount ?? 1) > 1 && ` · ${r.listingCount} listings`}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
             {nextOffset !== undefined && (
               <button

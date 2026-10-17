@@ -34,6 +34,7 @@ test("can add a new model with a new manufacturer", async ({ page }) => {
   await form.getByLabel("Name", { exact: true }).fill("E2E Test Kit");
   await form.getByRole("button", { name: "Save model" }).click();
 
+  await expect(page).toHaveURL(/\/models\/\d+$/);
   await expect(page.getByRole("heading", { name: "E2E Test Kit" })).toBeVisible();
   await expect(page.getByText("E2E-001")).toBeVisible();
   // "I own this kit" is on by default.
@@ -112,4 +113,88 @@ test("the add form is a dialog that closes with × or Escape", async ({ page }) 
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
+});
+
+test("moving on to a second kit clears the first one, barcode included", async ({ page }) => {
+  // The lookup itself is mocked in the browser: this exercises the form's
+  // bookkeeping, and must never spend real UPCitemdb calls.
+  const suffix = String(Date.now()).slice(-8);
+  const barcodeA = `40${suffix}001`;
+  const barcodeB = `49${suffix}002`;
+  const makerB = unique("E2E Second Maker");
+  await page.route("**/api/catalog/providers", (route) =>
+    route.fulfill({
+      json: [
+        { id: "manual", label: "Manual entry" },
+        { id: "upcitemdb", label: "Barcode lookup (UPCitemdb)" },
+      ],
+    }),
+  );
+  await page.route(
+    (url) => url.pathname === "/api/catalog/search",
+    (route) => {
+      const q = new URL(route.request().url()).searchParams.get("q");
+      const results =
+        q === barcodeA
+          ? [
+              {
+                externalId: barcodeA,
+                barcode: barcodeA,
+                manufacturerName: unique("E2E First Maker"),
+                kitNumber: "A-1",
+                name: "First Kit",
+                scale: "1:200",
+                priceRange: { low: 39.95, high: 39.95 },
+              },
+            ]
+          : [
+              {
+                externalId: barcodeB,
+                barcode: barcodeB,
+                barcodes: [barcodeB],
+                manufacturerName: makerB,
+                kitNumber: "B-2",
+                name: "Second Kit",
+              },
+            ];
+      return route.fulfill({ json: { results, quota: null } });
+    },
+  );
+
+  const form = await openAddForm(page);
+  const find = form.getByLabel("Barcode or kit search");
+
+  // Kit A by barcode: matched and filled, with its price line and barcode.
+  await find.fill(barcodeA);
+  await find.press("Enter");
+  await expect(form.getByLabel("Name", { exact: true })).toHaveValue("First Kit");
+  await expect(form.getByText(/US retail/)).toBeVisible();
+  await expect(form.getByTitle("Saved with this kit")).toContainText(barcodeA);
+
+  // Moving on: a name search clears A before B's results are shown...
+  await find.fill("second kit");
+  await find.press("Enter");
+  await expect(form.getByRole("button", { name: /Second Kit/ })).toBeVisible();
+  await expect(form.getByLabel("Name", { exact: true })).toHaveValue("");
+  await expect(form.getByText(/US retail/)).toBeHidden();
+  await expect(form.getByTitle("Saved with this kit")).toBeHidden();
+
+  // ...and picking B gives B's barcode, not A's.
+  await form.getByRole("button", { name: /Second Kit/ }).click();
+  await expect(form.getByLabel("Name", { exact: true })).toHaveValue("Second Kit");
+  await expect(form.getByTitle("Saved with this kit")).toContainText(barcodeB);
+  await form.getByRole("button", { name: "Save model" }).click();
+  await expect(page.getByRole("heading", { name: "Second Kit" })).toBeVisible();
+
+  const saved = await (await page.request.get(`/api/models?barcode=${barcodeB}`)).json();
+  expect(saved.map((r: { model: { name: string } }) => r.model.name)).toEqual(["Second Kit"]);
+  const stale = await (await page.request.get(`/api/models?barcode=${barcodeA}`)).json();
+  expect(stale).toEqual([]);
+
+  // Searching for it again flags it as already in the catalog, in the list.
+  await page.getByRole("link", { name: "Models", exact: true }).click();
+  await page.getByRole("button", { name: "+ Add model" }).click();
+  await find.fill("second kit");
+  await find.press("Enter");
+  await expect(form.getByRole("button", { name: /Second Kit/ })).toContainText("In your catalog");
 });

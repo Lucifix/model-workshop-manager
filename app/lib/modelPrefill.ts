@@ -131,3 +131,45 @@ export function prefillFromCatalogResult(result: {
     imageUrl: result.imageUrl,
   };
 }
+
+/**
+ * Called when a new lookup/search starts: whatever the previous result filled
+ * in belongs to the previous kit, so it's cleared rather than left on screen
+ * (or saved) next to the new one. Fields the user typed stay.
+ *
+ * The barcode needs care because it reaches the form two ways:
+ * - scanned/typed and *matched* by a lookup (`boundBarcode`) — it belongs to
+ *   that result's kit, so it goes with it;
+ * - scanned/typed with no match yet — it's still waiting for this box's kit
+ *   (the user is now searching by name), so it stays.
+ * A barcode that only arrived via a prefill is in `prefilled` and is cleared
+ * like any other auto-filled field. A lookup image the user clicked counts
+ * as touched but still belongs to the old result, so it's cleared too.
+ */
+export function clearAutoFilled(
+  values: ModelFormValues,
+  touched: ReadonlySet<ModelFormField>,
+  prefilled: ReadonlySet<ModelFormField>,
+  previous: { boundBarcode: string | null; lookupImages: ReadonlySet<string> },
+): { values: ModelFormValues; touched: ReadonlySet<ModelFormField> } {
+  const next: ModelFormValues = { ...values };
+  const nextTouched = new Set(touched);
+  const reset = (field: Exclude<ModelFormField, "tagNames">) => {
+    next[field] = EMPTY_MODEL_FORM[field];
+    nextTouched.delete(field);
+  };
+
+  for (const field of prefilled) {
+    // Tags are merged, not replaced, so a prefill never owns the whole list.
+    if (field !== "tagNames") {
+      reset(field);
+    }
+  }
+  if (next.barcode && next.barcode === previous.boundBarcode) {
+    reset("barcode");
+  }
+  if (next.imageUrl && previous.lookupImages.has(next.imageUrl)) {
+    reset("imageUrl");
+  }
+  return { values: next, touched: nextTouched };
+}
