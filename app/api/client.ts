@@ -151,6 +151,7 @@ export interface ModelListRow {
     scale?: string;
     category?: string;
     imageUrl?: string;
+    barcode?: string | null;
   };
   manufacturer: { id: number; name: string } | null;
   ownership: {
