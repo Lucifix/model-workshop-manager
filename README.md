@@ -8,9 +8,9 @@ Manager keeps your catalog, inventory, and builds in one place, installable as a
 phone or desktop, running entirely on your own server.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/screenshots/mobile-models.png" width="240" alt="The model catalog, browsable on the go">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
+  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-models.png" width="240" alt="The model catalog, browsable on the go">
 </p>
 
 ## What it does
@@ -213,9 +213,9 @@ three produce the same tarball format, so a backup from any one can be restored 
 ## Contributing
 
 Bug reports, feature requests, and PRs are welcome — see
-[CONTRIBUTING.md](CONTRIBUTING.md) for dev setup and conventions. Please also
-read the [Code of Conduct](CODE_OF_CONDUCT.md). Found a security issue? See
-[SECURITY.md](SECURITY.md) instead of opening a public issue.
+[CONTRIBUTING.md](.github/CONTRIBUTING.md) for dev setup and conventions. Please also
+read the [Code of Conduct](.github/CODE_OF_CONDUCT.md). Found a security issue? See
+[SECURITY.md](.github/SECURITY.md) instead of opening a public issue.
 
 ## License
 
