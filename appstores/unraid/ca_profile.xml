@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommunityApplications>
+  <Profile>
+Unraid templates for [Model Workshop Manager](https://github.com/Lucifix/model-workshop-manager) — a self-hosted, single-user app for tracking your model kit stash, paint shelf, supplies and builds.
+
+The app is developed and the Docker image is built in the main project repository; this repository only holds the Community Apps template. For questions and bug reports, use the project's [GitHub Discussions](https://github.com/Lucifix/model-workshop-manager/discussions) or [issue tracker](https://github.com/Lucifix/model-workshop-manager/issues).
+  </Profile>
+  <Icon>https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/public/icon-512.png</Icon>
+  <WebPage>https://github.com/Lucifix/unraid-templates</WebPage>
+</CommunityApplications>

@@ -1,0 +1,111 @@
+name: model-workshop-manager
+services:
+  model-workshop-manager:
+    image: ghcr.io/lucifix/model-workshop-manager:1.0.0
+    container_name: model-workshop-manager
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          memory: 128M
+    ports:
+      - target: 3000
+        published: "13080"
+        protocol: tcp
+    environment:
+      SESSION_COOKIE_SECURE: "false"
+      TRUST_PROXY: ""
+    volumes:
+      - type: bind
+        source: /DATA/AppData/$AppID/data
+        target: /data
+      - type: bind
+        source: /DATA/AppData/$AppID/backups
+        target: /backups
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    x-casaos:
+      envs:
+        - container: SESSION_COOKIE_SECURE
+          description:
+            en_US: Set to true only once the app is served over HTTPS (e.g. behind a reverse proxy with TLS). Over plain HTTP, true makes the browser drop the login cookie and login silently fails.
+        - container: TRUST_PROXY
+          description:
+            en_US: Number of reverse proxies in front of the app (usually 1) so the login rate limiter sees real client IPs. Leave empty without a proxy. "true" is refused and the app won't start.
+      ports:
+        - container: "3000"
+          description:
+            en_US: Web UI HTTP port
+      volumes:
+        - container: /data
+          description:
+            en_US: Database, uploaded photos and the auto-generated session secret
+        - container: /backups
+          description:
+            en_US: In-app backups (manual backup, download and restore)
+x-casaos:
+  id: org.icewhale.modelworkshopmanager
+  main: model-workshop-manager
+  index: /
+  port_map: "13080"
+  scheme: http
+  icon: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/icon.svg
+  thumbnail: https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/thumbnail.png
+  screenshot_link:
+    - https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/screenshot-1.png
+    - https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/screenshot-2.png
+    - https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/ModelWorkshopManager/screenshot-3.png
+  title:
+    en_US: Model Workshop Manager
+  tagline:
+    en_US: Track your model kit stash, paint shelf and builds
+  description:
+    en_US: |
+      No more guessing whether you already own that kit, digging through drawers for the right shade of paint, or losing track of build progress. Model Workshop Manager keeps your scale-model catalog, inventory and builds in one place, on your own hardware.
+
+      **Key Features:**
+      - Searchable catalog of kits and paints, kept separate from what you own and what's on your wishlist
+      - One-click starter catalog of 10,000+ paints from 30+ brands (Tamiya, Vallejo, Citadel, Mr. Hobby, AK, Mission Models and more)
+      - Barcode scanning to check whether you already own a kit, with optional UPCitemdb lookup
+      - Builds with a timestamped progress log, photos and "required vs. owned" paint matching
+      - One-tap shopping list for a build's missing paints, plus a wishlist
+      - Supplies (brushes, cement, masking tape) with low-stock alerts
+      - CSV/JSON import and export, and backup/restore from the UI
+      - Installable as an app on phone and desktop (PWA)
+      - Single-user and private: one SQLite file, photos on your own disk, no cloud, no tracking
+
+      **Learn More:**
+      - [Website](https://lucifix.github.io/model-workshop-manager/)
+      - [GitHub repository](https://github.com/Lucifix/model-workshop-manager)
+  tips:
+    before_install:
+      en_US: |
+        ## Getting Started
+
+        Open the Web UI and create your username and password on the one-time setup screen. Nothing else needs configuring.
+
+        To start with a full paint catalog, open **Import & Export → Import starter catalog**.
+
+        ## HTTPS and reverse proxies
+
+        This is a single-user app meant for your LAN or a VPN, not the open internet. If you serve it over HTTPS behind a reverse proxy, set `SESSION_COOKIE_SECURE` to `true` and `TRUST_PROXY` to `1`.
+  author: Lucifix
+  developer: Lucifix
+  category: Productivity
+  architectures:
+    - amd64
+    - arm64
+  version: "1.0.0"
+  update_at: "2026-10-17"
+  release_notes:
+    en_US: |-
+      - First tagged release: kit, paint and supply catalog and inventory, barcode scanning, builds with photo progress logs, shopping list and wishlist.
+      - One-click starter catalog of 10,000+ paints from 30+ brands.
+      - First-run setup screen, auto-generated session secret and in-app backups.
+  website: "https://lucifix.github.io/model-workshop-manager/"
+  repo: "https://github.com/Lucifix/model-workshop-manager"
+  support: "https://github.com/Lucifix/model-workshop-manager/issues"
+  docs: "https://github.com/Lucifix/model-workshop-manager#readme"
