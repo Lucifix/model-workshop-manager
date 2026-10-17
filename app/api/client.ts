@@ -539,7 +539,21 @@ export interface ModelCreateInput {
   imageUrl?: string;
   instructionUrl?: string;
   sourceUrl?: string;
+  barcode?: string;
   tagNames?: string[];
+}
+
+export interface ModelFieldOptions {
+  scales: string[];
+  categories: string[];
+  difficulties: string[];
+}
+
+export function useModelFieldOptions() {
+  return useQuery({
+    queryKey: ["models", "field-options"],
+    queryFn: () => apiFetch<ModelFieldOptions>("/models/field-options"),
+  });
 }
 
 export function useCreateModel() {
@@ -590,16 +604,23 @@ export function useUpdateModel() {
   });
 }
 
-export function useUploadModelImage() {
+export function useUploadModelImage({ silent = false }: { silent?: boolean } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ modelId, file }: { modelId: number; file: File }) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch(`/api/models/${modelId}/image`, {
-        method: "POST",
-        body: formData,
-      });
+    // `url` copies an image a barcode lookup returned onto local disk —
+    // see routes/api.models.$id.image.ts.
+    mutationFn: async ({ modelId, file, url }: { modelId: number; file?: File; url?: string }) => {
+      let body: BodyInit;
+      const headers: HeadersInit = {};
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        body = formData;
+      } else {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify({ url });
+      }
+      const res = await fetch(`/api/models/${modelId}/image`, { method: "POST", headers, body });
       if (!res.ok) {
         throw new Error("Failed to upload model image");
       }
@@ -608,9 +629,11 @@ export function useUploadModelImage() {
     onSuccess: (_, { modelId }) => {
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
-      toast.success("Photo uploaded");
+      if (!silent) {
+        toast.success("Photo uploaded");
+      }
     },
-    onError: toastError,
+    onError: silent ? undefined : toastError,
   });
 }
 
@@ -695,8 +718,29 @@ export interface CatalogSearchResult {
   kitNumber: string;
   name: string;
   scale?: string;
+  category?: string;
+  description?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   sourceUrl?: string;
+  barcode?: string;
+  barcodes?: string[];
+  listingCount?: number;
+  priceRange?: { low: number; high: number };
+}
+
+export interface CatalogSearchPage {
+  results: CatalogSearchResult[];
+  nextOffset?: number;
+  quota: { remaining: number; resetsAt?: string } | null;
+}
+
+export type CatalogSearchErrorCode = "daily_limit" | "too_fast" | "unavailable";
+
+export class CatalogSearchError extends Error {
+  constructor(readonly code: CatalogSearchErrorCode) {
+    super(code);
+  }
 }
 
 export interface CatalogProviderInfo {
@@ -713,24 +757,33 @@ export function useCatalogProviders() {
   });
 }
 
-/** Optional barcode-lookup convenience — never the primary path. */
+/** Optional barcode lookup / text search — never the primary path. A barcode
+ * query does a single lookup; anything else is a (paged) text search. Errors
+ * are left to the caller: running out of the daily quota needs its own
+ * message in the form, not a generic toast. */
 export function useCatalogSearch() {
   return useMutation({
-    mutationFn: async (query: string) => {
-      const res = await fetch(
-        `/api/catalog/search?provider=upcitemdb&q=${encodeURIComponent(query)}`,
-      );
-      if (!res.ok) {
-        throw new Error("Lookup failed");
+    mutationFn: async ({ query, offset }: { query: string; offset?: number }) => {
+      const params = new URLSearchParams({ provider: "upcitemdb", q: query });
+      if (offset) {
+        params.set("offset", String(offset));
       }
-      const data = (await res.json()) as { results: CatalogSearchResult[] };
-      return data.results;
+      const res = await fetch(`/api/catalog/search?${params}`);
+      if (res.status === 429 || res.status === 503) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new CatalogSearchError(
+          body?.error === "daily_limit" || body?.error === "too_fast" ? body.error : "unavailable",
+        );
+      }
+      if (!res.ok) {
+        throw new CatalogSearchError("unavailable");
+      }
+      return (await res.json()) as CatalogSearchPage;
     },
-    onError: toastError,
   });
 }
 
-export function useAddModelToInventory() {
+export function useAddModelToInventory({ silent = false }: { silent?: boolean } = {}) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -755,9 +808,11 @@ export function useAddModelToInventory() {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["models"] });
       queryClient.invalidateQueries({ queryKey: ["model", modelId] });
-      toast.success("Added to your collection");
+      if (!silent) {
+        toast.success("Added to your collection");
+      }
     },
-    onError: toastError,
+    onError: silent ? undefined : toastError,
   });
 }
 

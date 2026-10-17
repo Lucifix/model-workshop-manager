@@ -13,6 +13,8 @@ import {
   Images,
   Menu,
   MoreHorizontal,
+  ScanBarcode,
+  Search,
   Settings,
   ShoppingCart,
   Wrench,
@@ -106,4 +108,12 @@ export function CameraIcon(props: IconProps) {
 
 export function GalleryIcon(props: IconProps) {
   return <Images {...defaults} {...props} />;
+}
+
+export function ScanBarcodeIcon(props: IconProps) {
+  return <ScanBarcode {...defaults} {...props} />;
+}
+
+export function SearchIcon(props: IconProps) {
+  return <Search {...defaults} {...props} />;
 }

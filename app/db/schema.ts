@@ -72,26 +72,36 @@ export const paints = sqliteTable(
   }),
 );
 
-export const models = sqliteTable("models", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  manufacturerId: integer("manufacturer_id")
-    .notNull()
-    .references(() => manufacturers.id),
-  kitNumber: text("kit_number").notNull(),
-  name: text("name").notNull(),
-  scale: text("scale"), // e.g. "1:200"
-  category: text("category"), // e.g. Ship, Aircraft, Armor, Car
-  difficulty: text("difficulty"),
-  partCount: integer("part_count"),
-  description: text("description"),
-  source: text("source").notNull().default("manual"),
-  sourceUrl: text("source_url"),
-  imageUrl: text("image_url"),
-  instructionUrl: text("instruction_url"),
-  importedAt: text("imported_at"), // When this record was imported from external source
-  lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
-  ...timestamps,
-});
+export const models = sqliteTable(
+  "models",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    manufacturerId: integer("manufacturer_id")
+      .notNull()
+      .references(() => manufacturers.id),
+    kitNumber: text("kit_number").notNull(),
+    name: text("name").notNull(),
+    scale: text("scale"), // e.g. "1:200"
+    category: text("category"), // e.g. Ship, Aircraft, Armor, Car
+    difficulty: text("difficulty"),
+    partCount: integer("part_count"),
+    description: text("description"),
+    source: text("source").notNull().default("manual"),
+    sourceUrl: text("source_url"),
+    imageUrl: text("image_url"),
+    instructionUrl: text("instruction_url"),
+    // EAN/UPC off the box. Nullable: most existing kits were added without one,
+    // and several reseller barcodes can map to the same kit, so it's a lookup
+    // hint (scan -> "you already have this"), not a unique key.
+    barcode: text("barcode"),
+    importedAt: text("imported_at"), // When this record was imported from external source
+    lastSyncedAt: text("last_synced_at"), // Last time this record was synced with external source
+    ...timestamps,
+  },
+  (table) => ({
+    barcodeIdx: index("models_barcode_idx").on(table.barcode),
+  }),
+);
 
 /** Which paints a given model's instructions call for. Still catalog data. */
 export const modelPaints = sqliteTable(
@@ -350,6 +360,25 @@ export const appSettings = sqliteTable("app_settings", {
   upcItemDbEnabled: integer("upc_item_db_enabled", { mode: "boolean" }).notNull().default(false),
   ...timestamps,
 });
+
+/** Raw responses from external catalog providers (UPCitemdb), keyed by the
+ * query that produced them. The free tier allows ~100 calls/day, so repeat
+ * scans and re-searches must be served from here; storing the raw payload
+ * (not the parsed result) means parser improvements apply to cached rows too. */
+export const catalogLookupCache = sqliteTable(
+  "catalog_lookup_cache",
+  {
+    provider: text("provider").notNull(),
+    queryKey: text("query_key").notNull(),
+    response: text("response").notNull(), // JSON
+    fetchedAt: text("fetched_at")
+      .notNull()
+      .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.provider, t.queryKey] }),
+  }),
+);
 
 /** Single-row login credential (this is a single-user app — no users table).
  * Row id is always 1; see lib/credentials.server.ts. Absent entirely on a

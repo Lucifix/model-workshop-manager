@@ -1,7 +1,7 @@
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 // UPLOAD_DIR is read once at module load, so the temp dir has to be in the
 // environment before the dynamic import below.
@@ -72,5 +72,44 @@ describe("saveUploadedFile", () => {
 
     const saved = await upload.saveUploadedFile(pdf, upload.PDF_UPLOAD_TYPES, "models", "1");
     expect(saved.filename).toMatch(/\.pdf$/);
+  });
+});
+
+function stubFetch(body: BodyInit | null, init: ResponseInit) {
+  vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(new Response(body, init)));
+}
+
+describe("saveRemoteImage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46]);
+
+  it("stores a remote image on disk under the declared type", async () => {
+    stubFetch(JPEG, { headers: { "Content-Type": "image/jpeg" } });
+    const saved = await upload.saveRemoteImage("https://cdn.test/a.jpeg", "models", "9");
+    expect(saved.filename).toMatch(/\.jpg$/);
+    expect(readdirSync(join(uploadDir, "models", "9"))).toContain(saved.filename);
+  });
+
+  it("sniffs the bytes when the CDN sends a useless Content-Type", async () => {
+    stubFetch(JPEG, { headers: { "Content-Type": "application/octet-stream" } });
+    const saved = await upload.saveRemoteImage("https://cdn.test/a", "models", "9");
+    expect(saved.filename).toMatch(/\.jpg$/);
+  });
+
+  it("refuses non-image responses", async () => {
+    stubFetch("<html></html>", { headers: { "Content-Type": "text/html" } });
+    await expect(upload.saveRemoteImage("https://cdn.test/a", "models", "9")).rejects.toSatisfy(
+      (err: Response) => err.status === 415,
+    );
+  });
+
+  it("reports a dead link as a 502, not a crash", async () => {
+    stubFetch(null, { status: 404 });
+    await expect(upload.saveRemoteImage("https://cdn.test/gone", "models", "9")).rejects.toSatisfy(
+      (err: Response) => err.status === 502,
+    );
   });
 });

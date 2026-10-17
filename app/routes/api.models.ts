@@ -12,6 +12,7 @@ export async function loader({ request }: { request: Request }) {
   const scale = url.searchParams.get("scale") ?? undefined;
   const category = url.searchParams.get("category") ?? undefined;
   const tag = url.searchParams.get("tag") ?? undefined;
+  const barcode = url.searchParams.get("barcode")?.trim() || undefined;
 
   let rows = db
     .select({ model: models, manufacturer: manufacturers })
@@ -26,6 +27,9 @@ export async function loader({ request }: { request: Request }) {
         r.model.name.toLowerCase().includes(needle) ||
         r.model.kitNumber.toLowerCase().includes(needle),
     );
+  }
+  if (barcode) {
+    rows = rows.filter((r) => r.model.barcode === barcode);
   }
   if (manufacturerId) {
     rows = rows.filter((r) => r.model.manufacturerId === Number(manufacturerId));
