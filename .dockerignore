@@ -24,7 +24,6 @@ playwright-report
 test-results
 blob-report
 docs
-screenshots
 *.md
 !README.md
 

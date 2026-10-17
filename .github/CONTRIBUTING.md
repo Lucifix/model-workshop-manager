@@ -9,12 +9,12 @@ issues are genuinely welcome.
 For anything beyond a small fix, open an issue first describing what you
 want to change and why. This avoids wasted work on a PR that doesn't fit the
 project's direction — in particular, see "Things not to fix" in
-[AGENTS.md](AGENTS.md) for a few areas that are intentionally out of scope
+[AGENTS.md](../AGENTS.md) for a few areas that are intentionally out of scope
 (e.g. single-user auth, no manufacturer-site scraping).
 
 ## Dev setup
 
-See [AGENTS.md](AGENTS.md) for layout, install/run commands, and coding
+See [AGENTS.md](../AGENTS.md) for layout, install/run commands, and coding
 conventions — that's the canonical reference, not duplicated here.
 
 ## Making a PR
@@ -26,14 +26,14 @@ conventions — that's the canonical reference, not duplicated here.
 - Add/update tests for behavior changes (`npm test`).
 - Follow the existing conventions: Zod validation via `parseBody()`, the
   `CatalogProvider` interface for any new external/optional data source (see
-  [app/providers/types.ts](app/providers/types.ts)), comments that explain
+  [app/providers/types.ts](../app/providers/types.ts)), comments that explain
   _why_ not _what_.
 
 ## Contributing catalog data (paints, kits, manufacturers)
 
 There's no shared community catalog file in this repo yet — today, catalog
 data comes from the CSV import path (documented in
-[app/providers/csvImportProvider.ts](app/providers/csvImportProvider.ts))
+[app/providers/csvImportProvider.ts](../app/providers/csvImportProvider.ts))
 or hand entry, per-user. If you're interested in building out a shared,
 community-maintained seed dataset (a real paint/kit catalog beyond the
 handful of illustrative rows in `app/db/seed.server.ts`), open an issue
