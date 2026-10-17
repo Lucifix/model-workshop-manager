@@ -1,38 +1,58 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/public/icon-192.png" width="96" alt="Model Workshop Manager logo">
+
 # Model Workshop Manager
 
-**Track your model kit stash, paint shelf, and builds — self-hosted, on your own hardware.**
+**Your model kit stash, paint shelf, and builds — self-hosted, on your own hardware.**
 
-No more guessing whether you already own that Revell kit, digging through drawers to check if
-you have the right shade of Tamiya paint, or losing track of build progress. Model Workshop
-Manager keeps your catalog, inventory, and builds in one place, installable as an app on your
-phone or desktop, running entirely on your own server.
+[Website](https://lucifix.github.io/model-workshop-manager/) ·
+[Quick start](#quick-start-docker) ·
+[Changelog](CHANGELOG.md) ·
+[Discussions](https://github.com/Lucifix/model-workshop-manager/discussions) ·
+[Report a bug](https://github.com/Lucifix/model-workshop-manager/issues/new/choose)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-dashboard.png" width="240" alt="Dashboard on mobile — stash stats and the active build">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-build.png" width="240" alt="A completed build with its photo and progress bar">
-  <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-mobile-models.png" width="240" alt="The model catalog, browsable on the go">
-</p>
+<a href="https://github.com/Lucifix/model-workshop-manager/releases/latest"><img src="https://img.shields.io/github/v/release/Lucifix/model-workshop-manager?style=flat-square&color=f97316&label=release" alt="Latest release"></a>
+<a href="https://hub.docker.com/r/lucifix/model-workshop-manager"><img src="https://img.shields.io/docker/pulls/lucifix/model-workshop-manager?style=flat-square&logo=docker&logoColor=white" alt="Docker pulls"></a>
+<img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-0b1220?style=flat-square" alt="amd64 and arm64 images">
+<a href="https://github.com/Lucifix/model-workshop-manager/actions/workflows/docker-publish.yml"><img src="https://img.shields.io/github/actions/workflow/status/Lucifix/model-workshop-manager/docker-publish.yml?branch=main&style=flat-square&label=build" alt="Build status"></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/Lucifix/model-workshop-manager?style=flat-square&color=3B6D11" alt="MIT license"></a>
 
-## What it does
+<br>
 
-- **Dashboard** — kit/paint/build counts, low-stock paints, missing-paint alerts, recent activity.
-- **Models & Paints** — a searchable catalog, kept separate from what you actually own.
-- **10,000+ paints out of the box** — one click on the Import & Export page pulls in the
-  community [miniature-paints](https://github.com/Arcturus5404/miniature-paints) dataset: names,
-  codes, and colors for 30+ brands including Tamiya, Vallejo, Citadel, Mr. Hobby, AK, Mig, Mission
-  Models, Humbrol, and Revell.
-- **Barcode scanning** — snap a photo of a kit box's barcode to fill in the form, and get told
-  straight away if you already own it. Optional UPCitemdb lookup (off by default, enable in
-  Settings) pre-fills name, brand, and box art.
-- **Builds** — start a build in one guided flow, log progress with timestamps and photos, and get
-  automatic "required vs. owned" paint matching per project.
-- **Shopping list & Wishlist** — one tap turns a build's missing paints into a shopping list;
-  longer-term wants live separately in the wishlist.
-- **Supplies** — track tools and consumables (brushes, cement, masking tape, etc.) too.
-- **Import & export** — bring in an existing collection (or that spreadsheet you've been keeping)
-  via CSV/JSON, back it up from the UI.
-- **Installable app** — add it to your phone's home screen or your desktop as a PWA.
-- **Login-protected** — single-user auth, nothing exposed without a password.
+<img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-hero.png" alt="Model Workshop Manager on mobile: the dashboard, a completed HMS Victory build, and the model catalog">
+
+</div>
+
+<br>
+
+No more guessing whether you already own that Revell kit, digging through drawers for the right
+shade of Tamiya paint, or losing track of build progress. Model Workshop Manager keeps your
+catalog, inventory, and builds in one place — installable as an app on your phone or desktop, and
+running entirely on your own server.
+
+## Features
+
+- 📦 **Stash vs. catalog** — a searchable catalog of models and paints, kept separate from what
+  you actually own (and what's on your wishlist).
+- 🎨 **10,000+ paints in one click** — the community
+  [miniature-paints](https://github.com/Arcturus5404/miniature-paints) dataset, with names, codes,
+  and colors for 30+ brands: Tamiya, Vallejo, Citadel, Mr. Hobby, AK, Mig, Mission Models, Humbrol,
+  Revell, and more. Find it under **Import & Export → Import starter catalog**.
+- 📷 **Barcode scanning** — snap the barcode on a kit box and find out straight away if you already
+  own it. Optional UPCitemdb lookup (off by default, enable in Settings) pre-fills name, brand, and
+  box art.
+- 🛠️ **Builds** — start one in a guided flow, log progress with timestamps and photos, and see
+  "required vs. owned" paints for each project.
+- 🛒 **Shopping list & wishlist** — one tap turns a build's missing paints into a shopping list;
+  longer-term wants live in the wishlist.
+- 🖌️ **Supplies** — brushes, cement, masking tape, and other consumables, with low-stock alerts.
+- 📊 **Dashboard** — stash stats, low-stock and missing-paint alerts, and recent activity at a glance.
+- 🔁 **Import, export & backups** — bring in an existing collection (or that spreadsheet you've been
+  keeping) via CSV/JSON, and back up or restore from the UI.
+- 📱 **Installable app** — add it to your phone's home screen or your desktop as a PWA.
+- 🔒 **Private by default** — single-user login, one SQLite file, photos on your own disk. No
+  accounts, no cloud, no tracking.
 
 ## Quick start (Docker)
 
@@ -108,6 +128,11 @@ full paint catalog instead of an empty one, open **Import & Export → Import st
 
 ### Environment variables
 
+Nothing is required — every variable has a working default.
+
+<details>
+<summary>All variables</summary>
+
 All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 
 | Variable                | Required | Default          | What it does                                                                                                                                               |
@@ -123,13 +148,13 @@ All set in `.env` (copied from `.env.example`), read by `docker-compose.yml`.
 | `BACKUP_DIR`            | No       | `./backups`      | Host path where backups (in-app, manual script, and the nightly job) are written.                                                                          |
 | `BACKUP_RETENTION_DAYS` | No       | `14`             | How many days of nightly backups to keep before pruning.                                                                                                   |
 
-## Tech stack
+</details>
+
+## Local development
 
 A single React Router v8 (framework mode) app &rarr; Express &rarr; Drizzle ORM &rarr; SQLite, one
 Node process behind Docker Compose. React + TypeScript UI and API resource routes live in the same
 app; photos live on disk, never as DB blobs.
-
-## Local development
 
 Requires Node.js 22+ (see `.nvmrc` — `better-sqlite3` needs a matching native build; older Node
 versions fail silently instead of erroring).
@@ -220,3 +245,9 @@ read the [Code of Conduct](.github/CODE_OF_CONDUCT.md). Found a security issue? 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<p align="center">
+  If this saves you from buying the same kit twice, a ⭐ helps other modellers find it.
+</p>
