@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Container version="2">
+  <Name>model-workshop-manager</Name>
+  <Repository>ghcr.io/lucifix/model-workshop-manager:latest</Repository>
+  <Registry>https://github.com/Lucifix/model-workshop-manager/pkgs/container/model-workshop-manager</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Lucifix/model-workshop-manager/discussions</Support>
+  <Project>https://github.com/Lucifix/model-workshop-manager</Project>
+  <ReadMe>https://github.com/Lucifix/model-workshop-manager#readme</ReadMe>
+  <Overview>Model Workshop Manager keeps your scale-model hobby in one place: a searchable catalog of kits and paints kept separate from what you actually own, barcode scanning to check whether you already have a kit, a one-click starter catalog of 10,000+ paints from 30+ brands (Tamiya, Vallejo, Citadel, Mr. Hobby, AK and more), builds with progress photos and "required vs. owned" paint matching, a shopping list and wishlist, supplies with low-stock alerts, CSV/JSON import and export, and in-app backups. Installable as a PWA on phone and desktop.
+
+Single-user and private by default: one SQLite file and your photos on your own disk, no accounts, no cloud, no tracking.
+
+First run: open the WebUI and create your username and password on the one-time setup screen. Nothing else needs configuring.
+
+Meant for your LAN or a VPN, not the open internet. If you put it behind a reverse proxy with HTTPS, set SESSION_COOKIE_SECURE to true and TRUST_PROXY to 1.</Overview>
+  <Category>Productivity: Tools:Utilities</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Lucifix/unraid-templates/main/templates/model-workshop-manager.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/public/icon-512.png</Icon>
+  <!-- The image runs unprivileged as uid 1000 by default (APP_UID/APP_GID in
+       docker-compose.yml). Unraid creates missing appdata paths owned by
+       nobody:users (99:100), so run as that instead or the app can't write
+       its database. Change it here if your paths are owned by someone else. -->
+  <ExtraParams>--user 99:100</ExtraParams>
+  <ExtraSearchTerms>scale model kits miniatures paints hobby modelling inventory warhammer gunpla collection</ExtraSearchTerms>
+  <License>MIT</License>
+  <Screenshot>https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/mobile-dashboard.png</Screenshot>
+  <Screenshot>https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/mobile-models.png</Screenshot>
+  <Screenshot>https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/mobile-build.png</Screenshot>
+  <Config Name="WebUI" Target="3000" Default="8080" Mode="tcp" Description="Host port for the web interface. The app listens on 3000 inside the container." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/model-workshop-manager/data" Mode="rw" Description="Database, uploaded photos and the auto-generated session secret." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/model-workshop-manager/data</Config>
+  <Config Name="Backups" Target="/backups" Default="/mnt/user/appdata/model-workshop-manager/backups" Mode="rw" Description="Where in-app backups are written and restored from. Point it at a share you already back up." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/model-workshop-manager/backups</Config>
+  <Config Name="SESSION_COOKIE_SECURE" Target="SESSION_COOKIE_SECURE" Default="false" Description="Set to true only once the app is served over HTTPS (e.g. behind a reverse proxy with TLS). Over plain HTTP, true makes the browser drop the login cookie and login silently fails." Type="Variable" Display="always" Required="false" Mask="false">false</Config>
+  <Config Name="TRUST_PROXY" Target="TRUST_PROXY" Default="" Description="Number of reverse proxies in front of the app (usually 1 for SWAG, Nginx Proxy Manager or Traefik) so the login rate limiter sees real client IPs. Leave empty without a proxy. 'true' is refused on purpose and the app won't start." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+</Container>
