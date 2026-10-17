@@ -83,13 +83,25 @@ function looksLikeBarcode(value: string, barcode: string): boolean {
   return digits === barcode.replace(/^0+/, "") || /^\d{12,14}$/.test(value);
 }
 
+// `model` is free text per listing and sometimes holds a marketplace ID
+// instead of the kit number (seen live: "ADIB01LXLUUAO" for Tamiya 58638).
+// Only trust it when it's shaped like a kit number or the titles back it up.
+function plausibleKitNumber(value: string, titles: string[]): boolean {
+  if (/^\d[\d-]*[A-Za-z]?$/.test(value) || /^[A-Za-z]{1,5}[\s-]?\d{3,}[A-Za-z]?$/.test(value)) {
+    return true;
+  }
+  const token = new RegExp(`(?<![\\w])${escapeRegExp(value)}(?![\\w])`, "i");
+  return titles.some((t) => token.test(t));
+}
+
 function kitNumberFromModelField(
   model: string | undefined,
   brand: string | undefined,
   barcode: string,
+  titles: string[],
 ): string | undefined {
   const trimmed = model?.trim();
-  if (!trimmed || looksLikeBarcode(trimmed, barcode)) {
+  if (!trimmed || looksLikeBarcode(trimmed, barcode) || !plausibleKitNumber(trimmed, titles)) {
     return undefined;
   }
   return stripBrandPrefix(trimmed, brand) ?? trimmed;
@@ -134,7 +146,7 @@ function kitNumberCandidates(
 
 export function extractKitNumber(item: UpcItem): string | undefined {
   const barcode = item.ean ?? item.upc ?? "";
-  const fromModel = kitNumberFromModelField(item.model, item.brand, barcode);
+  const fromModel = kitNumberFromModelField(item.model, item.brand, barcode, allTitles(item));
   if (fromModel) {
     return fromModel;
   }
@@ -167,6 +179,8 @@ const FILLER_PATTERNS = [
   /\b(?:(?:plastic|scale|ship|aircraft|airplane|plane|tank|car|military|hobby)\s+)*model\s+(?:making\s+|building\s+)?kits?\b/gi,
   /\bmodel\s+making\b/gi,
   /\bplastic\b/gi,
+  // Retail colour attribute that leaks into titles ("… Carrier Multi-Colored").
+  /\bmulti-?colou?red\b/gi,
   /\bscale\s+model\b/gi,
   /\bkit\s*$/gi,
 ];

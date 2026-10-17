@@ -124,3 +124,24 @@ export const tamiyaSearch = {
     },
   ],
 };
+
+// `model` holds a marketplace ID, not the kit number — the kit number (58638)
+// is only in the titles. Also a 1:10 RC car rather than a static kit.
+export const tamiyaRcCarLookup = {
+  code: "OK",
+  total: 1,
+  offset: 0,
+  items: [
+    {
+      ean: "4950344586387",
+      title: "Tamiya 58638 1:10 RC Mercedes-Benz 190E 2.5-16 - TT01E Evo.II Team Zakspeed",
+      brand: "Tamiya",
+      model: "ADIB01LXLUUAO",
+      images: [],
+      offers: [
+        { title: "Tamiya 58638 1:10 RC Mercedes-Benz 190E 2.5-16 - TT01E Evo.II Team Zakspeed" },
+        { title: "tamiya 1/10 mercedes 190 e 2.5 16 evo ii diebels alt tt01e kit" },
+      ],
+    },
+  ],
+};

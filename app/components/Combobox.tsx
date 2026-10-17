@@ -16,6 +16,8 @@ export function Combobox({
   createLabel,
   normalize,
   ariaLabel,
+  inputClassName = "",
+  adornment,
 }: {
   id?: string;
   value: string;
@@ -28,6 +30,9 @@ export function Combobox({
   /** Applied to typed (not picked) text when the field loses focus. */
   normalize?: (value: string) => string;
   ariaLabel?: string;
+  inputClassName?: string;
+  /** Small element pinned inside the right end of the input (e.g. a badge). */
+  adornment?: ReactNode;
 }) {
   const listId = useId();
   const [open, setOpen] = useState(false);
@@ -74,6 +79,7 @@ export function Combobox({
         aria-controls={listId}
         aria-autocomplete="list"
         autoComplete="off"
+        className={`${adornment ? "pr-16" : ""} ${inputClassName}`}
         value={value}
         placeholder={placeholder}
         onChange={(e) => {
@@ -99,6 +105,11 @@ export function Combobox({
           }
         }}
       />
+      {adornment && (
+        <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2">
+          {adornment}
+        </span>
+      )}
       {open && rowCount > 0 && (
         <div
           id={listId}

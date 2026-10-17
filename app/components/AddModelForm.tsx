@@ -34,7 +34,7 @@ import {
   type ModelPrefill,
 } from "../lib/modelPrefill";
 import { Combobox } from "./Combobox";
-import { CameraIcon, ChevronDownIcon, ScanBarcodeIcon, SearchIcon } from "./icons";
+import { CameraIcon, ChevronDownIcon, CloseIcon, ScanBarcodeIcon, SearchIcon } from "./icons";
 import { PhotoPicker } from "./PhotoPicker";
 import { TagInput } from "./TagInput";
 import { Button, Card, FieldLabel, Input, Textarea } from "./ui";
@@ -90,19 +90,25 @@ const noticeStyles: Record<Notice["tone"], string> = {
 function lookupErrorText(err: unknown): string {
   const code = err instanceof CatalogSearchError ? err.code : "unavailable";
   if (code === "daily_limit") {
-    return "Daily lookup limit reached — UPCitemdb's free tier allows 100 lookups a day. Barcodes you've looked up before still work; fill this one in by hand or try again tomorrow.";
+    // 100/day on UPCitemdb's free tier; already-looked-up barcodes still work (cached).
+    return "Daily lookup limit reached — try again tomorrow.";
   }
   if (code === "too_fast") {
-    return "Too many lookups in a row — wait a few seconds and try again.";
+    return "Too many lookups — wait a few seconds.";
   }
-  return "The lookup service isn't reachable right now. You can still fill the fields in by hand.";
+  return "Lookup unavailable right now.";
 }
+
+// Fields a lookup filled get this ring until edited: "check these" without
+// a paragraph of text saying so.
+const PREFILLED_RING = "ring-1 ring-workshop-accent/50";
 
 export function AddModelForm({
   onCreated,
   onCancel,
   ownershipToggle = true,
   addAnother = true,
+  bare = false,
 }: {
   onCreated: (model: CreatedModel) => void;
   onCancel?: () => void;
@@ -111,6 +117,8 @@ export function AddModelForm({
   ownershipToggle?: boolean;
   /** Off when the host flow needs exactly one model back. */
   addAnother?: boolean;
+  /** Rendered inside a Sheet: no outer card/heading, sticky action bar. */
+  bare?: boolean;
 }) {
   const { data: manufacturers } = useManufacturers();
   const { data: fieldOptions } = useModelFieldOptions();
@@ -137,6 +145,8 @@ export function AddModelForm({
       touchedRef.current = new Set(touchedRef.current).add(field);
     }
   };
+  const [prefilled, setPrefilled] = useState<ReadonlySet<ModelFormField>>(new Set());
+  const [justAdded, setJustAdded] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [owned, setOwned] = useState(true);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -175,6 +185,23 @@ export function AddModelForm({
       setValues({ ...valuesRef.current, manufacturer: last });
     }
   }, []);
+
+  useEffect(() => {
+    // Ready to type or paste a barcode straight away — but only with a mouse
+    // and keyboard; on a phone that would cover half the sheet with the
+    // keyboard before the user has chosen between typing, scanning and a photo.
+    if (bare && window.matchMedia("(pointer: fine)").matches) {
+      queryInputRef.current?.focus();
+    }
+  }, [bare]);
+
+  useEffect(() => {
+    if (!justAdded) {
+      return;
+    }
+    const timer = window.setTimeout(() => setJustAdded(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [justAdded]);
 
   useEffect(() => {
     if (!photo) {
@@ -248,6 +275,14 @@ export function AddModelForm({
   const setField = <K extends ModelFormField>(field: K, value: ModelFormValues[K]) => {
     setValues({ ...valuesRef.current, [field]: value });
     markTouched(field);
+    setPrefilled((p) => {
+      if (!p.has(field)) {
+        return p;
+      }
+      const next = new Set(p);
+      next.delete(field);
+      return next;
+    });
     if (field === "manufacturer" || field === "kitNumber" || field === "name") {
       setErrors((e) => ({ ...e, [field]: undefined }));
     }
@@ -258,6 +293,7 @@ export function AddModelForm({
   const prefill = (data: ModelPrefill): ModelFormField[] => {
     const result = applyPrefill(valuesRef.current, touchedRef.current, data);
     setValues(result.values);
+    setPrefilled((p) => new Set([...p, ...result.applied]));
     if (result.applied.some((f) => DETAIL_FIELDS.includes(f))) {
       setShowDetails(true);
     }
@@ -276,13 +312,7 @@ export function AddModelForm({
     setImageBroken(false);
     setLookupImages((prev) => new Set([...prev, ...(result.imageUrls ?? [])]));
     setSearchResults(null);
-    setNotice({
-      tone: "info",
-      text:
-        filled.length > 0
-          ? "Filled in from the lookup — check the fields before saving."
-          : "Found it, but you'd already filled in everything it knows.",
-    });
+    setNotice(filled.length > 0 ? null : { tone: "info", text: "Nothing new to fill in." });
   };
 
   const runSearch = async (q: string, offset = 0) => {
@@ -316,10 +346,9 @@ export function AddModelForm({
             tone: "warn",
             text: (
               <>
-                Already in your catalog: <strong>{existing.model.name}</strong> (
-                {existing.manufacturer?.name} {existing.model.kitNumber}).{" "}
+                Already in your catalog: <strong>{existing.model.name}</strong>.{" "}
                 <Link to={`/models/${existing.model.id}`} className="underline">
-                  Open it
+                  Open
                 </Link>
               </>
             ),
@@ -330,12 +359,10 @@ export function AddModelForm({
         // fall through to the online lookup
       }
 
+      // No message when the lookup is off: the barcode chip appearing is
+      // the feedback.
       setField("barcode", q);
       if (!lookupEnabled) {
-        setNotice({
-          tone: "info",
-          text: "Not in your catalog yet — the barcode will be saved with this kit.",
-        });
         return;
       }
       const page = await runSearch(q);
@@ -346,7 +373,12 @@ export function AddModelForm({
       if (!hit) {
         setNotice({
           tone: "info",
-          text: "No match for this barcode — the lookup is sourced from US retail listings, so European and import kits are often missing. Try searching by name (e.g. “revell 05239”), or fill the fields in by hand.",
+          // The data is US retail listings, so European/import kits often miss.
+          text: (
+            <>
+              No match. Try the kit name, e.g. <em>revell 05239</em>.
+            </>
+          ),
         });
         return;
       }
@@ -357,7 +389,15 @@ export function AddModelForm({
     if (!lookupEnabled) {
       setNotice({
         tone: "info",
-        text: "Searching by name needs the online lookup, which is off. Scan or type the barcode instead, or fill the fields in by hand.",
+        text: (
+          <>
+            Name search needs auto-fill —{" "}
+            <Link to="/settings" className="underline">
+              turn it on in Settings
+            </Link>
+            .
+          </>
+        ),
       });
       return;
     }
@@ -369,7 +409,7 @@ export function AddModelForm({
     setSearchResults(page.results);
     setNextOffset(page.nextOffset);
     if (page.results.length === 0) {
-      setNotice({ tone: "info", text: `No listings found for “${q}”.` });
+      setNotice({ tone: "info", text: `No listings for “${q}”.` });
     }
   };
 
@@ -392,7 +432,7 @@ export function AddModelForm({
       if (!code) {
         setNotice({
           tone: "warn",
-          text: "Couldn't read a barcode in that photo. Get closer so the barcode fills more of the frame, keep it in focus, or type the digits instead.",
+          text: "No barcode found — try closer and in focus.",
         });
         return;
       }
@@ -401,7 +441,7 @@ export function AddModelForm({
     } catch {
       setNotice({
         tone: "warn",
-        text: "Couldn't open that photo to look for a barcode — type the digits instead.",
+        text: "Couldn't open that photo.",
       });
     } finally {
       setScanning(false);
@@ -415,6 +455,7 @@ export function AddModelForm({
       scale: values.scale,
     });
     touchedRef.current = new Set();
+    setPrefilled(new Set());
     setShowDetails(false);
     setPhoto(null);
     setImageBroken(false);
@@ -517,6 +558,7 @@ export function AddModelForm({
         onCreated(created);
       } else {
         resetForAnother();
+        setJustAdded(created.name);
       }
     } catch {
       setFormError("Could not save this model. Check the fields and try again.");
@@ -528,21 +570,60 @@ export function AddModelForm({
   const busy = saving || catalogSearch.isPending || scanning;
   const imageChoices = (applied?.imageUrls ?? []).filter((url) => !brokenImages.has(url));
 
-  return (
-    <Card>
-      <h2 className="mb-4 text-sm font-semibold text-slate-300">Add a new model</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void save("open");
-        }}
-        className="flex flex-col gap-4"
-        noValidate
-      >
-        {/* Quick fill: barcode scan / lookup / text search */}
-        <div>
-          <FieldLabel htmlFor="add-model-find">Barcode or kit search</FieldLabel>
-          <div className="flex gap-2">
+  const ring = (field: ModelFormField) => (prefilled.has(field) ? PREFILLED_RING : "");
+  const isNewManufacturer = Boolean(
+    manufacturers && values.manufacturer.trim() && !matchedManufacturer,
+  );
+  const photoLabel = photo || (values.imageUrl && !imageBroken) ? "Change photo" : "Add box photo";
+  const photoSrc = photoPreview ?? (values.imageUrl && !imageBroken ? values.imageUrl : null);
+
+  const form = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save("open");
+      }}
+      // min-h-full + the action bar's mt-auto keep Save at the bottom of the
+      // full-height phone sheet even when the form is short.
+      className={`flex flex-col gap-5 ${bare ? "min-h-full px-4 pt-4 sm:px-5 sm:pt-5" : ""}`}
+      noValidate
+    >
+      {justAdded && (
+        <p
+          aria-live="polite"
+          className="rounded-lg border border-emerald-900 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-300"
+        >
+          ✓ Added <strong>{justAdded}</strong> — ready for the next kit.
+        </p>
+      )}
+
+      {/* Quick fill: barcode scan / lookup / text search */}
+      <section>
+        <div className="mb-1.5 flex min-h-6 items-center justify-between gap-2">
+          <label htmlFor="add-model-find" className="text-sm font-medium text-slate-300">
+            Barcode or kit search
+          </label>
+          {values.barcode && (
+            <span
+              title="Saved with this kit"
+              className="inline-flex items-center gap-1 rounded-full border border-workshop-border bg-workshop-panelmuted py-0.5 pr-1 pl-2 text-xs text-slate-300"
+            >
+              <ScanBarcodeIcon className="size-3.5 text-slate-500" />
+              {values.barcode}
+              <button
+                type="button"
+                aria-label="Remove barcode"
+                onClick={() => setField("barcode", "")}
+                className="rounded-full p-0.5 text-slate-500 hover:text-slate-200"
+              >
+                <CloseIcon className="size-3" />
+              </button>
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <div className="relative min-w-0 flex-1">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-500" />
             <Input
               id="add-model-find"
               ref={queryInputRef}
@@ -558,442 +639,453 @@ export function AddModelForm({
               inputMode="search"
               enterKeyHint="search"
               placeholder={lookupEnabled ? "Barcode or kit name" : "Barcode on the box"}
-              className="min-w-0 flex-1"
+              className="pr-11 pl-9"
             />
-            <Button
+            <button
               type="button"
-              variant="secondary"
               onClick={() => scanInputRef.current?.click()}
               disabled={busy}
               aria-label="Scan barcode from photo"
               title="Scan barcode from a photo"
+              className="absolute top-1/2 right-1 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-workshop-accent disabled:opacity-50"
             >
-              <ScanBarcodeIcon className="size-4" />
-              <span className="hidden sm:inline">{scanning ? "Reading…" : "Scan"}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => void find(query)}
-              disabled={busy || !query.trim()}
-            >
-              <SearchIcon className="size-4" />
-              {catalogSearch.isPending ? "Looking…" : "Find"}
-            </Button>
-          </div>
-          <input
-            ref={scanInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            data-testid="barcode-scan-input"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              if (file) {
-                void handleScan(file);
-              }
-            }}
-          />
-          {!lookupEnabled && catalogProviders && (
-            <p className="mt-1.5 text-xs text-slate-500">
-              Barcodes are checked against your own catalog. To auto-fill new kits from the barcode
-              or by name, turn on barcode lookup in{" "}
-              <Link to="/settings" className="text-workshop-accent underline">
-                Settings
-              </Link>
-              .
-            </p>
-          )}
-          {lookupEnabled && quotaRemaining !== null && quotaRemaining <= 20 && (
-            <p className="mt-1.5 text-xs text-slate-500">
-              {quotaRemaining} online lookup{quotaRemaining === 1 ? "" : "s"} left today.
-            </p>
-          )}
-          {notice && (
-            <div
-              role="status"
-              className={`mt-2 rounded-lg border px-3 py-2 text-sm ${noticeStyles[notice.tone]}`}
-            >
-              {notice.text}
-            </div>
-          )}
-
-          {searchResults && searchResults.length > 0 && (
-            <div className="mt-2 overflow-hidden rounded-lg border border-workshop-border">
-              <p className="border-b border-workshop-border bg-workshop-panelmuted px-3 py-2 text-xs text-slate-400">
-                Pick the kit to fill in the form:
-              </p>
-              <ul className="max-h-80 divide-y divide-workshop-border overflow-y-auto">
-                {searchResults.map((r) => (
-                  <li key={`${r.manufacturerName}|${r.kitNumber}|${r.externalId}`}>
-                    <button
-                      type="button"
-                      onClick={() => applyResult(r)}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-workshop-panelmuted"
-                    >
-                      <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-workshop-border bg-workshop-panelmuted">
-                        {r.imageUrl && !brokenImages.has(r.imageUrl) && (
-                          <img
-                            onError={() => markBroken(r.imageUrl!)}
-                            src={r.imageUrl}
-                            alt=""
-                            loading="lazy"
-                            referrerPolicy="no-referrer"
-                            className="size-full object-cover"
-                          />
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-slate-100">
-                          {r.name}
-                        </span>
-                        <span className="block truncate text-xs text-slate-400">
-                          {[r.manufacturerName, r.kitNumber, r.scale].filter(Boolean).join(" · ")}
-                          {(r.listingCount ?? 1) > 1 && ` · ${r.listingCount} listings`}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {nextOffset !== undefined && (
-                <button
-                  type="button"
-                  onClick={() => void loadMore()}
-                  disabled={busy}
-                  className="w-full border-t border-workshop-border px-3 py-2 text-sm text-workshop-accent hover:bg-workshop-panelmuted disabled:opacity-50"
-                >
-                  {catalogSearch.isPending ? "Loading…" : "More results"}
-                </button>
-              )}
-            </div>
-          )}
-
-          {applied && (imageChoices.length > 1 || applied.priceRange) && (
-            <div className="mt-2 rounded-lg border border-workshop-border px-3 py-2">
-              {imageChoices.length > 1 && (
-                <>
-                  <p className="mb-2 text-xs text-slate-400">
-                    Pick the box image{photo ? " (your own photo is used instead)" : ""}:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {imageChoices.map((url, i) => (
-                      <button
-                        key={url}
-                        type="button"
-                        aria-label={`Use image ${i + 1}`}
-                        aria-pressed={values.imageUrl === url}
-                        onClick={() => {
-                          setField("imageUrl", url);
-                          setImageBroken(false);
-                        }}
-                        className={`size-16 overflow-hidden rounded-md border-2 ${
-                          values.imageUrl === url
-                            ? "border-workshop-accent"
-                            : "border-workshop-border"
-                        }`}
-                      >
-                        <img
-                          src={url}
-                          alt=""
-                          referrerPolicy="no-referrer"
-                          onError={() => markBroken(url)}
-                          className="size-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              {applied.priceRange && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Recorded US retail price: {formatCurrency(applied.priceRange.low, "USD")}–
-                  {formatCurrency(applied.priceRange.high, "USD")}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Essentials */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <PhotoPicker onSelect={setPhoto} disabled={saving}>
-            {(open) => (
-              <button
-                type="button"
-                onClick={open}
-                aria-label={photo ? "Change box photo" : "Add box photo"}
-                className="relative flex h-28 w-full shrink-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border border-dashed border-workshop-border bg-workshop-panelmuted text-xs text-slate-400 transition-colors hover:border-workshop-accent sm:size-32"
-              >
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Box photo" className="size-full object-cover" />
-                ) : values.imageUrl && !imageBroken ? (
-                  <>
-                    <img
-                      src={values.imageUrl}
-                      alt="Box"
-                      referrerPolicy="no-referrer"
-                      onError={() => setImageBroken(true)}
-                      className="size-full object-cover"
-                    />
-                    <span className="absolute inset-x-0 bottom-0 bg-black/60 py-1 text-center text-[11px] text-slate-200">
-                      Tap to use your own photo
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <CameraIcon className="size-6" />
-                    Box photo
-                  </>
-                )}
-              </button>
-            )}
-          </PhotoPicker>
-
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <div>
-              <FieldLabel htmlFor="add-model-manufacturer">Manufacturer</FieldLabel>
-              <Combobox
-                id="add-model-manufacturer"
-                value={values.manufacturer}
-                onChange={(v) => setField("manufacturer", v)}
-                options={manufacturerOptions}
-                placeholder="Search or add…"
-                createLabel={(q) => `+ Add "${q}"`}
-              />
-              {errors.manufacturer && (
-                <p className="mt-1 text-xs text-red-400">{errors.manufacturer}</p>
-              )}
-              {!errors.manufacturer &&
-                manufacturers &&
-                values.manufacturer.trim() &&
-                !matchedManufacturer && (
-                  <p className="mt-1 text-xs text-slate-500">
-                    New manufacturer — it'll be added when you save.
-                  </p>
-                )}
-            </div>
-            <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,5fr)] gap-3">
-              <div>
-                <FieldLabel htmlFor="add-model-kit-number">Kit number</FieldLabel>
-                <Input
-                  id="add-model-kit-number"
-                  value={values.kitNumber}
-                  onChange={(e) => setField("kitNumber", e.target.value)}
-                  placeholder="05239"
-                  autoComplete="off"
-                />
-                {errors.kitNumber && (
-                  <p className="mt-1 text-xs text-red-400">{errors.kitNumber}</p>
-                )}
-              </div>
-              <div>
-                <FieldLabel htmlFor="add-model-name">Name</FieldLabel>
-                <Input
-                  id="add-model-name"
-                  value={values.name}
-                  onChange={(e) => setField("name", e.target.value)}
-                  placeholder="Smit Houston"
-                  autoComplete="off"
-                />
-                {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name}</p>}
-              </div>
-            </div>
-            {values.barcode && (
-              <p className="text-xs text-slate-500">
-                Barcode {values.barcode} will be saved with this kit.{" "}
-                <button
-                  type="button"
-                  className="underline hover:text-slate-300"
-                  onClick={() => setField("barcode", "")}
-                >
-                  Remove
-                </button>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {duplicate && (
-          <div
-            role="alert"
-            className="rounded-lg border border-amber-900 bg-amber-950/30 px-3 py-2 text-sm text-amber-300"
-          >
-            "{duplicate.name}" ({duplicate.kitNumber}) is already in your catalog.{" "}
-            <button type="button" className="underline" onClick={() => onCreated(duplicate)}>
-              Open it instead
+              <ScanBarcodeIcon className={`size-5 ${scanning ? "animate-pulse" : ""}`} />
             </button>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void find(query)}
+            disabled={busy || !query.trim()}
+          >
+            {catalogSearch.isPending ? "Looking…" : "Find"}
+          </Button>
+        </div>
+        <input
+          ref={scanInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          data-testid="barcode-scan-input"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) {
+              void handleScan(file);
+            }
+          }}
+        />
+        {!lookupEnabled && catalogProviders && (
+          <p className="mt-1.5 text-xs text-slate-500">
+            Auto-fill is off ·{" "}
+            <Link to="/settings" className="text-workshop-accent hover:underline">
+              Turn on in Settings
+            </Link>
+          </p>
+        )}
+        {lookupEnabled && quotaRemaining !== null && quotaRemaining <= 20 && (
+          <p className="mt-1.5 text-xs text-slate-500">
+            {quotaRemaining} lookup{quotaRemaining === 1 ? "" : "s"} left today
+          </p>
+        )}
+        {notice && (
+          <div
+            role="status"
+            className={`mt-2 rounded-lg border px-3 py-2 text-sm ${noticeStyles[notice.tone]}`}
+          >
+            {notice.text}
+          </div>
         )}
 
-        {/* Everything else */}
-        <div className="rounded-xl border border-workshop-border">
-          <button
-            type="button"
-            aria-expanded={showDetails}
-            aria-controls="add-model-details"
-            onClick={() => setShowDetails((s) => !s)}
-            className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-300"
-          >
-            More details
-            <span className="flex items-center gap-2 text-xs font-normal text-slate-500">
-              {!showDetails && [values.scale, values.category].filter((v) => v.trim()).join(" · ")}
-              <ChevronDownIcon
-                className={`size-4 transition-transform ${showDetails ? "rotate-180" : ""}`}
-              />
-            </span>
-          </button>
-          {showDetails && (
-            <div
-              id="add-model-details"
-              className="flex flex-col gap-3 border-t border-workshop-border p-3"
+        {searchResults && searchResults.length > 0 && (
+          <div className="mt-2 overflow-hidden rounded-lg border border-workshop-border">
+            <p className="border-b border-workshop-border bg-workshop-panelmuted px-3 py-1.5 text-xs text-slate-400">
+              Pick a kit
+            </p>
+            <ul className="max-h-72 divide-y divide-workshop-border overflow-y-auto">
+              {searchResults.map((r) => (
+                <li key={`${r.manufacturerName}|${r.kitNumber}|${r.externalId}`}>
+                  <button
+                    type="button"
+                    onClick={() => applyResult(r)}
+                    className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-workshop-panelmuted"
+                  >
+                    <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-workshop-border bg-workshop-panelmuted">
+                      {r.imageUrl && !brokenImages.has(r.imageUrl) && (
+                        <img
+                          onError={() => markBroken(r.imageUrl!)}
+                          src={r.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className="size-full object-cover"
+                        />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-slate-100">
+                        {r.name}
+                      </span>
+                      <span className="block truncate text-xs text-slate-400">
+                        {[r.manufacturerName, r.kitNumber, r.scale].filter(Boolean).join(" · ")}
+                        {(r.listingCount ?? 1) > 1 && ` · ${r.listingCount} listings`}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {nextOffset !== undefined && (
+              <button
+                type="button"
+                onClick={() => void loadMore()}
+                disabled={busy}
+                className="w-full border-t border-workshop-border px-3 py-2 text-sm text-workshop-accent hover:bg-workshop-panelmuted disabled:opacity-50"
+              >
+                {catalogSearch.isPending ? "Loading…" : "More results"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {applied && (imageChoices.length > 1 || applied.priceRange) && (
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+            {imageChoices.length > 1 && (
+              <div>
+                <p className="mb-1.5 text-xs text-slate-400">Box image</p>
+                <div className="flex flex-wrap gap-2">
+                  {imageChoices.map((url, i) => (
+                    <button
+                      key={url}
+                      type="button"
+                      aria-label={`Use image ${i + 1}`}
+                      aria-pressed={values.imageUrl === url}
+                      onClick={() => {
+                        setField("imageUrl", url);
+                        setImageBroken(false);
+                      }}
+                      className={`size-14 overflow-hidden rounded-md border-2 ${
+                        values.imageUrl === url
+                          ? "border-workshop-accent"
+                          : "border-workshop-border"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        onError={() => markBroken(url)}
+                        className="size-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {applied.priceRange && (
+              <p className="text-xs text-slate-500">
+                US retail {formatCurrency(applied.priceRange.low, "USD")}–
+                {formatCurrency(applied.priceRange.high, "USD")}
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Identity: photo + the three required fields */}
+      <section className="grid grid-cols-1 gap-3 border-t border-workshop-border pt-5 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
+        <PhotoPicker onSelect={setPhoto} disabled={saving}>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              aria-label={photo ? "Change box photo" : "Add box photo"}
+              className="group relative flex items-center gap-3 overflow-hidden rounded-xl border border-dashed border-workshop-border bg-workshop-panelmuted p-2 text-left text-sm text-slate-400 transition-colors hover:border-workshop-accent sm:flex-col sm:justify-center sm:p-0"
             >
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <FieldLabel htmlFor="add-model-scale">Scale</FieldLabel>
-                  <Combobox
-                    id="add-model-scale"
-                    value={values.scale}
-                    onChange={(v) => setField("scale", v)}
-                    options={scaleOptions}
-                    normalize={normalizeScale}
-                    placeholder="1:48"
+              {/* Phone: compact row. sm+: fills the grid cell, which the
+                  grid stretches to exactly the height of the fields. */}
+              <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-workshop-panel sm:absolute sm:inset-0 sm:size-auto sm:rounded-none sm:bg-transparent">
+                {photoSrc ? (
+                  <img
+                    src={photoSrc}
+                    alt={photo ? "Box photo" : "Box"}
+                    referrerPolicy="no-referrer"
+                    onError={() => !photo && setImageBroken(true)}
+                    className="size-full object-cover"
                   />
-                </div>
-                <div>
-                  <FieldLabel htmlFor="add-model-category">Category</FieldLabel>
-                  <Combobox
-                    id="add-model-category"
-                    value={values.category}
-                    onChange={(v) => setField("category", v)}
-                    options={categoryOptions}
-                    placeholder="Aircraft"
-                  />
-                </div>
-                <div>
-                  <FieldLabel htmlFor="add-model-difficulty">Difficulty</FieldLabel>
-                  <Combobox
-                    id="add-model-difficulty"
-                    value={values.difficulty}
-                    onChange={(v) => setField("difficulty", v)}
-                    options={difficultyOptions}
-                    placeholder="Intermediate"
-                  />
-                </div>
-                <div>
-                  <FieldLabel htmlFor="add-model-part-count">Part count</FieldLabel>
-                  <Input
-                    id="add-model-part-count"
-                    type="number"
-                    inputMode="numeric"
-                    min="1"
-                    value={values.partCount}
-                    onChange={(e) => setField("partCount", e.target.value)}
-                    placeholder="200"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <FieldLabel>Tags</FieldLabel>
-                <TagInput value={values.tagNames} onChange={(t) => setField("tagNames", t)} />
-              </div>
-
-              <div>
-                <FieldLabel htmlFor="add-model-description">Description</FieldLabel>
-                <Textarea
-                  id="add-model-description"
-                  value={values.description}
-                  onChange={(e) => setField("description", e.target.value)}
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <FieldLabel htmlFor="add-model-image-url">Image URL</FieldLabel>
-                <Input
-                  id="add-model-image-url"
-                  value={values.imageUrl}
-                  onChange={(e) => {
-                    setField("imageUrl", e.target.value);
-                    setImageBroken(false);
-                  }}
-                  placeholder="Or paste the image address from the kit's product page"
-                />
-                <p className="mt-1.5 text-xs text-slate-500">
-                  {photo
-                    ? "Your box photo is used instead of this."
-                    : lookupImages.has(values.imageUrl)
-                      ? "A copy of this image is saved with the kit, so it keeps working if the shop removes it."
-                      : "Taking a box photo above is usually easier."}
-                </p>
-                {imageBroken && (
-                  <p className="mt-1 text-xs text-amber-400">Couldn't load that image URL.</p>
+                ) : (
+                  <CameraIcon className="size-5 sm:size-6" />
                 )}
-              </div>
+              </span>
+              <span
+                className={
+                  photoSrc
+                    ? "sm:absolute sm:inset-x-0 sm:bottom-0 sm:bg-black/60 sm:py-1 sm:text-center sm:text-xs sm:text-slate-200 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+                    : "sm:relative sm:mt-9 sm:text-xs"
+                }
+              >
+                {photoLabel}
+              </span>
+            </button>
+          )}
+        </PhotoPicker>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <FieldLabel htmlFor="add-model-source-url">Official page</FieldLabel>
-                  <Input
-                    id="add-model-source-url"
-                    value={values.sourceUrl}
-                    onChange={(e) => setField("sourceUrl", e.target.value)}
-                    placeholder="Manufacturer's product page"
-                  />
-                </div>
-                <div>
-                  <FieldLabel htmlFor="add-model-instruction-url">Instructions link</FieldLabel>
-                  <Input
-                    id="add-model-instruction-url"
-                    value={values.instructionUrl}
-                    onChange={(e) => setField("instructionUrl", e.target.value)}
-                    placeholder="PDF manual — or attach the file after saving"
-                  />
-                </div>
+        <div className="flex min-w-0 flex-col gap-3">
+          <div>
+            <FieldLabel htmlFor="add-model-manufacturer">Manufacturer</FieldLabel>
+            <Combobox
+              id="add-model-manufacturer"
+              value={values.manufacturer}
+              onChange={(v) => setField("manufacturer", v)}
+              options={manufacturerOptions}
+              placeholder="Search or add…"
+              createLabel={(q) => `+ Add "${q}"`}
+              inputClassName={ring("manufacturer")}
+              adornment={
+                isNewManufacturer && (
+                  <span
+                    title="Added when you save"
+                    className="rounded-sm bg-workshop-accent/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-workshop-accent uppercase"
+                  >
+                    New
+                  </span>
+                )
+              }
+            />
+            {errors.manufacturer && (
+              <p className="mt-1 text-xs text-red-400">{errors.manufacturer}</p>
+            )}
+          </div>
+          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,5fr)] gap-3">
+            <div>
+              <FieldLabel htmlFor="add-model-kit-number">Kit number</FieldLabel>
+              <Input
+                id="add-model-kit-number"
+                value={values.kitNumber}
+                onChange={(e) => setField("kitNumber", e.target.value)}
+                placeholder="05239"
+                autoComplete="off"
+                className={ring("kitNumber")}
+              />
+              {errors.kitNumber && <p className="mt-1 text-xs text-red-400">{errors.kitNumber}</p>}
+            </div>
+            <div>
+              <FieldLabel htmlFor="add-model-name">Name</FieldLabel>
+              <Input
+                id="add-model-name"
+                value={values.name}
+                onChange={(e) => setField("name", e.target.value)}
+                placeholder="Smit Houston"
+                autoComplete="off"
+                className={ring("name")}
+              />
+              {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name}</p>}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {duplicate && (
+        <div
+          role="alert"
+          className="rounded-lg border border-amber-900 bg-amber-950/30 px-3 py-2 text-sm text-amber-300"
+        >
+          "{duplicate.name}" ({duplicate.kitNumber}) is already in your catalog.{" "}
+          <button type="button" className="underline" onClick={() => onCreated(duplicate)}>
+            Open it
+          </button>
+        </div>
+      )}
+
+      {/* Everything else */}
+      <div className="rounded-xl border border-workshop-border">
+        <button
+          type="button"
+          aria-expanded={showDetails}
+          aria-controls="add-model-details"
+          onClick={() => setShowDetails((s) => !s)}
+          className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-300"
+        >
+          More details
+          <span className="flex items-center gap-2 text-xs font-normal text-slate-500">
+            {!showDetails && [values.scale, values.category].filter((v) => v.trim()).join(" · ")}
+            <ChevronDownIcon
+              className={`size-4 transition-transform ${showDetails ? "rotate-180" : ""}`}
+            />
+          </span>
+        </button>
+        {showDetails && (
+          <div
+            id="add-model-details"
+            className="flex flex-col gap-3 border-t border-workshop-border p-3"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FieldLabel htmlFor="add-model-scale">Scale</FieldLabel>
+                <Combobox
+                  id="add-model-scale"
+                  value={values.scale}
+                  onChange={(v) => setField("scale", v)}
+                  options={scaleOptions}
+                  normalize={normalizeScale}
+                  placeholder="1:48"
+                  inputClassName={ring("scale")}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="add-model-category">Category</FieldLabel>
+                <Combobox
+                  id="add-model-category"
+                  value={values.category}
+                  onChange={(v) => setField("category", v)}
+                  options={categoryOptions}
+                  placeholder="Aircraft"
+                  inputClassName={ring("category")}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="add-model-difficulty">Difficulty</FieldLabel>
+                <Combobox
+                  id="add-model-difficulty"
+                  value={values.difficulty}
+                  onChange={(v) => setField("difficulty", v)}
+                  options={difficultyOptions}
+                  placeholder="Intermediate"
+                  inputClassName={ring("difficulty")}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="add-model-part-count">Part count</FieldLabel>
+                <Input
+                  id="add-model-part-count"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={values.partCount}
+                  onChange={(e) => setField("partCount", e.target.value)}
+                  placeholder="200"
+                  className={ring("partCount")}
+                />
               </div>
             </div>
-          )}
-        </div>
 
-        {ownershipToggle && (
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={owned}
-              onChange={(e) => setOwned(e.target.checked)}
-              className="size-4 rounded-sm border-workshop-border accent-workshop-accent"
-            />
-            I own this kit
-          </label>
+            <div>
+              <FieldLabel>Tags</FieldLabel>
+              <TagInput value={values.tagNames} onChange={(t) => setField("tagNames", t)} />
+            </div>
+
+            <div>
+              <FieldLabel htmlFor="add-model-description">Description</FieldLabel>
+              <Textarea
+                id="add-model-description"
+                value={values.description}
+                onChange={(e) => setField("description", e.target.value)}
+                rows={2}
+                className={ring("description")}
+              />
+            </div>
+
+            <div>
+              <FieldLabel htmlFor="add-model-image-url">Image URL</FieldLabel>
+              <Input
+                id="add-model-image-url"
+                value={values.imageUrl}
+                onChange={(e) => {
+                  setField("imageUrl", e.target.value);
+                  setImageBroken(false);
+                }}
+                placeholder="https://…"
+                className={ring("imageUrl")}
+              />
+              {(photo || imageBroken || lookupImages.has(values.imageUrl)) && (
+                <p className={`mt-1 text-xs ${imageBroken ? "text-amber-400" : "text-slate-500"}`}>
+                  {photo
+                    ? "Your box photo is used instead."
+                    : imageBroken
+                      ? "Couldn't load that image."
+                      : "Saved as a local copy."}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <FieldLabel htmlFor="add-model-source-url">Official page</FieldLabel>
+                <Input
+                  id="add-model-source-url"
+                  value={values.sourceUrl}
+                  onChange={(e) => setField("sourceUrl", e.target.value)}
+                  placeholder="https://…"
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="add-model-instruction-url">Instructions link</FieldLabel>
+                <Input
+                  id="add-model-instruction-url"
+                  value={values.instructionUrl}
+                  onChange={(e) => setField("instructionUrl", e.target.value)}
+                  placeholder="https://… (or attach a PDF later)"
+                />
+              </div>
+            </div>
+          </div>
         )}
+      </div>
 
-        {formError && <p className="text-sm text-red-400">{formError}</p>}
+      {ownershipToggle && (
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={owned}
+            onChange={(e) => setOwned(e.target.checked)}
+            className="size-4 rounded-sm border-workshop-border accent-workshop-accent"
+          />
+          I own this kit
+        </label>
+      )}
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button type="submit" disabled={saving} className="sm:flex-1">
-            {saving ? "Saving…" : "Save model"}
+      {formError && <p className="text-sm text-red-400">{formError}</p>}
+
+      <div
+        className={
+          bare
+            ? // Pinned to the bottom of the sheet's scroll area so Save is
+              // always reachable, even with "More details" open on a phone.
+              "sticky bottom-0 -mx-4 mt-auto grid grid-cols-2 gap-2 border-t border-workshop-border bg-workshop-panel px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-5 sm:px-5"
+            : "flex flex-col gap-2 sm:flex-row"
+        }
+      >
+        <Button type="submit" disabled={saving} className={bare ? "" : "sm:flex-1"}>
+          {saving ? "Saving…" : "Save model"}
+        </Button>
+        {addAnother && (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={saving}
+            className={bare ? "" : "sm:flex-1"}
+            onClick={() => void save("another")}
+          >
+            Save &amp; add another
           </Button>
-          {addAnother && (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={saving}
-              className="sm:flex-1"
-              onClick={() => void save("another")}
-            >
-              Save &amp; add another
-            </Button>
-          )}
-          {onCancel && (
-            <Button type="button" variant="ghost" className="sm:w-auto" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-        </div>
-      </form>
+        )}
+        {onCancel && !bare && (
+          <Button type="button" variant="ghost" className="sm:w-auto" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+
+  if (bare) {
+    return form;
+  }
+  return (
+    <Card>
+      <h2 className="mb-4 text-sm font-semibold text-slate-300">Add a new model</h2>
+      {form}
     </Card>
   );
 }

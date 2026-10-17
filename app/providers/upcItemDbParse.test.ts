@@ -8,7 +8,12 @@ import {
   parseUpcItem,
   type UpcItem,
 } from "./upcItemDbParse";
-import { revellTugLookup, tamiyaSearch, tamiyaSpitfireLookup } from "./__fixtures__/upcItemDb";
+import {
+  revellTugLookup,
+  tamiyaRcCarLookup,
+  tamiyaSearch,
+  tamiyaSpitfireLookup,
+} from "./__fixtures__/upcItemDb";
 
 const tamiya = tamiyaSpitfireLookup.items[0] as UpcItem;
 const revell = revellTugLookup.items[0] as UpcItem;
@@ -79,6 +84,18 @@ describe("parseUpcItem", () => {
 });
 
 describe("extractKitNumber", () => {
+  it("ignores a `model` value that is a marketplace ID, not a kit number", () => {
+    const parsed = parseUpcItem(tamiyaRcCarLookup.items[0] as UpcItem);
+    expect(parsed.kitNumber).toBe("58638");
+    expect(parsed.scale).toBe("1:10");
+  });
+
+  it("trusts an odd-looking `model` value when a title backs it up", () => {
+    expect(extractKitNumber({ brand: "X", model: "MK1-ALPHA", title: "X MK1-ALPHA Kit" })).toBe(
+      "MK1-ALPHA",
+    );
+  });
+
   it("only strips a letter prefix that abbreviates the brand", () => {
     expect(extractKitNumber({ brand: "Airfix", model: "A05100" })).toBe("05100");
     expect(extractKitNumber({ brand: "Revell", model: "TAM61119" })).toBe("TAM61119");
@@ -107,6 +124,12 @@ describe("cleanName", () => {
     expect(
       cleanName("Revell 1:72 Plastic Model Making Kit Eurofighter Typhoon", { brand: "Revell" }),
     ).toBe("Eurofighter Typhoon");
+    expect(
+      cleanName("35263 1/35 Humvee M1025 Armament Carrier Multi-Colored", {
+        brand: "Tamiya",
+        kitNumber: "35263",
+      }),
+    ).toBe("Humvee M1025 Armament Carrier");
   });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import {
@@ -21,6 +21,7 @@ import {
   SegmentedControl,
 } from "../components/ui";
 import { AddModelForm } from "../components/AddModelForm";
+import { Sheet } from "../components/Sheet";
 
 type StatusFilter = "all" | "owned" | "not_owned";
 
@@ -110,6 +111,8 @@ export default function Models() {
   const { data: allTags } = useTags();
   const { data, isLoading, isError } = useModels(search, tag || undefined);
 
+  const closeAddForm = useCallback(() => setShowAddForm(false), []);
+
   const setStatus = (value: StatusFilter) => {
     const next = new URLSearchParams(searchParams);
     if (value === "all") {
@@ -145,14 +148,17 @@ export default function Models() {
       <PageHeader
         title="Models"
         description="Every kit in the catalog — owned and wishlist."
-        actions={!showAddForm && <Button onClick={() => setShowAddForm(true)}>+ Add model</Button>}
+        actions={<Button onClick={() => setShowAddForm(true)}>+ Add model</Button>}
       />
 
       {showAddForm && (
-        <AddModelForm
-          onCreated={(model) => navigate(`/models/${model.id}`)}
-          onCancel={() => setShowAddForm(false)}
-        />
+        <Sheet title="Add a model" onClose={closeAddForm}>
+          <AddModelForm
+            bare
+            onCreated={(model) => navigate(`/models/${model.id}`)}
+            onCancel={closeAddForm}
+          />
+        </Sheet>
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -7,7 +7,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { BoxIcon, ChevronDownIcon } from "./icons";
 
 export function Card({
@@ -200,6 +200,15 @@ const thumbnailSizes = {
   lg: "h-16 w-16",
 };
 
+// Uploaded files can go missing (restored backup without uploads/, manual
+// cleanup) and hotlinked retail images rot — fall back to the placeholder
+// instead of the browser's broken-image icon and alt text. Keyed by URL so a
+// new image gets a fresh chance.
+function useImageFailed(src: string | null | undefined) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  return [src != null && failedSrc === src, () => setFailedSrc(src ?? null)] as const;
+}
+
 export function ModelThumbnail({
   imageUrl,
   size = "md",
@@ -210,11 +219,13 @@ export function ModelThumbnail({
   className?: string;
 }) {
   const sizeClass = thumbnailSizes[size];
-  if (imageUrl) {
+  const [failed, onError] = useImageFailed(imageUrl);
+  if (imageUrl && !failed) {
     return (
       <img
         src={imageUrl}
         alt=""
+        onError={onError}
         className={`${sizeClass} shrink-0 rounded-xl border border-workshop-border object-cover ${className}`}
       />
     );
@@ -304,16 +315,18 @@ export function MediaCard({
     overlay?: ReactNode;
   }
 >) {
+  const [failed, onError] = useImageFailed(image);
   return (
     <div
       className={`group overflow-hidden rounded-2xl border border-workshop-border bg-workshop-panel shadow-panel transition-all duration-200 hover:-translate-y-0.5 hover:border-workshop-accent/50 hover:shadow-lift ${className}`}
       {...props}
     >
       <div className={`relative ${aspect} w-full overflow-hidden bg-workshop-panelmuted`}>
-        {image ? (
+        {image && !failed ? (
           <img
             src={image}
             alt={imageAlt}
+            onError={onError}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -339,13 +352,15 @@ export function SegmentedControl<T extends string>({
   options: { value: T; label: string }[];
 }) {
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded-lg border border-workshop-border bg-workshop-panelmuted p-1">
+    // shrink-0: as a flex item next to a search box it would otherwise give
+    // up width first and wrap its last option onto a second line.
+    <div className="inline-flex shrink-0 flex-wrap gap-1 rounded-lg border border-workshop-border bg-workshop-panelmuted p-1">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
             value === opt.value
               ? "bg-workshop-accent text-white"
               : "text-slate-400 hover:text-slate-100"

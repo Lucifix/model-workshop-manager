@@ -9,7 +9,7 @@ function unique(prefix: string) {
 async function openAddForm(page: Page) {
   await page.getByRole("link", { name: "Models", exact: true }).click();
   await page.getByRole("button", { name: "+ Add model" }).click();
-  return page.locator("form");
+  return page.getByRole("dialog", { name: "Add a model" });
 }
 
 async function chooseNewManufacturer(page: Page, name: string) {
@@ -29,7 +29,7 @@ test("can add a new model with a new manufacturer", async ({ page }) => {
   await expect(form.getByLabel("Scale")).toBeHidden();
 
   await chooseNewManufacturer(page, manufacturer);
-  await expect(form.getByText("New manufacturer — it'll be added when you save.")).toBeVisible();
+  await expect(form.getByText("New", { exact: true })).toBeVisible();
   await form.getByLabel("Kit number").fill("E2E-001");
   await form.getByLabel("Name", { exact: true }).fill("E2E Test Kit");
   await form.getByRole("button", { name: "Save model" }).click();
@@ -87,8 +87,8 @@ test("remembers a typed barcode and recognises it on the next scan", async ({ pa
 
   await form.getByLabel("Barcode or kit search").fill(barcode);
   await form.getByRole("button", { name: "Find" }).click();
-  await expect(form.getByRole("status")).toContainText("Not in your catalog yet");
-  await expect(form.getByText(`Barcode ${barcode} will be saved with this kit.`)).toBeVisible();
+  // Not in the catalog yet: the barcode is kept as a chip, to be saved with the kit.
+  await expect(form.getByTitle("Saved with this kit")).toContainText(barcode);
 
   await chooseNewManufacturer(page, manufacturer);
   await form.getByLabel("Kit number").fill("BC-1");
@@ -99,4 +99,17 @@ test("remembers a typed barcode and recognises it on the next scan", async ({ pa
   await form.getByLabel("Barcode or kit search").fill(barcode);
   await form.getByLabel("Barcode or kit search").press("Enter");
   await expect(form.getByRole("status")).toContainText("Already in your catalog: Barcode Kit");
+});
+
+test("the add form is a dialog that closes with × or Escape", async ({ page }) => {
+  const dialog = await openAddForm(page);
+  await expect(dialog.getByLabel("Barcode or kit search")).toBeFocused();
+
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.getByRole("button", { name: "+ Add model" }).click();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
 });
