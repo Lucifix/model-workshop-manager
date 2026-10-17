@@ -18,7 +18,7 @@
 <a href="https://github.com/Lucifix/model-workshop-manager/actions/workflows/docker-publish.yml"><img src="https://img.shields.io/github/actions/workflow/status/Lucifix/model-workshop-manager/docker-publish.yml?branch=main&style=flat-square&label=build" alt="Build status"></a>
 <a href="LICENSE"><img src="https://img.shields.io/github/license/Lucifix/model-workshop-manager?style=flat-square&color=3B6D11" alt="MIT license"></a>
 
-<br><br>
+<br>
 
 <img src="https://raw.githubusercontent.com/Lucifix/model-workshop-manager/main/docs/screenshots/readme-hero.png" alt="Model Workshop Manager on mobile: the dashboard, a completed HMS Victory build, and the model catalog">
 
