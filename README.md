@@ -17,16 +17,22 @@ phone or desktop, running entirely on your own server.
 
 - **Dashboard** — kit/paint/build counts, low-stock paints, missing-paint alerts, recent activity.
 - **Models & Paints** — a searchable catalog, kept separate from what you actually own.
+- **10,000+ paints out of the box** — one click on the Import & Export page pulls in the
+  community [miniature-paints](https://github.com/Arcturus5404/miniature-paints) dataset: names,
+  codes, and colors for 30+ brands including Tamiya, Vallejo, Citadel, Mr. Hobby, AK, Mig, Mission
+  Models, Humbrol, and Revell.
+- **Barcode scanning** — snap a photo of a kit box's barcode to fill in the form, and get told
+  straight away if you already own it. Optional UPCitemdb lookup (off by default, enable in
+  Settings) pre-fills name, brand, and box art.
 - **Builds** — start a build in one guided flow, log progress with timestamps and photos, and get
   automatic "required vs. owned" paint matching per project.
 - **Shopping list & Wishlist** — one tap turns a build's missing paints into a shopping list;
   longer-term wants live separately in the wishlist.
 - **Supplies** — track tools and consumables (brushes, cement, masking tape, etc.) too.
-- **Import & export** — bring in an existing collection via CSV/JSON, back it up from the UI.
+- **Import & export** — bring in an existing collection (or that spreadsheet you've been keeping)
+  via CSV/JSON, back it up from the UI.
+- **Installable app** — add it to your phone's home screen or your desktop as a PWA.
 - **Login-protected** — single-user auth, nothing exposed without a password.
-
-> PWA/offline installability is temporarily unavailable after a recent migration (see
-> [Tech stack](#tech-stack)) — tracked as follow-up work.
 
 ## Quick start (Docker)
 
@@ -78,21 +84,22 @@ docker compose pull
 docker compose up -d
 ```
 
-**Updating:** `docker compose pull && docker compose up -d`
+**Updating:** `docker compose pull && docker compose up -d` — see [CHANGELOG.md](CHANGELOG.md)
+for what's new.
 
 ### Option B: build from source
 
 ```bash
-git clone <this-repo-url> && cd model-workshop-manager
+git clone https://github.com/Lucifix/model-workshop-manager.git && cd model-workshop-manager
 cp .env.example .env          # optional tweaks — nothing required
-docker compose up -d --build
-docker compose exec app npm run db:seed   # optional: sample data (migrations run automatically on boot)
+docker compose up -d --build  # migrations run automatically on boot
 ```
 
 **Updating:** `git pull && docker compose up -d --build`
 
 Both options open `http://localhost:8080` (or whatever `HOST_PORT` you set) — first visit shows a
-one-time setup screen to create your username/password, then you're logged in.
+one-time setup screen to create your username/password, then you're logged in. To start with a
+full paint catalog instead of an empty one, open **Import & Export → Import starter catalog**.
 
 **Stopping:** `docker compose down` (your data lives in the `workshop-data` volume, untouched)
 

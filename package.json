@@ -1,6 +1,6 @@
 {
   "name": "model-workshop-manager",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Model Workshop Manager — a single React Router v8 (framework mode) app for both the UI and the API.",
   "type": "module",
