@@ -54,6 +54,7 @@ Notes on the choices:
 
    The build should finish without errors and produce
    `dist/apps/org.icewhale.modelworkshopmanager/`.
+
 4. Optional: install it on a CasaOS box first. In the App Store, use
    **Custom Install → Import** and paste the compose file.
 5. Commit on a branch, push, and open a PR against `main` titled e.g.
