@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Container version="2">
   <Name>model-workshop-manager</Name>
-  <Repository>ghcr.io/lucifix/model-workshop-manager:latest</Repository>
-  <Registry>https://github.com/Lucifix/model-workshop-manager/pkgs/container/model-workshop-manager</Registry>
+  <Repository>lucifix/model-workshop-manager:latest</Repository>
+  <Registry>https://hub.docker.com/r/lucifix/model-workshop-manager</Registry>
   <Network>bridge</Network>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>

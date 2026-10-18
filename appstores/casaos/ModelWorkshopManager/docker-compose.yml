@@ -1,7 +1,7 @@
 name: model-workshop-manager
 services:
   model-workshop-manager:
-    image: ghcr.io/lucifix/model-workshop-manager:1.0.0
+    image: lucifix/model-workshop-manager:1.0.0
     container_name: model-workshop-manager
     restart: unless-stopped
     deploy:
