@@ -39,7 +39,7 @@
     "react-router": "^8.3.1",
     "sonner": "^2.0.8",
     "tar": "^7.5.22",
-    "zod": "^4.5.4",
+    "zod": "^4.6.6",
     "zxing-wasm": "^3.1.4"
   },
   "devDependencies": {
