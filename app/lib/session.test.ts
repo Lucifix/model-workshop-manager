@@ -130,8 +130,10 @@ describe("isSessionAuthenticated", () => {
     expect(await isSessionAuthenticated("")).toBe(false);
 
     const cookie = await validCookie();
-    // Flip the last character of the signature — unsign() must reject it.
-    const tampered = cookie.slice(0, -1) + (cookie.endsWith("A") ? "B" : "A");
+    // Flip the first character of the signed payload — unsign() must reject
+    // it. (Not the signature's last char: it is base64 of a 32-byte HMAC, so
+    // that char has 2 unused bits and some swaps decode to the same bytes.)
+    const tampered = (cookie.startsWith("A") ? "B" : "A") + cookie.slice(1);
     expect(await isSessionAuthenticated(tampered)).toBe(false);
   });
 });
